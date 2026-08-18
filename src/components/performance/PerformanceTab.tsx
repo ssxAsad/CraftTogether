@@ -124,7 +124,7 @@ export const PerformanceTab: React.FC = () => {
       {/* Java Runtime Selector */}
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <div className="flex items-center gap-2.5">
-          <Cpu className="w-5 h-5 text-cyan-400" />
+          <Cpu className="w-5 h-5 text-emerald-400" />
           <div>
             <h2 className="text-base font-bold text-white">Detected Java Runtime (JRE / JDK)</h2>
             <p className="text-xs text-slate-400">Java 21 is required for Minecraft 1.20.5+; Java 17 for 1.18 - 1.20.4</p>
@@ -134,7 +134,7 @@ export const PerformanceTab: React.FC = () => {
         <select
           value={selectedJava}
           onChange={(e) => setSelectedJava(e.target.value)}
-          className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+          className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
         >
           {javaRuntimes.length > 0 ? (
             javaRuntimes.map((j) => (
@@ -152,7 +152,7 @@ export const PerformanceTab: React.FC = () => {
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Code className="w-5 h-5 text-violet-400" />
+            <Code className="w-5 h-5 text-emerald-400" />
             <div>
               <h2 className="text-base font-bold text-white">Aikar's Optimized G1GC Flags</h2>
               <p className="text-xs text-slate-400">Industry-standard flags used by top Minecraft networks to eliminate GC lag spikes</p>
@@ -165,7 +165,7 @@ export const PerformanceTab: React.FC = () => {
               type="checkbox"
               checked={useAikar}
               onChange={(e) => setUseAikar(e.target.checked)}
-              className="w-4 h-4 accent-violet-500 cursor-pointer"
+              className="w-4 h-4 accent-emerald-500 cursor-pointer"
             />
           </label>
         </div>

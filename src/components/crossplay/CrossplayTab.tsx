@@ -152,10 +152,10 @@ export const CrossplayTab: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
               Floodgate 2.0
             </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/50">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
               UDP 19132
             </span>
           </div>
@@ -189,7 +189,7 @@ export const CrossplayTab: React.FC = () => {
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, bedrockPort: parseInt(e.target.value, 10) || 19132 })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
               />
               <span className="text-[11px] text-slate-400">Default Bedrock port is 19132.</span>
             </div>
@@ -205,7 +205,7 @@ export const CrossplayTab: React.FC = () => {
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, authType: e.target.value as any })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
               >
                 <option value="floodgate">Floodgate (Recommended - No Java MC account needed for Bedrock)</option>
                 <option value="online">Online Mode (Requires Mojang/Microsoft Java account)</option>
@@ -223,7 +223,7 @@ export const CrossplayTab: React.FC = () => {
                 type="text"
                 value={geyserConfig.motd1}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd1: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -234,7 +234,7 @@ export const CrossplayTab: React.FC = () => {
                 type="text"
                 value={geyserConfig.motd2}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd2: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
           </div>
@@ -250,21 +250,21 @@ export const CrossplayTab: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-cyan-300 block font-semibold">📱 Phones & Tablets (Android / iOS)</strong>
+            <strong className="text-emerald-400 block font-semibold">📱 Phones & Tablets (Android / iOS)</strong>
             <p className="text-slate-400 leading-relaxed">
               Open Minecraft Bedrock → Play → Servers tab → Scroll to bottom → <strong>Add Server</strong>. Enter your IP and Port <strong>19132</strong>.
             </p>
           </div>
 
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-emerald-300 block font-semibold">💻 Windows 10/11 Bedrock</strong>
+            <strong className="text-emerald-400 block font-semibold">💻 Windows 10/11 Bedrock</strong>
             <p className="text-slate-400 leading-relaxed">
               Open Minecraft for Windows → Play → Servers → Add Server. Type your server IP and port <strong>19132</strong>.
             </p>
           </div>
 
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-violet-300 block font-semibold">🎮 Consoles (Xbox / PS / Switch)</strong>
+            <strong className="text-emerald-400 block font-semibold">🎮 Consoles (Xbox / PS / Switch)</strong>
             <p className="text-slate-400 leading-relaxed">
               Use the free <strong>BedrockTogether</strong> mobile app or custom DNS on console to redirect to your server IP seamlessly.
             </p>

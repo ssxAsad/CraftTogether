@@ -81,7 +81,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             useAikarFlags: s.useAikarFlags !== false,
             port: s.port || 25565,
             isCracked: s.isCracked || false,
-            networkMode: s.networkMode === 'lan_only' ? 'lan_only' : 'ngrok_lan'
+            networkMode: s.networkMode === 'lan_only' ? 'lan_only' : s.networkMode === 'upnp' ? 'upnp' : 'cloud_relay'
           }));
 
           setServers(mapped);
@@ -244,7 +244,12 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             useAikarFlags: config.useAikarFlags,
             port: config.port,
             isCracked: config.isCracked,
-            networkMode: config.networkMode
+            networkMode: config.networkMode,
+            keepInventory: config.keepInventory !== undefined ? config.keepInventory : true,
+            showCoordinates: config.showCoordinates !== undefined ? config.showCoordinates : true,
+            onePlayerSleep: config.onePlayerSleep !== undefined ? config.onePlayerSleep : true,
+            disableMobGriefing: config.disableMobGriefing !== undefined ? config.disableMobGriefing : false,
+            disableFireSpread: config.disableFireSpread !== undefined ? config.disableFireSpread : false
           }
         });
 
@@ -262,7 +267,12 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const newServer: ServerInstanceConfig = {
           ...config,
           id: cleanId,
-          serverDir: `C:/DukeCraftora/servers/${cleanId}`
+          serverDir: `C:/DukeCraftora/servers/${cleanId}`,
+          keepInventory: config.keepInventory !== undefined ? config.keepInventory : true,
+          showCoordinates: config.showCoordinates !== undefined ? config.showCoordinates : true,
+          onePlayerSleep: config.onePlayerSleep !== undefined ? config.onePlayerSleep : true,
+          disableMobGriefing: config.disableMobGriefing !== undefined ? config.disableMobGriefing : false,
+          disableFireSpread: config.disableFireSpread !== undefined ? config.disableFireSpread : false
         };
         setServers(prev => {
           const updated = [...prev, newServer];

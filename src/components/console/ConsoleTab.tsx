@@ -164,7 +164,7 @@ export const ConsoleTab: React.FC = () => {
       {/* Quick Command Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <span className="text-[11px] font-bold uppercase text-slate-400 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-cyan-400" /> Shortcuts:
+          <Sparkles className="w-3 h-3 text-emerald-400" /> Shortcuts:
         </span>
         {quickCommands.map((q) => (
           <button

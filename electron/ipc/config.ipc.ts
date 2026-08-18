@@ -52,7 +52,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
     return await DependencySetupService.checkAllDependencies();
   });
 
-  ipcMain.handle('setup:install-dependency', async (_, id: 'java' | 'ngrok' | 'papermc' | 'plugins') => {
+  ipcMain.handle('setup:install-dependency', async (_, id: 'java' | 'cloud_relay' | 'papermc' | 'plugins') => {
     const { DependencySetupService } = await import('../services/dependency-setup.service');
     return await DependencySetupService.installDependency(id, (percent, message) => {
       mainWindow.webContents.send('setup:dependency-progress', { id, percent, message });
@@ -128,8 +128,13 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
         useAikarFlags: meta.useAikarFlags !== false,
         port: props['server-port'] || meta.port || 25565,
         isCracked: props['online-mode'] === false || meta.isCracked === true,
-        networkMode: meta.networkMode || 'ngrok_lan',
-        motd: props['motd'] || meta.motd || 'DukeCraftora Server'
+        networkMode: meta.networkMode === 'lan_only' ? 'lan_only' : meta.networkMode === 'upnp' ? 'upnp' : 'cloud_relay',
+        motd: props['motd'] || meta.motd || 'DukeCraftora Server',
+        keepInventory: meta.keepInventory !== undefined ? meta.keepInventory : true,
+        showCoordinates: meta.showCoordinates !== undefined ? meta.showCoordinates : true,
+        onePlayerSleep: meta.onePlayerSleep !== undefined ? meta.onePlayerSleep : true,
+        disableMobGriefing: meta.disableMobGriefing !== undefined ? meta.disableMobGriefing : false,
+        disableFireSpread: meta.disableFireSpread !== undefined ? meta.disableFireSpread : false
       };
     });
   });

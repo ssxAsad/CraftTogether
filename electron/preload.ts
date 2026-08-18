@@ -7,7 +7,7 @@ export interface IElectronAPI {
   setStorageDirectory: (targetPath: string) => Promise<boolean>;
   browseDirectory: () => Promise<{ path: string; validation: { isValid: boolean; isEmpty: boolean; error?: string } } | null>;
   checkSetupDependencies: () => Promise<any[]>;
-  installSetupDependency: (id: 'java' | 'ngrok' | 'papermc' | 'plugins') => Promise<boolean>;
+  installSetupDependency: (id: 'java' | 'cloud_relay' | 'papermc' | 'plugins') => Promise<boolean>;
   onSetupDependencyProgress: (callback: (data: { id: string; percent: number; message?: string }) => void) => () => void;
 
   // Server process
@@ -33,12 +33,18 @@ export interface IElectronAPI {
   getSoftwareVersions: (software: string) => Promise<string[]>;
   downloadJar: (params: { software: string; version: string; serverId: string }) => Promise<string>;
 
-  // Free ngrok TCP
-  startNgrok: (params: { port: number; authToken?: string }) => Promise<any>;
-  stopNgrok: () => Promise<any>;
-  getNgrokStatus: () => Promise<any>;
-  saveNgrokToken: (token: string) => Promise<boolean>;
-  getNgrokToken: () => Promise<string>;
+  // UPnP Direct Port Forwarding
+  checkUpnpSupport: (forceRefresh?: boolean) => Promise<any>;
+  startUpnp: (params?: { port?: number; protocol?: 'TCP' | 'UDP'; description?: string }) => Promise<any>;
+  stopUpnp: (params?: { port?: number; protocol?: 'TCP' | 'UDP' }) => Promise<any>;
+  getUpnpStatus: () => Promise<any>;
+
+  // Cloud Relay (Playit Zero-Auth Engine)
+  startCloudTunnel: (params?: { port?: number }) => Promise<any>;
+  stopCloudTunnel: () => Promise<any>;
+  getCloudTunnelStatus: () => Promise<any>;
+  ensureCloudTunnelBinary: () => Promise<boolean>;
+  onCloudTunnelStatus: (callback: (status: any) => void) => () => void;
 
   // LAN Discovery
   startLanBroadcast: (params: { motd: string; port: number }) => Promise<boolean>;
@@ -143,12 +149,24 @@ const electronAPI: IElectronAPI = {
   getSoftwareVersions: (software) => ipcRenderer.invoke('jars:get-versions', software),
   downloadJar: (params) => ipcRenderer.invoke('jars:download-jar', params),
 
-  // Free ngrok TCP
-  startNgrok: (params) => ipcRenderer.invoke('ngrok:start', params),
-  stopNgrok: () => ipcRenderer.invoke('ngrok:stop'),
-  getNgrokStatus: () => ipcRenderer.invoke('ngrok:get-status'),
-  saveNgrokToken: (token) => ipcRenderer.invoke('ngrok:save-token', token),
-  getNgrokToken: () => ipcRenderer.invoke('ngrok:get-token'),
+  // UPnP Direct Port Forwarding
+  checkUpnpSupport: (forceRefresh) => ipcRenderer.invoke('upnp:check-support', forceRefresh),
+  startUpnp: (params) => ipcRenderer.invoke('upnp:start', params || {}),
+  stopUpnp: (params) => ipcRenderer.invoke('upnp:stop', params || {}),
+  getUpnpStatus: () => ipcRenderer.invoke('upnp:get-status'),
+
+  // Cloud Relay (Playit Zero-Auth Engine)
+  startCloudTunnel: (params) => ipcRenderer.invoke('cloud-tunnel:start', params || {}),
+  stopCloudTunnel: () => ipcRenderer.invoke('cloud-tunnel:stop'),
+  getCloudTunnelStatus: () => ipcRenderer.invoke('cloud-tunnel:get-status'),
+  ensureCloudTunnelBinary: () => ipcRenderer.invoke('cloud-tunnel:ensure-binary'),
+  onCloudTunnelStatus: (callback) => {
+    const handler = (_: any, status: any) => callback(status);
+    ipcRenderer.on('cloud-tunnel:status-update', handler);
+    return () => {
+      ipcRenderer.removeListener('cloud-tunnel:status-update', handler);
+    };
+  },
 
   // LAN Discovery
   startLanBroadcast: (params) => ipcRenderer.invoke('lan:start', params),

@@ -4,11 +4,12 @@
   "description": "DukeCraftora - Modern, High-Performance Windows Minecraft Server Manager & Host",
   "main": "dist-electron/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "npm run build && electron .",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder",
+    "make": "npm run package"
   },
   "keywords": [
     "minecraft",
@@ -16,14 +17,14 @@
     "geysermc",
     "crossplay",
     "bedrock",
-    "ngrok",
+    "upnp",
+    "playit",
     "papermc",
     "electron"
   ],
-  "author": "DukeCraftora Team",
+  "author": "Duke",
   "license": "MIT",
   "dependencies": {
-    "@ngrok/ngrok": "^1.4.1",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-web-links": "^0.11.0",
     "@xterm/xterm": "^5.5.0",

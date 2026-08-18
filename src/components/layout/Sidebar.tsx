@@ -32,10 +32,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const getNetworkBadge = (mode?: NetworkMode) => {
     switch (mode) {
       case 'lan_only':
-        return { label: 'Only LAN', color: 'text-zinc-400 bg-zinc-800/80 border-zinc-700/50' };
-      case 'ngrok_lan':
+        return { label: 'LAN', color: 'text-zinc-400 bg-obsidian-950 border-white/10' };
+      case 'upnp':
+        return { label: 'UPnP', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' };
+      case 'cloud_relay':
       default:
-        return { label: 'Ngrok+LAN', color: 'text-emerald-300 bg-emerald-950/50 border-emerald-500/30' };
+        return { label: 'PlayIt.gg', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' };
     }
   };
 
@@ -123,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             isRunning && status === 'ONLINE'
                               ? 'bg-emerald-500'
                               : isRunning && status === 'STARTING'
-                              ? 'bg-amber-400 animate-pulse'
+                              ? 'bg-emerald-400 animate-pulse'
                               : isSelected
                               ? 'bg-emerald-500'
                               : 'bg-zinc-600'

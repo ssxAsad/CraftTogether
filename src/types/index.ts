@@ -2,7 +2,7 @@ export type ServerStatus = 'STOPPED' | 'STARTING' | 'ONLINE' | 'STOPPING' | 'CRA
 
 export type ServerSoftwareType = 'paper' | 'purpur' | 'vanilla' | 'fabric';
 
-export type NetworkMode = 'ngrok_lan' | 'lan_only';
+export type NetworkMode = 'cloud_relay' | 'upnp' | 'lan_only';
 
 export interface ServerMetrics {
   cpu: number;
@@ -34,6 +34,11 @@ export interface ServerInstanceConfig {
   port: number;
   isCracked: boolean;
   networkMode: NetworkMode;
+  keepInventory?: boolean;
+  showCoordinates?: boolean;
+  onePlayerSleep?: boolean;
+  disableMobGriefing?: boolean;
+  disableFireSpread?: boolean;
 }
 
 export interface JavaRuntime {
@@ -44,12 +49,22 @@ export interface JavaRuntime {
   vendor: string;
 }
 
-export interface NgrokStatus {
+export interface UpnpStatus {
+  isSupported: boolean;
   isActive: boolean;
-  publicUrl: string | null;
+  externalIp: string | null;
+  mappedPort: number | null;
+  routerName?: string | null;
+  error?: string | null;
+  unsupportedReason?: string | null;
+}
+
+export interface CloudTunnelStatus {
+  isActive: boolean;
+  status: 'STOPPED' | 'STARTING' | 'WAITING_CLAIM' | 'ONLINE' | 'ERROR';
+  claimUrl: string | null;
   serverAddress: string | null;
   port: number;
-  authToken: string;
   error?: string | null;
 }
 

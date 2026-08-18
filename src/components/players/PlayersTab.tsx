@@ -143,7 +143,7 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleKick(player.username)}
                     title="Kick Player"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition disabled:opacity-40"
                   >
                     <UserX className="w-4 h-4" />
                   </button>

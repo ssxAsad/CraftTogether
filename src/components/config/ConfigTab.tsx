@@ -13,13 +13,18 @@ import {
   Zap,
   HardDrive,
   Cpu,
-  ShieldCheck
+  ShieldCheck,
+  Compass,
+  Moon,
+  Flame,
+  PackageCheck
 } from 'lucide-react';
+import { JavaIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { ServerProperties } from '../../types';
 
 export const ConfigTab: React.FC = () => {
-  const { activeServer, javaRuntimes, updateServerConfig, refreshServers } = useServer();
+  const { activeServer, javaRuntimes, updateServerConfig, refreshServers, status, sendCommand } = useServer();
   const [activeSection, setActiveSection] = useState<'game' | 'performance'>('game');
 
   const [properties, setProperties] = useState<ServerProperties>({
@@ -43,6 +48,13 @@ export const ConfigTab: React.FC = () => {
   const [useAikar, setUseAikar] = useState(activeServer?.useAikarFlags !== false);
   const [selectedJava, setSelectedJava] = useState(activeServer?.javaPath || javaRuntimes[0]?.path || 'java');
 
+  // Gameplay Gamerules State
+  const [keepInventory, setKeepInventory] = useState(activeServer?.keepInventory !== false);
+  const [showCoordinates, setShowCoordinates] = useState(activeServer?.showCoordinates !== false);
+  const [onePlayerSleep, setOnePlayerSleep] = useState(activeServer?.onePlayerSleep !== false);
+  const [disableMobGriefing, setDisableMobGriefing] = useState(activeServer?.disableMobGriefing === true);
+  const [disableFireSpread, setDisableFireSpread] = useState(activeServer?.disableFireSpread === true);
+
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -52,6 +64,11 @@ export const ConfigTab: React.FC = () => {
       setRamGb(activeServer.allocatedRamGb || 4);
       setUseAikar(activeServer.useAikarFlags !== false);
       setSelectedJava(activeServer.javaPath || javaRuntimes[0]?.path || 'java');
+      setKeepInventory(activeServer.keepInventory !== false);
+      setShowCoordinates(activeServer.showCoordinates !== false);
+      setOnePlayerSleep(activeServer.onePlayerSleep !== false);
+      setDisableMobGriefing(activeServer.disableMobGriefing === true);
+      setDisableFireSpread(activeServer.disableFireSpread === true);
 
       if (window.electronAPI) {
         const props = await window.electronAPI.readProperties(activeServer.id);
@@ -87,8 +104,23 @@ export const ConfigTab: React.FC = () => {
       await updateServerConfig(activeServer.id, {
         allocatedRamGb: ramGb,
         useAikarFlags: useAikar,
-        javaPath: selectedJava
+        javaPath: selectedJava,
+        keepInventory,
+        showCoordinates,
+        onePlayerSleep,
+        disableMobGriefing,
+        disableFireSpread
       });
+
+      // If server is currently running, dispatch real-time gamerules to server console
+      if (status === 'ONLINE') {
+        await sendCommand(`gamerule keepInventory ${keepInventory ? 'true' : 'false'}`);
+        await sendCommand(`gamerule showCoordinates ${showCoordinates ? 'true' : 'false'}`);
+        await sendCommand(`gamerule playersSleepingPercentage ${onePlayerSleep ? 1 : 100}`);
+        await sendCommand(`gamerule mobGriefing ${disableMobGriefing ? 'false' : 'true'}`);
+        await sendCommand(`gamerule doFireTick ${disableFireSpread ? 'false' : 'true'}`);
+      }
+
       await refreshServers();
     }
 
@@ -162,10 +194,10 @@ export const ConfigTab: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-white">Cracked (Offline Mode) Support</h2>
                   <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
                       isCracked
-                        ? 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
-                        : 'bg-zinc-800 text-zinc-400'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-zinc-800 text-zinc-400 border-white/5'
                     }`}
                   >
                     {isCracked ? 'Cracked Allowed' : 'Premium Only'}
@@ -203,8 +235,8 @@ export const ConfigTab: React.FC = () => {
             </div>
 
             {isCracked && (
-              <div className="bg-amber-950/30 border border-amber-500/20 p-3.5 rounded-lg flex items-start gap-3 text-xs text-amber-200">
-                <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="bg-obsidian-900 border border-white/10 p-3.5 rounded-lg flex items-start gap-3 text-xs text-slate-300">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <strong>Skin Restoration Active:</strong> DukeCraftora auto-injects SkinsRestorer so cracked players keep their skins and can use <code>/skin &lt;name&gt;</code> in-game!
                 </div>
@@ -214,6 +246,101 @@ export const ConfigTab: React.FC = () => {
 
       {/* Main Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Popular Gameplay Enhancements (Gamerules) Card */}
+        <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4 md:col-span-2">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
+            <PackageCheck className="w-4 h-4 text-emerald-400" />
+            <span>Popular Gameplay Enhancements (Live GameRules)</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Keep Inventory */}
+            <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <PackageCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-semibold text-white block">Keep Inventory</span>
+                  <span className="text-[10px] text-slate-400">Keep items & XP upon dying</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={keepInventory}
+                onChange={(e) => setKeepInventory(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Show Coordinates */}
+            <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <Compass className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-semibold text-white block">Show Coordinates HUD</span>
+                  <span className="text-[10px] text-slate-400">Live X, Y, Z on screen for Bedrock & Java</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={showCoordinates}
+                onChange={(e) => setShowCoordinates(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Instant 1-Player Sleep */}
+            <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <Moon className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-semibold text-white block">Instant 1-Player Sleep</span>
+                  <span className="text-[10px] text-slate-400">1 player in bed skips the night</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={onePlayerSleep}
+                onChange={(e) => setOnePlayerSleep(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Disable Mob Griefing */}
+            <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-semibold text-white block">Anti-Creeper / Mob Griefing</span>
+                  <span className="text-[10px] text-slate-400">Prevent Creeper/Enderman block damage</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={disableMobGriefing}
+                onChange={(e) => setDisableMobGriefing(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Disable Fire Spread */}
+            <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <Flame className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-semibold text-white block">Disable Fire Spread</span>
+                  <span className="text-[10px] text-slate-400">Prevent fire from spreading to wood</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={disableFireSpread}
+                onChange={(e) => setDisableFireSpread(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Core Gameplay Card */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
@@ -283,7 +410,7 @@ export const ConfigTab: React.FC = () => {
         {/* World & Performance Tuning */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-            <Eye className="w-4 h-4 text-cyan-400" />
+            <Eye className="w-4 h-4 text-emerald-400" />
             <span>World & Limits</span>
           </h3>
 
@@ -298,7 +425,7 @@ export const ConfigTab: React.FC = () => {
               onChange={(e) =>
                 setProperties({ ...properties, 'max-players': parseInt(e.target.value, 10) || 20 })
               }
-              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -306,7 +433,7 @@ export const ConfigTab: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold text-slate-300">
               <span>View Distance (Chunks): {properties['view-distance'] || 10}</span>
-              <span className="text-cyan-400 font-mono">{properties['view-distance'] || 10} Chunks</span>
+              <span className="text-emerald-400 font-mono">{properties['view-distance'] || 10} Chunks</span>
             </div>
             <input
               type="range"
@@ -316,7 +443,7 @@ export const ConfigTab: React.FC = () => {
               onChange={(e) =>
                 setProperties({ ...properties, 'view-distance': parseInt(e.target.value, 10) })
               }
-              className="w-full accent-cyan-400 cursor-pointer"
+              className="w-full accent-emerald-500 cursor-pointer"
             />
             <span className="text-[10px] text-slate-500">Higher values increase RAM/CPU requirements.</span>
           </div>
@@ -325,7 +452,7 @@ export const ConfigTab: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold text-slate-300">
               <span>Simulation Distance: {properties['simulation-distance'] || 10}</span>
-              <span className="text-cyan-400 font-mono">{properties['simulation-distance'] || 10} Chunks</span>
+              <span className="text-emerald-400 font-mono">{properties['simulation-distance'] || 10} Chunks</span>
             </div>
             <input
               type="range"
@@ -335,7 +462,7 @@ export const ConfigTab: React.FC = () => {
               onChange={(e) =>
                 setProperties({ ...properties, 'simulation-distance': parseInt(e.target.value, 10) })
               }
-              className="w-full accent-cyan-400 cursor-pointer"
+              className="w-full accent-emerald-500 cursor-pointer"
             />
           </div>
 
@@ -438,8 +565,8 @@ export const ConfigTab: React.FC = () => {
           {/* Java Runtime Selector */}
           <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                <Cpu className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 p-1.5">
+                <JavaIcon className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">Java Runtime Binary</h3>
@@ -450,7 +577,7 @@ export const ConfigTab: React.FC = () => {
             <select
               value={selectedJava}
               onChange={(e) => setSelectedJava(e.target.value)}
-              className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+              className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
             >
               {javaRuntimes.length > 0 ? (
                 javaRuntimes.map((j) => (

@@ -7,7 +7,8 @@ import { registerNetworkIpc } from './ipc/network.ipc';
 import { registerPluginsIpc } from './ipc/plugins.ipc';
 import { registerConfigIpc } from './ipc/config.ipc';
 import { ServerManagerService } from './services/server-manager.service';
-import { NgrokService } from './services/ngrok.service';
+import { PlayitService } from './services/playit.service';
+import { UpnpService } from './services/upnp.service';
 import { LanBroadcastService } from './services/lan-broadcast.service';
 
 // __filename and __dirname are globally available in CommonJS
@@ -71,7 +72,7 @@ async function createWindow() {
 
   // Register all IPC module handlers
   registerServerIpc(mainWindow);
-  registerNetworkIpc();
+  registerNetworkIpc(mainWindow);
   registerPluginsIpc();
   registerConfigIpc(mainWindow);
 
@@ -95,7 +96,8 @@ app.on('window-all-closed', async () => {
   // Graceful cleanup on quit
   logger.info('Shutting down services and network tunnels...');
   await ServerManagerService.stopServer();
-  await NgrokService.stopTunnel();
+  await PlayitService.stopTunnel();
+  await UpnpService.closePort();
   LanBroadcastService.stopBroadcasting();
 
   if (process.platform !== 'darwin') {

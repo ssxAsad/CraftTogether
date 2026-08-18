@@ -22,7 +22,6 @@ export default defineConfig({
               },
               external: [
                 'electron',
-                '@ngrok/ngrok',
                 'pidusage',
                 'ws',
                 'child_process',

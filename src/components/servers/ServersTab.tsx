@@ -23,7 +23,7 @@ import { CrossplayTab } from '../crossplay/CrossplayTab';
 import { ConfigTab } from '../config/ConfigTab';
 import { PlayersTab } from '../players/PlayersTab';
 import { PluginsTab } from '../plugins/PluginsTab';
-import confetti from 'canvas-confetti';
+
 
 export type ServerSubTabType =
   | 'overview'
@@ -46,17 +46,6 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<ServerSubTabType>('overview');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleStart = async () => {
-    const ok = await startServer();
-    if (ok) {
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 }
-      });
-    }
-  };
 
   const handleDeleteConfirm = async () => {
     if (!activeServer) return;
@@ -92,7 +81,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
         <div className="space-y-2 max-w-md">
           <h2 className="text-xl font-bold text-white">No Minecraft Servers Yet</h2>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Create your first Minecraft server with 1-click Paper/Purpur installation, GeyserMC Bedrock cross-play, free ngrok sharing, and cracked support.
+            Create your first Minecraft server with 1-click Paper/Purpur installation, GeyserMC Bedrock cross-play, PlayIt.gg Tunnel & UPnP sharing, and cracked support.
           </p>
         </div>
 

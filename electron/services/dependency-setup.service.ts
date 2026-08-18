@@ -5,13 +5,14 @@ import { promisify } from 'util';
 import { AppPaths } from '../utils/paths';
 import { JavaDetectorService } from './java-detector.service';
 import { JarDownloaderService } from './jar-downloader.service';
+import { PlayitService } from './playit.service';
 import { Logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
 const logger = new Logger('DependencySetup');
 
 export interface DependencyStatus {
-  id: 'java' | 'ngrok' | 'papermc' | 'plugins';
+  id: 'java' | 'cloud_relay' | 'papermc' | 'plugins';
   name: string;
   description: string;
   status: 'ready' | 'missing' | 'installing' | 'error';
@@ -49,26 +50,25 @@ export class DependencySetupService {
       });
     }
 
-    // 2. Check Ngrok Native Embedded Agent
+    // 2. Check PlayIt.gg Tunnel Agent Binary
     try {
-      const ngrokModule = await import('@ngrok/ngrok');
-      const isReady = Boolean(ngrokModule.default || ngrokModule.SessionBuilder);
+      const isInstalled = PlayitService.isBinaryInstalled();
       results.push({
-        id: 'ngrok',
-        name: 'ngrok Cloud Tunnel Agent',
-        description: 'Official embedded native TCP tunnel agent for 1-click internet sharing',
-        status: isReady ? 'ready' : 'missing',
-        progress: isReady ? 100 : 0,
-        details: isReady ? 'Embedded Native Agent Ready' : 'Needs initialization'
+        id: 'cloud_relay',
+        name: 'PlayIt.gg Tunnel Daemon',
+        description: 'Embedded tunnel client for worldwide multiplayer sharing without port forwarding',
+        status: isInstalled ? 'ready' : 'missing',
+        progress: isInstalled ? 100 : 0,
+        details: isInstalled ? 'Binary Cached & Ready' : 'Ready for download'
       });
     } catch {
       results.push({
-        id: 'ngrok',
-        name: 'ngrok Cloud Tunnel Agent',
-        description: 'Official embedded native TCP tunnel agent for 1-click internet sharing',
+        id: 'cloud_relay',
+        name: 'PlayIt.gg Tunnel Daemon',
+        description: 'Embedded tunnel client for worldwide multiplayer sharing without port forwarding',
         status: 'missing',
         progress: 0,
-        details: 'Needs initialization'
+        details: 'Ready for download'
       });
     }
 
@@ -118,7 +118,7 @@ export class DependencySetupService {
    * Installs/pre-caches a specific dependency by ID.
    */
   static async installDependency(
-    id: 'java' | 'ngrok' | 'papermc' | 'plugins',
+    id: 'java' | 'cloud_relay' | 'papermc' | 'plugins',
     onProgress: (percent: number, message?: string) => void
   ): Promise<boolean> {
     logger.info(`Installing dependency: ${id}`);
@@ -127,13 +127,11 @@ export class DependencySetupService {
       return await JavaDetectorService.downloadAndInstallJava21(onProgress);
     }
 
-    if (id === 'ngrok') {
-      onProgress(30, 'Initializing embedded native ngrok agent...');
-      const configPath = path.join(AppPaths.getBaseDir(), 'ngrok.json');
-      if (!fs.existsSync(configPath)) {
-        fs.writeFileSync(configPath, JSON.stringify({ authToken: '', port: 25565, initialized: true }, null, 2), 'utf-8');
-      }
-      onProgress(100, 'Embedded ngrok native engine ready in workspace!');
+    if (id === 'cloud_relay') {
+      onProgress(10, 'Downloading PlayIt.gg Tunnel Daemon...');
+      const downloaded = await PlayitService.ensureBinary(onProgress);
+      if (!downloaded) return false;
+      onProgress(100, 'PlayIt.gg Tunnel Daemon Cached & Ready!');
       return true;
     }
 

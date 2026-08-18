@@ -100,7 +100,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const renderIcon = () => {
     switch (options.type) {
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-amber-400" />;
+        return <AlertTriangle className="w-5 h-5 text-red-400" />;
       case 'success':
         return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
       case 'prompt':
@@ -121,7 +121,11 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans">
           <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+              <div className={`p-2 rounded-lg shrink-0 border ${
+                options.type === 'warning'
+                  ? 'bg-red-500/10 border-red-500/20'
+                  : 'bg-emerald-500/10 border-emerald-500/20'
+              }`}>
                 {renderIcon()}
               </div>
 

@@ -27,6 +27,9 @@
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
+    "deleteAppDataOnUninstall": false,
+    "installerIcon": "src/assets/DC.ico",
+    "uninstallerIcon": "src/assets/DC.ico",
+    "loadingGif": "build/splash.gif"
   }
 }

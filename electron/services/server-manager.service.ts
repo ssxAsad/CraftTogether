@@ -39,7 +39,12 @@ export interface ServerInstanceConfig {
   useAikarFlags: boolean;
   port: number;
   isCracked: boolean;
-  networkMode?: 'ngrok_lan' | 'lan_only';
+  networkMode?: 'cloud_relay' | 'upnp' | 'lan_only';
+  keepInventory?: boolean;
+  showCoordinates?: boolean;
+  onePlayerSleep?: boolean;
+  disableMobGriefing?: boolean;
+  disableFireSpread?: boolean;
 }
 
 export class ServerManagerService {
@@ -318,6 +323,7 @@ export class ServerManagerService {
     if (line.includes('Done (') && line.includes('For help, type "help"')) {
       this.setStatus('ONLINE');
       this.emitLog('[DukeCraftora] Server is ONLINE and accepting connections! ✨', 'system');
+      this.applyGamerules();
     }
 
     // 2. Detect Player Join
@@ -346,6 +352,53 @@ export class ServerManagerService {
         this.notifyPlayersChanged();
       }
     }
+  }
+
+  /**
+   * Applies user-configured gameplay gamerules (keepInventory, showCoordinates, sleep percentage, etc.).
+   */
+  private static applyGamerules(): void {
+    if (!this.activeConfig) return;
+
+    // Small delay to ensure the server console is fully ready to process commands
+    setTimeout(() => {
+      if (!this.activeConfig || this.status !== 'ONLINE') return;
+
+      // 1. Keep Inventory on death
+      if (this.activeConfig.keepInventory !== undefined) {
+        const val = this.activeConfig.keepInventory ? 'true' : 'false';
+        this.sendCommand(`gamerule keepInventory ${val}`);
+        this.emitLog(`[DukeCraftora] Applied gamerule: keepInventory = ${val}`, 'system');
+      }
+
+      // 2. Show Coordinates HUD
+      if (this.activeConfig.showCoordinates !== undefined) {
+        const val = this.activeConfig.showCoordinates ? 'true' : 'false';
+        this.sendCommand(`gamerule showCoordinates ${val}`);
+        this.emitLog(`[DukeCraftora] Applied gamerule: showCoordinates = ${val}`, 'system');
+      }
+
+      // 3. 1-Player Instant Sleep Percentage
+      if (this.activeConfig.onePlayerSleep !== undefined) {
+        const pct = this.activeConfig.onePlayerSleep ? 1 : 100;
+        this.sendCommand(`gamerule playersSleepingPercentage ${pct}`);
+        this.emitLog(`[DukeCraftora] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
+      }
+
+      // 4. Disable Mob Griefing
+      if (this.activeConfig.disableMobGriefing !== undefined) {
+        const val = this.activeConfig.disableMobGriefing ? 'false' : 'true';
+        this.sendCommand(`gamerule mobGriefing ${val}`);
+        this.emitLog(`[DukeCraftora] Applied gamerule: mobGriefing = ${val}`, 'system');
+      }
+
+      // 5. Disable Fire Spread
+      if (this.activeConfig.disableFireSpread !== undefined) {
+        const val = this.activeConfig.disableFireSpread ? 'false' : 'true';
+        this.sendCommand(`gamerule doFireTick ${val}`);
+        this.emitLog(`[DukeCraftora] Applied gamerule: doFireTick = ${val}`, 'system');
+      }
+    }, 1500);
   }
 
   /**

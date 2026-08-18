@@ -127,13 +127,13 @@ export const PluginsTab: React.FC = () => {
 
   const renderIcon = (iconName: string) => {
     switch (iconName) {
-      case 'UserCheck': return <UserCheck className="w-5 h-5 text-amber-400" />;
-      case 'Smartphone': return <Smartphone className="w-5 h-5 text-cyan-400" />;
+      case 'UserCheck': return <UserCheck className="w-5 h-5 text-emerald-400" />;
+      case 'Smartphone': return <Smartphone className="w-5 h-5 text-emerald-400" />;
       case 'Layers': return <Layers className="w-5 h-5 text-emerald-400" />;
-      case 'History': return <History className="w-5 h-5 text-violet-400" />;
-      case 'Shield': return <Shield className="w-5 h-5 text-blue-400" />;
+      case 'History': return <History className="w-5 h-5 text-emerald-400" />;
+      case 'Shield': return <Shield className="w-5 h-5 text-emerald-400" />;
       case 'Wrench': return <Wrench className="w-5 h-5 text-emerald-400" />;
-      case 'Zap': return <Zap className="w-5 h-5 text-amber-400" />;
+      case 'Zap': return <Zap className="w-5 h-5 text-emerald-400" />;
       case 'Lock': return <Lock className="w-5 h-5 text-red-400" />;
       default: return <Puzzle className="w-5 h-5 text-emerald-400" />;
     }
@@ -159,7 +159,7 @@ export const PluginsTab: React.FC = () => {
           </div>
         </div>
 
-        <span className="text-xs font-semibold px-3 py-1.5 bg-emerald-950/60 text-emerald-300 rounded-lg border border-emerald-500/30">
+        <span className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 text-emerald-300 rounded-lg border border-emerald-500/20">
           {installed.length} Installed Plugins
         </span>
       </div>
@@ -197,7 +197,7 @@ export const PluginsTab: React.FC = () => {
 
                 <div className="pt-2 border-t border-white/5">
                   {alreadyInstalled ? (
-                    <div className="flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-950/60 py-2 rounded-lg border border-emerald-500/30">
+                    <div className="flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 py-2 rounded-lg border border-emerald-500/20">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Installed</span>
                     </div>

@@ -7,6 +7,7 @@ import {
   Shield,
   Layers,
   Zap,
+  Lock,
   Globe2,
   Puzzle,
   Swords,
@@ -18,8 +19,14 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Compass,
+  Moon,
+  Flame,
+  ShieldAlert,
+  PackageCheck
 } from 'lucide-react';
+import { PlayItIcon, JavaIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { useNetwork } from '../../context/NetworkContext';
 import { useDialog } from '../../context/DialogContext';
@@ -34,7 +41,7 @@ type WizardStep = 'basic' | 'performance' | 'crossplay' | 'cracked' | 'network' 
 
 export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, onClose }) => {
   const { servers, createServer, isDownloading, downloadProgress, javaRuntimes, refreshServers } = useServer();
-  const { saveNgrokToken, ngrokStatus } = useNetwork();
+  const { upnpStatus } = useNetwork();
   const { showAlert } = useDialog();
 
   const [currentStep, setCurrentStep] = useState<WizardStep>('basic');
@@ -51,27 +58,31 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   ]);
   const [loadingVersions, setLoadingVersions] = useState(false);
 
-  // 2. Performance & RAM
+  // 2. RAM & Performance
   const [ramGb, setRamGb] = useState(4);
   const [useAikarFlags, setUseAikarFlags] = useState(true);
-  const [selectedJava, setSelectedJava] = useState(javaRuntimes[0]?.path || 'java');
+  const [selectedJava, setSelectedJava] = useState<string>('');
 
   // 3. Cross-Play (GeyserMC)
   const [enableCrossplay, setEnableCrossplay] = useState(true);
   const [bedrockPort, setBedrockPort] = useState(19132);
   const [authType, setAuthType] = useState<'floodgate' | 'online' | 'offline'>('floodgate');
 
-  // 4. Cracked & Gameplay Settings
+  // 4. Gameplay Rules & Features
   const [isCracked, setIsCracked] = useState(false);
+  const [keepInventory, setKeepInventory] = useState(true);
+  const [showCoordinates, setShowCoordinates] = useState(true);
+  const [onePlayerSleep, setOnePlayerSleep] = useState(true);
+  const [disableMobGriefing, setDisableMobGriefing] = useState(false);
+  const [disableFireSpread, setDisableFireSpread] = useState(false);
   const [difficulty, setDifficulty] = useState('normal');
   const [gamemode, setGamemode] = useState('survival');
   const [pvp, setPvp] = useState(true);
   const [maxPlayers, setMaxPlayers] = useState(20);
   const [motd, setMotd] = useState('A DukeCraftora Minecraft Server');
 
-  // 5. Network Sharing (Two options: Ngrok + Lan, Only Lan)
-  const [networkMode, setNetworkMode] = useState<NetworkMode>('ngrok_lan');
-  const [ngrokToken, setNgrokToken] = useState(ngrokStatus.authToken || '');
+  // 5. Network Sharing (Cloud Relay, Direct UPnP, Only LAN)
+  const [networkMode, setNetworkMode] = useState<NetworkMode>('cloud_relay');
 
   // 6. Pre-installed Plugins
   const [selectedPlugins, setSelectedPlugins] = useState<string[]>(['skinsrestorer', 'viaversion']);
@@ -106,10 +117,21 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       setUseAikarFlags(true);
       setEnableCrossplay(true);
       setIsCracked(false);
-      setNetworkMode('ngrok_lan');
+      setKeepInventory(true);
+      setShowCoordinates(true);
+      setOnePlayerSleep(true);
+      setDisableMobGriefing(false);
+      setDisableFireSpread(false);
+      setNetworkMode('cloud_relay');
       setSelectedPlugins(['skinsrestorer', 'viaversion']);
     }
   }, [isOpen, servers]);
+
+  useEffect(() => {
+    if (!upnpStatus.isSupported && networkMode === 'upnp') {
+      setNetworkMode('cloud_relay');
+    }
+  }, [upnpStatus.isSupported, networkMode]);
 
   useEffect(() => {
     const fetchVersions = async () => {
@@ -145,11 +167,6 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
     try {
       const cleanId = name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
 
-      // 1. Save ngrok token if entered
-      if (networkMode === 'ngrok_lan' && ngrokToken.trim()) {
-        await saveNgrokToken(ngrokToken.trim());
-      }
-
       setCreationStatus({
         step: 'Downloading Server Core',
         percent: 10,
@@ -166,7 +183,12 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
         useAikarFlags,
         port: 25565,
         isCracked,
-        networkMode
+        networkMode,
+        keepInventory,
+        showCoordinates,
+        onePlayerSleep,
+        disableMobGriefing,
+        disableFireSpread
       });
 
       // 3. Configure properties
@@ -399,7 +421,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-slate-300">Minecraft Version</label>
                   {version.startsWith('26') && (
-                    <span className="text-[10px] text-cyan-400 font-mono">Requires Java 25 (auto-handled)</span>
+                    <span className="text-[10px] text-emerald-400 font-mono">Requires Java 25 (auto-handled)</span>
                   )}
                 </div>
                 <select
@@ -467,11 +489,14 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
               {/* Java Version */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Java Runtime</label>
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <JavaIcon className="w-4 h-4" />
+                  <span>Java Runtime Environment</span>
+                </label>
                 <select
                   value={selectedJava}
                   onChange={(e) => setSelectedJava(e.target.value)}
-                  className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
                 >
                   {javaRuntimes.map((j) => (
                     <option key={j.path} value={j.path}>
@@ -486,9 +511,9 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {/* STEP 3: Cross-Play (GeyserMC) */}
           {currentStep === 'crossplay' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-obsidian-950/60 rounded-xl border border-cyan-500/30">
+              <div className="flex items-center justify-between p-4 bg-obsidian-950/60 rounded-xl border border-white/10">
                 <div className="flex items-center gap-3">
-                  <Smartphone className="w-5 h-5 text-cyan-400" />
+                  <Smartphone className="w-5 h-5 text-emerald-400" />
                   <div>
                     <span className="text-xs font-bold text-white block">Enable GeyserMC + Floodgate</span>
                     <span className="text-[10px] text-slate-400">Bedrock (mobile, console, Windows 10/11) players can join</span>
@@ -498,7 +523,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   type="checkbox"
                   checked={enableCrossplay}
                   onChange={(e) => setEnableCrossplay(e.target.checked)}
-                  className="w-4 h-4 accent-cyan-400 cursor-pointer"
+                  className="w-4 h-4 accent-emerald-500 cursor-pointer"
                 />
               </div>
 
@@ -531,62 +556,179 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             </div>
           )}
 
-          {/* STEP 4: Cracked & Gameplay */}
+          {/* STEP 4: Gameplay Rules & Features */}
           {currentStep === 'cracked' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-obsidian-950/60 rounded-xl border border-amber-500/30">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-amber-400" />
-                  <div>
-                    <span className="text-xs font-bold text-white block">Cracked (Offline Mode) Support</span>
-                    <span className="text-[10px] text-slate-400">Allows non-premium accounts + auto SkinsRestorer</span>
+              {/* Gameplay Gamerules Section */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Popular Gameplay Enhancements
+                </span>
+                
+                <div className="grid grid-cols-1 gap-2.5">
+                  {/* Keep Inventory */}
+                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <PackageCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Keep Inventory on Death</span>
+                        <span className="text-[10px] text-slate-400">Never lose items, tools, armor, or XP upon dying</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={keepInventory}
+                      onChange={(e) => setKeepInventory(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Show Coordinates */}
+                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <Compass className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Show Coordinates HUD</span>
+                        <span className="text-[10px] text-slate-400">Live on-screen X, Y, Z coordinates for Bedrock & Java players</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={showCoordinates}
+                      onChange={(e) => setShowCoordinates(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* 1-Player Sleep */}
+                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <Moon className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Instant 1-Player Sleep</span>
+                        <span className="text-[10px] text-slate-400">Only 1 player needs to sleep in bed to skip the night</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={onePlayerSleep}
+                      onChange={(e) => setOnePlayerSleep(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Disable Mob Griefing */}
+                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <ShieldAlert className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Anti-Creeper / Mob Griefing</span>
+                        <span className="text-[10px] text-slate-400">Prevent Creeper explosions and Endermen from breaking blocks</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={disableMobGriefing}
+                      onChange={(e) => setDisableMobGriefing(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Disable Fire Spread */}
+                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <Flame className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Disable Fire Spread</span>
+                        <span className="text-[10px] text-slate-400">Prevent accidental fires from burning down wooden builds</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={disableFireSpread}
+                      onChange={(e) => setDisableFireSpread(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    />
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={isCracked}
-                  onChange={(e) => setIsCracked(e.target.checked)}
-                  className="w-4 h-4 accent-amber-500 cursor-pointer"
-                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Difficulty</label>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                    className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white"
-                  >
-                    <option value="peaceful">Peaceful</option>
-                    <option value="easy">Easy</option>
-                    <option value="normal">Normal</option>
-                    <option value="hard">Hard</option>
-                  </select>
+              {/* Launcher Access & World Defaults */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Launcher Access & World Defaults
+                </span>
+
+                <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-white block">Cracked (Offline Mode) Support</span>
+                      <span className="text-[10px] text-slate-400">Allows non-premium accounts (TLauncher, SKLauncher, Prism) + auto SkinsRestorer</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isCracked}
+                    onChange={(e) => setIsCracked(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Difficulty</label>
+                    <select
+                      value={difficulty}
+                      onChange={(e) => setDifficulty(e.target.value)}
+                      className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white"
+                    >
+                      <option value="peaceful">Peaceful</option>
+                      <option value="easy">Easy</option>
+                      <option value="normal">Normal</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Gamemode</label>
+                    <select
+                      value={gamemode}
+                      onChange={(e) => setGamemode(e.target.value)}
+                      className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white"
+                    >
+                      <option value="survival">Survival</option>
+                      <option value="creative">Creative</option>
+                      <option value="adventure">Adventure</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <Swords className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-white block">PvP (Player vs Player)</span>
+                      <span className="text-[10px] text-slate-400">Allow players to attack and damage each other</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={pvp}
+                    onChange={(e) => setPvp(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Gamemode</label>
-                  <select
-                    value={gamemode}
-                    onChange={(e) => setGamemode(e.target.value)}
+                  <label className="text-xs font-semibold text-slate-300">Server MOTD</label>
+                  <input
+                    type="text"
+                    value={motd}
+                    onChange={(e) => setMotd(e.target.value)}
                     className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white"
-                  >
-                    <option value="survival">Survival</option>
-                    <option value="creative">Creative</option>
-                    <option value="adventure">Adventure</option>
-                  </select>
+                  />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Server MOTD</label>
-                <input
-                  type="text"
-                  value={motd}
-                  onChange={(e) => setMotd(e.target.value)}
-                  className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white"
-                />
               </div>
             </div>
           )}
@@ -601,31 +743,30 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 </p>
               </div>
 
-              {/* 2 Simple Options */}
               <div className="grid grid-cols-1 gap-3">
-                {/* Option 1: Ngrok + Lan */}
+                {/* Option 1: PlayIt.gg Tunnel */}
                 <div
-                  onClick={() => setNetworkMode('ngrok_lan')}
+                  onClick={() => setNetworkMode('cloud_relay')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                    networkMode === 'ngrok_lan'
+                    networkMode === 'cloud_relay'
                       ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
                       : 'bg-obsidian-900 border-white/5 hover:border-white/15'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg ${networkMode === 'ngrok_lan' ? 'bg-emerald-500 text-obsidian-950' : 'bg-white/5 text-emerald-400'}`}>
-                        <Globe2 className="w-4 h-4" />
+                      <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm shrink-0">
+                        <PlayItIcon className="w-9 h-9 rounded-lg" />
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-white">Ngrok + LAN</strong>
-                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                            Internet Play (Recommended)
+                          <strong className="text-xs font-bold text-white">PlayIt.gg Tunnel (Recommended)</strong>
+                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                            Universal Internet Play
                           </span>
                         </div>
                         <p className="text-xs text-slate-400">
-                          Play online with friends anywhere over the internet. No router port-forwarding needed.
+                          Play online with friends worldwide. Bypasses CGNAT & strict firewalls with zero router port forwarding.
                         </p>
                       </div>
                     </div>
@@ -633,14 +774,78 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     <input
                       type="radio"
                       name="networkMode"
-                      checked={networkMode === 'ngrok_lan'}
-                      onChange={() => setNetworkMode('ngrok_lan')}
+                      checked={networkMode === 'cloud_relay'}
+                      onChange={() => setNetworkMode('cloud_relay')}
                       className="mt-1 w-4 h-4 accent-emerald-500 cursor-pointer"
                     />
                   </div>
                 </div>
 
-                {/* Option 2: Only Lan */}
+                {/* Option 2: Direct UPnP */}
+                <div
+                  onClick={() => {
+                    if (upnpStatus.isSupported) {
+                      setNetworkMode('upnp');
+                    }
+                  }}
+                  className={`p-4 rounded-xl border transition-all ${
+                    !upnpStatus.isSupported
+                      ? 'bg-obsidian-950/60 border-red-500/20 opacity-60 cursor-not-allowed'
+                      : networkMode === 'upnp'
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 cursor-pointer'
+                      : 'bg-obsidian-900 border-white/5 hover:border-white/15 cursor-pointer'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          !upnpStatus.isSupported
+                            ? 'bg-red-500/10 text-red-400'
+                            : networkMode === 'upnp'
+                            ? 'bg-emerald-500 text-obsidian-950'
+                            : 'bg-white/5 text-emerald-400'
+                        }`}
+                      >
+                        {!upnpStatus.isSupported ? <Lock className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-xs font-bold text-white">Direct UPnP Port Forward</strong>
+                          {upnpStatus.isSupported ? (
+                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                              0ms Added Ping
+                            </span>
+                          ) : (
+                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-red-950/80 text-red-400 border border-red-500/30">
+                              Unsupported by Gateway
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400">
+                          {upnpStatus.isSupported
+                            ? 'Direct connection via automated router port mapping (lowest latency).'
+                            : 'Your local network gateway or ISP does not support UPnP IGD automatic port mapping. Please select PlayIt.gg Tunnel or Local LAN.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <input
+                      type="radio"
+                      name="networkMode"
+                      disabled={!upnpStatus.isSupported}
+                      checked={networkMode === 'upnp'}
+                      onChange={() => {
+                        if (upnpStatus.isSupported) setNetworkMode('upnp');
+                      }}
+                      className={`mt-1 w-4 h-4 accent-emerald-500 ${
+                        !upnpStatus.isSupported ? 'cursor-not-allowed opacity-30' : 'cursor-pointer'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Option 3: Only Lan */}
                 <div
                   onClick={() => setNetworkMode('lan_only')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
@@ -651,12 +856,12 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg ${networkMode === 'lan_only' ? 'bg-emerald-500 text-obsidian-950' : 'bg-white/5 text-slate-400'}`}>
+                      <div className={`p-2 rounded-lg ${networkMode === 'lan_only' ? 'bg-emerald-500 text-obsidian-950' : 'bg-white/5 text-slate-300'}`}>
                         <Radio className="w-4 h-4" />
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-white">Only LAN</strong>
+                          <strong className="text-xs font-bold text-white">Only Local LAN</strong>
                           <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/50">
                             Offline / Same Wi-Fi
                           </span>
@@ -677,39 +882,6 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   </div>
                 </div>
               </div>
-
-              {/* Contextual token input if ngrok */}
-              {networkMode === 'ngrok_lan' && (
-                <div className="p-3 bg-obsidian-950 rounded-xl border border-cyan-500/30 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
-                      <Key className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>ngrok Authtoken (Optional)</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = 'https://dashboard.ngrok.com/get-started/your-authtoken';
-                        if (window.electronAPI?.openExternal) {
-                          window.electronAPI.openExternal(url);
-                        } else {
-                          window.open(url, '_blank');
-                        }
-                      }}
-                      className="text-[10px] text-cyan-400 hover:underline cursor-pointer bg-transparent border-0 p-0"
-                    >
-                      Get Free Token →
-                    </button>
-                  </div>
-                  <input
-                    type="password"
-                    value={ngrokToken}
-                    onChange={(e) => setNgrokToken(e.target.value)}
-                    placeholder="Paste your free ngrok token..."
-                    className="w-full px-3 py-2 bg-obsidian-900 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-              )}
             </div>
           )}
 

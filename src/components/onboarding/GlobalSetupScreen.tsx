@@ -1,69 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Download,
   CheckCircle2,
-  AlertTriangle,
-  Coffee,
   Layers,
   Plug,
   ArrowRight,
   Loader2,
-  Globe2,
   Sparkles,
   RefreshCw,
-  Zap,
-  Check,
-  ShieldCheck
+  Clock
 } from 'lucide-react';
+import { PlayItIcon, JavaIcon } from '../common/Icons';
+import { PlayitSetupScreen } from './PlayitSetupScreen';
 
 interface GlobalSetupScreenProps {
   onSetupComplete: () => void;
 }
 
 interface DepItem {
-  id: 'java' | 'ngrok' | 'papermc' | 'plugins';
+  id: 'java' | 'cloud_relay' | 'papermc' | 'plugins';
   name: string;
   description: string;
-  status: 'ready' | 'missing' | 'installing' | 'error';
+  status: 'ready' | 'missing' | 'installing' | 'queued' | 'error';
   progress: number;
   error?: string;
   details?: string;
 }
 
+const DEP_META: Record<DepItem['id'], { label: string; desc: string; readyLabel: string }> = {
+  java: {
+    label: 'Java Runtime',
+    desc: 'Required to run the Minecraft server. Downloaded once, used for all servers.',
+    readyLabel: 'Installed'
+  },
+  papermc: {
+    label: 'Minecraft Server',
+    desc: 'The core Minecraft server software (PaperMC). Saved to your workspace folder.',
+    readyLabel: 'Downloaded'
+  },
+  plugins: {
+    label: 'Server Plugins',
+    desc: 'Adds cross-play support for mobile & console players, plus skin support for all accounts.',
+    readyLabel: 'Downloaded'
+  },
+  cloud_relay: {
+    label: 'PlayIt.gg Tunnel',
+    desc: 'Lets friends join your server from anywhere over the internet, with no router setup needed.',
+    readyLabel: 'Downloaded'
+  }
+};
+
 export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupComplete }) => {
+  const [wizardStep, setWizardStep] = useState<'dependencies' | 'playit'>('dependencies');
+
   const [dependencies, setDependencies] = useState<DepItem[]>([
-    {
-      id: 'java',
-      name: 'Java 21 JRE Runtime',
-      description: 'Required engine to run modern Minecraft servers (1.20.5+)',
-      status: 'missing',
-      progress: 0
-    },
-    {
-      id: 'ngrok',
-      name: 'ngrok Cloud Tunnel Agent',
-      description: 'Zero-config tunnel client saved in workspace for free internet play',
-      status: 'missing',
-      progress: 0
-    },
-    {
-      id: 'papermc',
-      name: 'PaperMC 1.21.4 Server Core',
-      description: 'High-performance Minecraft server jar pre-cached in workspace',
-      status: 'missing',
-      progress: 0
-    },
-    {
-      id: 'plugins',
-      name: 'Essential Plugins (SkinsRestorer & Geyser Cross-Play)',
-      description: 'Bedrock iOS/Android/Xbox cross-play & player skins for cracked mode',
-      status: 'missing',
-      progress: 0
-    }
+    { id: 'java', name: DEP_META.java.label, description: DEP_META.java.desc, status: 'missing', progress: 0 },
+    { id: 'papermc', name: DEP_META.papermc.label, description: DEP_META.papermc.desc, status: 'missing', progress: 0 },
+    { id: 'plugins', name: DEP_META.plugins.label, description: DEP_META.plugins.desc, status: 'missing', progress: 0 },
+    { id: 'cloud_relay', name: DEP_META.cloud_relay.label, description: DEP_META.cloud_relay.desc, status: 'missing', progress: 0 }
   ]);
 
   const [isInstallingAll, setIsInstallingAll] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+
+  // Track last reported progress per item to prevent going backwards (race condition fix)
+  const lastProgressRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     checkAll();
@@ -74,11 +75,16 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         setDependencies((prev) =>
           prev.map((item) => {
             if (item.id === data.id) {
+              // Fix: only advance progress, never go backwards (prevents race condition flicker)
+              const lastPct = lastProgressRef.current[data.id] ?? 0;
+              const newPct = Math.max(lastPct, data.percent);
+              lastProgressRef.current[data.id] = newPct;
+
               return {
                 ...item,
-                progress: data.percent,
+                progress: newPct,
                 details: data.message || item.details,
-                status: data.percent >= 100 ? 'ready' : 'installing'
+                status: newPct >= 100 ? 'ready' : 'installing'
               };
             }
             return item;
@@ -97,7 +103,17 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     if (window.electronAPI?.checkSetupDependencies) {
       try {
         const results = await window.electronAPI.checkSetupDependencies();
-        setDependencies(results);
+        setDependencies(prev => {
+          return results.map((res: DepItem) => {
+            const existing = prev.find(p => p.id === res.id);
+            // Preserve 'queued' or 'installing' state if backend says missing
+            if (existing && (existing.status === 'queued' || existing.status === 'installing') && res.status !== 'ready') {
+              return { ...res, status: existing.status, details: existing.details, progress: existing.progress };
+            }
+            return res;
+          });
+        });
+
       } catch (e) {
         console.error('Error checking dependencies', e);
       }
@@ -105,68 +121,46 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
       // Browser preview fallback
       setTimeout(() => {
         setDependencies([
-          {
-            id: 'java',
-            name: 'Java 21 JRE Runtime',
-            description: 'Required engine to run modern Minecraft servers (1.20.5+)',
-            status: 'missing',
-            progress: 0
-          },
-          {
-            id: 'ngrok',
-            name: 'ngrok Cloud Tunnel Agent',
-            description: 'Zero-config tunnel client saved in workspace for free internet play',
-            status: 'missing',
-            progress: 0
-          },
-          {
-            id: 'papermc',
-            name: 'PaperMC 1.21.4 Server Core',
-            description: 'High-performance Minecraft server jar pre-cached in workspace',
-            status: 'missing',
-            progress: 0
-          },
-          {
-            id: 'plugins',
-            name: 'Essential Plugins (SkinsRestorer & Geyser Cross-Play)',
-            description: 'Bedrock iOS/Android/Xbox cross-play & player skins for cracked mode',
-            status: 'missing',
-            progress: 0
-          }
+          { id: 'java', name: DEP_META.java.label, description: DEP_META.java.desc, status: 'missing', progress: 0 },
+          { id: 'papermc', name: DEP_META.papermc.label, description: DEP_META.papermc.desc, status: 'missing', progress: 0 },
+          { id: 'plugins', name: DEP_META.plugins.label, description: DEP_META.plugins.desc, status: 'missing', progress: 0 },
+          { id: 'cloud_relay', name: DEP_META.cloud_relay.label, description: DEP_META.cloud_relay.desc, status: 'missing', progress: 0 }
         ]);
       }, 500);
     }
     setIsChecking(false);
   };
 
-  const handleInstallSingle = async (id: 'java' | 'ngrok' | 'papermc' | 'plugins') => {
+  const handleInstallSingle = async (id: DepItem['id']) => {
+    // Reset progress tracker for this item
+    lastProgressRef.current[id] = 0;
+
     setDependencies((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: 'installing', progress: 10, error: undefined } : item))
+      prev.map((item) => (item.id === id ? { ...item, status: 'installing', progress: 0, details: 'Starting...' } : item))
     );
 
     if (window.electronAPI?.installSetupDependency) {
       try {
         const success = await window.electronAPI.installSetupDependency(id);
-        if (id === 'java') {
-          // Check again after installer window opens
-          setTimeout(checkAll, 3000);
-        } else if (success) {
+        if (success) {
+          lastProgressRef.current[id] = 100;
           setDependencies((prev) =>
-            prev.map((item) => (item.id === id ? { ...item, status: 'ready', progress: 100 } : item))
+            prev.map((item) => (item.id === id ? { ...item, status: 'ready', progress: 100, details: DEP_META[id].readyLabel } : item))
+          );
+        } else {
+          setDependencies((prev) =>
+            prev.map((item) => (item.id === id ? { ...item, status: 'missing', progress: 0, details: 'Failed — try again' } : item))
           );
         }
-      } catch (err: any) {
+      } catch {
         setDependencies((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? { ...item, status: 'error', error: err.message || 'Failed to download dependency' }
-              : item
-          )
+          prev.map((item) => (item.id === id ? { ...item, status: 'error', progress: 0, details: 'Download error' } : item))
         );
       }
+      await checkAll();
     } else {
-      // Browser preview simulation
-      for (let p = 10; p <= 100; p += 30) {
+      // Mock for browser preview
+      for (let p = 10; p <= 100; p += 25) {
         await new Promise((r) => setTimeout(r, 200));
         setDependencies((prev) =>
           prev.map((item) => (item.id === id ? { ...item, progress: Math.min(100, p) } : item))
@@ -182,6 +176,13 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     setIsInstallingAll(true);
     const missing = dependencies.filter((d) => d.status !== 'ready');
 
+    // Immediately mark all pending items as queued
+    setDependencies((prev) =>
+      prev.map((item) =>
+        item.status !== 'ready' ? { ...item, status: 'queued', details: 'In queue...' } : item
+      )
+    );
+
     for (const dep of missing) {
       await handleInstallSingle(dep.id);
     }
@@ -189,37 +190,47 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     await checkAll();
   };
 
-  const allReady = dependencies.every((d) => d.status === 'ready');
   const readyCount = dependencies.filter((d) => d.status === 'ready').length;
+  const allReady = readyCount === dependencies.length;
 
+  // Step 2: PlayIt.gg Setup
+  if (wizardStep === 'playit') {
+    return (
+      <PlayitSetupScreen
+        onBack={() => setWizardStep('dependencies')}
+        onComplete={onSetupComplete}
+      />
+    );
+  }
+
+  // Step 1: Download dependencies
   return (
     <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-y-auto max-h-screen">
       {/* Header */}
-      <div className="text-center mb-8 pt-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
+      <div className="text-center mb-6 pt-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Prerequisites & Pre-caching</span>
+          <span>Step 1 of 2 — Download Required Files</span>
         </div>
         <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
-          Setup Must-Needed Dependencies
+          Get Your Server Ready
         </h2>
         <p className="text-slate-400 text-sm max-w-2xl mx-auto">
-          DukeCraftora is pre-caching your required tools into your selected workspace so servers boot instantly without missing files.
+          Download the 4 components DukeCraftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
         </p>
       </div>
 
-      {/* Action bar */}
+      {/* Status Bar */}
       <div className="flex items-center justify-between bg-obsidian-900/60 p-4 rounded-2xl border border-white/10 mb-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold font-mono">
-            {readyCount}/4
-          </div>
           <div>
-            <h4 className="text-sm font-bold text-white">Prerequisites Status</h4>
+            <h4 className="text-sm font-bold text-white">
+              {allReady ? 'Everything is ready!' : `${4 - readyCount} item${4 - readyCount === 1 ? '' : 's'} left to download`}
+            </h4>
             <p className="text-xs text-slate-400">
               {allReady
-                ? 'All essential dependencies are installed and cached in your workspace!'
-                : `${4 - readyCount} item(s) pending installation`}
+                ? 'All components are downloaded and ready to use.'
+                : 'Click "Download All" to get everything at once.'}
             </p>
           </div>
         </div>
@@ -228,287 +239,179 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           <button
             onClick={checkAll}
             disabled={isChecking}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 transition"
+            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition cursor-pointer border border-white/5"
+            title="Refresh"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />
-            <span>Scan Again</span>
+            <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
           </button>
 
           {!allReady && (
             <button
               onClick={handleInstallAll}
-              disabled={isInstallingAll}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs transition cursor-pointer"
+              disabled={isInstallingAll || isChecking}
+              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-obsidian-950 font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
             >
               {isInstallingAll ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Installing All...</span>
-                </>
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  <span>Install All Missing</span>
-                </>
+                <Download className="w-4 h-4" />
               )}
+              <span>{isInstallingAll ? 'Downloading...' : 'Download All'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 4 Core Dependency Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {/* 1. Java Card */}
-        <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                <Coffee className="w-5 h-5" />
-              </div>
-              {dependencies.find((d) => d.id === 'java')?.status === 'ready' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Ready
-                </span>
-              ) : dependencies.find((d) => d.id === 'java')?.status === 'installing' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-500/30">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Installing
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
-                  Needs Install
-                </span>
-              )}
-            </div>
+      {/* Dependency Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Java */}
+        <DepCard
+          id="java"
+          icon={<JavaIcon className="w-9 h-9" />}
+          dep={dependencies.find((d) => d.id === 'java')!}
+          meta={DEP_META.java}
+          onInstall={() => handleInstallSingle('java')}
+          buttonLabel="Download Java"
+        />
 
-            <h3 className="text-base font-bold text-white">Java 21/25 JRE Runtime</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Required by modern Minecraft and PaperMC server engines.
-            </p>
-          </div>
+        {/* PaperMC */}
+        <DepCard
+          id="papermc"
+          icon={<Layers className="w-8 h-8 text-emerald-400" />}
+          dep={dependencies.find((d) => d.id === 'papermc')!}
+          meta={DEP_META.papermc}
+          onInstall={() => handleInstallSingle('papermc')}
+          buttonLabel="Download Server"
+        />
 
-          {dependencies.find((d) => d.id === 'java')?.status === 'installing' && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Downloading installer...</span>
-                <span>{dependencies.find((d) => d.id === 'java')?.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
-                  style={{ width: `${dependencies.find((d) => d.id === 'java')?.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
+        {/* Plugins */}
+        <DepCard
+          id="plugins"
+          icon={<Plug className="w-8 h-8 text-emerald-400" />}
+          dep={dependencies.find((d) => d.id === 'plugins')!}
+          meta={DEP_META.plugins}
+          onInstall={() => handleInstallSingle('plugins')}
+          buttonLabel="Download Plugins"
+        />
 
-          {dependencies.find((d) => d.id === 'java')?.status !== 'ready' &&
-            dependencies.find((d) => d.id === 'java')?.status !== 'installing' && (
-              <button
-                onClick={() => handleInstallSingle('java')}
-                className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download & Install Java</span>
-              </button>
-            )}
-        </div>
-
-        {/* 2. Ngrok Card */}
-        <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                <Globe2 className="w-5 h-5" />
-              </div>
-              {dependencies.find((d) => d.id === 'ngrok')?.status === 'ready' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Ready
-                </span>
-              ) : dependencies.find((d) => d.id === 'ngrok')?.status === 'installing' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-500/30">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Downloading
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
-                  Needs Download
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-base font-bold text-white">ngrok Cloud Tunnel Agent</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Provides free 1-click internet sharing without router port forwarding.
-            </p>
-          </div>
-
-          {dependencies.find((d) => d.id === 'ngrok')?.status === 'installing' && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Saving to workspace bin/ngrok.exe...</span>
-                <span>{dependencies.find((d) => d.id === 'ngrok')?.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
-                  style={{ width: `${dependencies.find((d) => d.id === 'ngrok')?.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {dependencies.find((d) => d.id === 'ngrok')?.status !== 'ready' &&
-            dependencies.find((d) => d.id === 'ngrok')?.status !== 'installing' && (
-              <button
-                onClick={() => handleInstallSingle('ngrok')}
-                className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Pre-cache ngrok</span>
-              </button>
-            )}
-        </div>
-
-        {/* 3. PaperMC Server Core */}
-        <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                <Layers className="w-5 h-5" />
-              </div>
-              {dependencies.find((d) => d.id === 'papermc')?.status === 'ready' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Pre-cached
-                </span>
-              ) : dependencies.find((d) => d.id === 'papermc')?.status === 'installing' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-500/30">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Downloading
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
-                  Needs Download
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-base font-bold text-white">PaperMC Server Core</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              High-performance Minecraft engine for paper servers.
-            </p>
-          </div>
-
-          {dependencies.find((d) => d.id === 'papermc')?.status === 'installing' && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Saving to workspace downloads/...</span>
-                <span>{dependencies.find((d) => d.id === 'papermc')?.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
-                  style={{ width: `${dependencies.find((d) => d.id === 'papermc')?.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {dependencies.find((d) => d.id === 'papermc')?.status !== 'ready' &&
-            dependencies.find((d) => d.id === 'papermc')?.status !== 'installing' && (
-              <button
-                onClick={() => handleInstallSingle('papermc')}
-                className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Pre-cache PaperMC</span>
-              </button>
-            )}
-        </div>
-
-        {/* 4. Essential Plugins */}
-        <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                <Plug className="w-5 h-5" />
-              </div>
-              {dependencies.find((d) => d.id === 'plugins')?.status === 'ready' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Plugins Cached
-                </span>
-              ) : dependencies.find((d) => d.id === 'plugins')?.status === 'installing' ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-500/30">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Downloading
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
-                  Needs Download
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-base font-bold text-white">Essential Plugins (Skins, Geyser)</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Caches SkinsRestorer, GeyserMC, and Floodgate jars in workspace.
-            </p>
-          </div>
-
-          {dependencies.find((d) => d.id === 'plugins')?.status === 'installing' && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Downloading plugin jars...</span>
-                <span>{dependencies.find((d) => d.id === 'plugins')?.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
-                  style={{ width: `${dependencies.find((d) => d.id === 'plugins')?.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {dependencies.find((d) => d.id === 'plugins')?.status !== 'ready' &&
-            dependencies.find((d) => d.id === 'plugins')?.status !== 'installing' && (
-              <button
-                onClick={() => handleInstallSingle('plugins')}
-                className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Pre-cache Essential Plugins</span>
-              </button>
-            )}
-        </div>
+        {/* PlayIt.gg */}
+        <DepCard
+          id="cloud_relay"
+          icon={<PlayItIcon className="w-11 h-11 rounded-xl" />}
+          iconPadding="p-1.5"
+          dep={dependencies.find((d) => d.id === 'cloud_relay')!}
+          meta={DEP_META.cloud_relay}
+          onInstall={() => handleInstallSingle('cloud_relay')}
+          buttonLabel="Download Tunnel"
+        />
       </div>
 
-      {/* Completion button */}
-      <div className="mt-auto flex justify-center pb-8">
+      {/* Footer CTA */}
+      <div className="flex items-center justify-end pt-2 border-t border-white/10 mt-auto">
         <button
-          onClick={onSetupComplete}
+          type="button"
           disabled={!allReady}
-          className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-xs transition-all ${
-            allReady
-              ? 'bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 cursor-pointer'
-              : 'bg-zinc-800 text-slate-500 cursor-not-allowed border border-white/5 opacity-60'
+          onClick={() => setWizardStep('playit')}
+          className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
+            allReady 
+              ? 'bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 cursor-pointer' 
+              : 'bg-emerald-500/20 text-emerald-500/50 cursor-not-allowed'
           }`}
         >
-          {allReady ? (
-            <>
-              <ShieldCheck className="w-4 h-4" />
-              <span>Finish Setup & Go to Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
-            </>
-          ) : (
-            <span>Install Must-Needed Dependencies to Continue</span>
-          )}
+          <span>Continue</span>
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
+    </div>
+  );
+};
+
+// ─── Reusable Dependency Card ───────────────────────────────────────────────
+
+interface DepCardProps {
+  id: DepItem['id'];
+  icon: React.ReactNode;
+  iconPadding?: string;
+  dep: DepItem;
+  meta: { label: string; desc: string; readyLabel: string };
+  onInstall: () => void;
+  buttonLabel: string;
+}
+
+const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, meta, onInstall, buttonLabel }) => {
+  return (
+    <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 flex flex-col justify-between space-y-4">
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <div className={`w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center ${iconPadding} shadow-md shrink-0`}>
+            {icon}
+          </div>
+
+          {dep.status === 'ready' ? (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {meta.readyLabel}
+            </span>
+          ) : dep.status === 'installing' ? (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-300 bg-white/5 px-2.5 py-1 rounded border border-white/10">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+              Downloading
+            </span>
+          ) : dep.status === 'queued' ? (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-950/40 px-2.5 py-1 rounded border border-amber-500/30">
+              <Clock className="w-3.5 h-3.5" />
+              In Queue
+            </span>
+          ) : dep.status === 'error' ? (
+            <span className="text-[11px] font-semibold text-red-300 bg-red-950/40 px-2.5 py-1 rounded border border-red-500/30">
+              Failed
+            </span>
+          ) : (
+            <span className="text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
+              Not Downloaded
+            </span>
+          )}
+        </div>
+
+        <h3 className="text-base font-bold text-white">{meta.label}</h3>
+        <p className="text-xs text-slate-400 mt-1 leading-relaxed">{meta.desc}</p>
+
+        {dep.details && dep.status !== 'ready' && dep.status !== 'missing' && dep.status !== 'queued' && (
+          <p className="text-[11px] text-slate-500 mt-1">{dep.details}</p>
+        )}
+      </div>
+
+      {dep.status === 'installing' && (
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-[11px] text-slate-400">
+            <span>{dep.details || 'Downloading...'}</span>
+            <span>{dep.progress}%</span>
+          </div>
+          <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+              style={{ width: `${dep.progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {dep.status === 'queued' && (
+        <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
+          <div className="h-full bg-amber-500/40 rounded-full w-full animate-pulse" />
+        </div>
+      )}
+
+      {/* Only show download button for truly idle/errored items, NOT queued ones */}
+      {(dep.status === 'missing' || dep.status === 'error') && (
+        <button
+          onClick={onInstall}
+          className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Download className="w-4 h-4" />
+          <span>{buttonLabel}</span>
+        </button>
+      )}
     </div>
   );
 };

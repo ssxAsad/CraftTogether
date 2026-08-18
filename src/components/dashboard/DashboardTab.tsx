@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Square,
@@ -13,8 +13,12 @@ import {
   Smartphone,
   ShieldAlert,
   ArrowUpRight,
-  FolderOpen
+  FolderOpen,
+  Loader2,
+  Sparkles,
+  Power
 } from 'lucide-react';
+import { PlayItIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { useNetwork } from '../../context/NetworkContext';
 import confetti from 'canvas-confetti';
@@ -25,7 +29,17 @@ interface DashboardTabProps {
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => {
   const { activeServer, status, metrics, startServer, stopServer, killServer } = useServer();
-  const { ngrokStatus, localIp } = useNetwork();
+  const {
+    cloudTunnelStatus,
+    upnpStatus,
+    localIp,
+    publicIp,
+    startCloudTunnel,
+    stopCloudTunnel,
+    startUpnp,
+    stopUpnp,
+    isLoadingNetwork
+  } = useNetwork();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [bedrockPort, setBedrockPort] = useState<number>(19132);
 
@@ -43,16 +57,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
     if (activeServer?.networkMode === 'lan_only') {
       return localIp;
     }
-    if (activeServer?.networkMode === 'ngrok_lan') {
-      if (ngrokStatus.publicUrl) {
-        return ngrokStatus.publicUrl.replace('tcp://', '').split(':')[0];
-      }
-      return localIp;
+    if (activeServer?.networkMode === 'upnp') {
+      return publicIp || upnpStatus.externalIp || localIp;
+    }
+    if (cloudTunnelStatus.serverAddress) {
+      return cloudTunnelStatus.serverAddress.split(':')[0];
     }
     return localIp;
   };
 
   const bedrockIp = getBedrockIp();
+
+  const prevStatusRef = useRef(status);
+
+  useEffect(() => {
+    if (prevStatusRef.current === 'STARTING' && status === 'ONLINE') {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.8 }
+      });
+    }
+    prevStatusRef.current = status;
+  }, [status]);
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -61,14 +88,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
   };
 
   const handleStart = async () => {
-    const ok = await startServer();
-    if (ok) {
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 }
-      });
-    }
+    await startServer();
   };
 
   const formatUptime = (seconds: number) => {
@@ -94,7 +114,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   status === 'ONLINE'
                     ? 'bg-emerald-500'
                     : status === 'STARTING'
-                    ? 'bg-amber-400 animate-pulse'
+                    ? 'bg-emerald-400 animate-pulse'
                     : 'bg-zinc-600'
                 }`}
               />
@@ -107,9 +127,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <span className={`text-[11px] font-semibold uppercase px-2 py-0.5 rounded border ${
                 activeServer?.networkMode === 'lan_only'
                   ? 'bg-zinc-800 text-zinc-300 border-zinc-700/50'
-                  : 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               }`}>
-                {activeServer?.networkMode === 'lan_only' ? 'Only LAN' : 'Ngrok + LAN'}
+                {activeServer?.networkMode === 'lan_only'
+                  ? 'Only LAN'
+                  : activeServer?.networkMode === 'upnp'
+                  ? 'Direct UPnP'
+                  : 'PlayIt.gg'}
               </span>
             </div>
 
@@ -123,7 +147,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 Default Port: <strong className="text-emerald-400 font-mono">{activeServer?.port || 25565}</strong>
               </span>
               {activeServer?.isCracked && (
-                <span className="px-2 py-0.5 rounded bg-amber-950/50 text-amber-300 border border-amber-500/30 text-[11px] font-medium">
+                <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10 text-[11px] font-medium">
                   Cracked Enabled
                 </span>
               )}
@@ -143,9 +167,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             ) : status === 'STARTING' ? (
               <button
                 disabled
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-xs animate-pulse cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/5 text-slate-300 border border-white/10 font-bold text-xs animate-pulse cursor-not-allowed"
               >
-                <RotateCw className="w-4 h-4 animate-spin" />
+                <RotateCw className="w-4 h-4 animate-spin text-emerald-400" />
                 <span>Starting Up...</span>
               </button>
             ) : (
@@ -181,11 +205,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="text-2xl font-black text-white font-mono">
             {metrics.cpu}%
           </div>
-          {/* Progress bar */}
+            {/* Progress bar */}
           <div className="w-full h-1.5 bg-obsidian-850 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
-                metrics.cpu > 80 ? 'bg-red-500' : metrics.cpu > 50 ? 'bg-amber-400' : 'bg-cyan-400'
+                metrics.cpu > 80 ? 'bg-red-500' : 'bg-emerald-500'
               }`}
               style={{ width: `${Math.min(metrics.cpu, 100)}%` }}
             />
@@ -204,7 +228,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="w-full h-1.5 bg-obsidian-850 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
-                ramPercent > 85 ? 'bg-red-500' : ramPercent > 65 ? 'bg-amber-400' : 'bg-emerald-400'
+                ramPercent > 85 ? 'bg-red-500' : 'bg-emerald-500'
               }`}
               style={{ width: `${ramPercent}%` }}
             />
@@ -215,7 +239,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">Server TPS</span>
-            <Activity className="w-4 h-4 text-violet-400" />
+            <Activity className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-white font-mono flex items-center gap-2">
             {status === 'ONLINE' ? metrics.tps.toFixed(1) : '--'}
@@ -225,7 +249,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           </div>
           <div className="w-full h-1.5 bg-obsidian-850 rounded-full overflow-hidden">
             <div
-              className="h-full bg-violet-400 transition-all duration-500"
+              className="h-full bg-emerald-500 transition-all duration-500"
               style={{ width: status === 'ONLINE' ? '100%' : '0%' }}
             />
           </div>
@@ -235,20 +259,20 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">Players</span>
-            <Users className="w-4 h-4 text-amber-400" />
+            <Users className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-white font-mono flex items-center justify-between">
             <span>{metrics.onlinePlayers} <span className="text-xs text-slate-400 font-sans font-normal">/ {metrics.maxPlayers}</span></span>
             <button
               onClick={() => onNavigateTab('players')}
-              className="text-xs text-amber-400 hover:underline flex items-center gap-0.5"
+              className="text-xs text-emerald-400 hover:underline flex items-center gap-0.5"
             >
               View <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
           <div className="w-full h-1.5 bg-obsidian-850 rounded-full overflow-hidden">
             <div
-              className="h-full bg-amber-400 transition-all duration-500"
+              className="h-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${(metrics.onlinePlayers / metrics.maxPlayers) * 100}%` }}
             />
           </div>
@@ -257,12 +281,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
 
       {/* Quick Join Addresses & Connectivity Widget based on active server's networkMode */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Card 1: Internet / Public Access (Ngrok) or Local Access (LAN) */}
+        {/* Card 1: Internet / Public Access (Cloud Relay / UPnP) or Local Access (LAN) */}
         {activeServer?.networkMode === 'lan_only' ? (
-          <div className="glass-card rounded-xl p-5 border border-violet-500/30 space-y-4">
+          <div className="glass-card rounded-xl p-5 border border-white/10 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-violet-500/20 text-violet-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                   <Wifi className="w-4 h-4" />
                 </div>
                 <div>
@@ -270,68 +294,190 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   <p className="text-xs text-slate-400">Offline network for friends on your same Wi-Fi</p>
                 </div>
               </div>
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-violet-950 text-violet-300 border border-violet-500/30">
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
                 LAN
               </span>
             </div>
 
-            <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-violet-500/30">
-              <span className="font-mono text-xs text-violet-300 font-semibold select-all truncate">
+            <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
+              <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
                 {localIp}:{activeServer?.port || 25565}
               </span>
               <button
                 onClick={() => handleCopy(`${localIp}:${activeServer?.port || 25565}`, 'lan-only-ip')}
-                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 rounded transition"
+                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition"
               >
                 {copiedKey === 'lan-only-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedKey === 'lan-only-ip' ? 'Copied' : 'Copy Local IP'}</span>
               </button>
             </div>
           </div>
-        ) : (
-          <div className="glass-card rounded-xl p-5 border border-cyan-500/30 space-y-4">
+        ) : null}
+        {activeServer?.networkMode !== 'lan_only' && (
+          <div className="glass-card rounded-xl p-5 border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                  <Wifi className="w-4 h-4" />
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm shrink-0">
+                  {activeServer?.networkMode === 'upnp' ? <Wifi className="w-6 h-6 text-emerald-400" /> : <PlayItIcon className="w-9 h-9 rounded-lg" />}
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-white">Ngrok Public Address</h2>
+                  <h2 className="text-sm font-bold text-white">
+                    {activeServer?.networkMode === 'upnp' ? 'Direct UPnP IP' : 'PlayIt.gg Tunnel'}
+                  </h2>
                   <p className="text-xs text-slate-400">Share with friends over the internet</p>
                 </div>
               </div>
               <span
-                className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                  ngrokStatus.isActive
-                    ? 'bg-cyan-950 text-cyan-400 border border-cyan-500/30'
-                    : 'bg-slate-800 text-slate-400'
+                className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                  (activeServer?.networkMode === 'upnp' ? upnpStatus.isActive : (cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE'))
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    : cloudTunnelStatus.status === 'WAITING_CLAIM'
+                    ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                    : cloudTunnelStatus.status === 'STARTING'
+                    ? 'bg-white/5 text-slate-300 border-white/10'
+                    : 'bg-white/5 text-slate-400 border-white/10'
                 }`}
               >
-                {ngrokStatus.isActive ? 'Active' : 'Offline'}
+                {activeServer?.networkMode === 'upnp'
+                  ? (upnpStatus.isActive ? 'Active' : 'Offline')
+                  : cloudTunnelStatus.status === 'ONLINE'
+                  ? 'Active'
+                  : cloudTunnelStatus.status === 'WAITING_CLAIM'
+                  ? 'Claim Needed'
+                  : cloudTunnelStatus.status === 'STARTING'
+                  ? 'Connecting...'
+                  : 'Offline'}
               </span>
             </div>
 
-            {ngrokStatus.isActive && ngrokStatus.serverAddress ? (
-              <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-cyan-500/30">
-                <span className="font-mono text-xs text-cyan-300 font-semibold select-all truncate">
-                  {ngrokStatus.serverAddress}
+            {activeServer?.networkMode === 'upnp' ? (
+              upnpStatus.isActive ? (
+                <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-emerald-500/30">
+                  <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
+                    {publicIp || upnpStatus.externalIp}:{activeServer.port || 25565}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activeServer.port || 25565}`, 'upnp-ip')}
+                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition cursor-pointer"
+                    >
+                      {copiedKey === 'upnp-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedKey === 'upnp-ip' ? 'Copied' : 'Copy'}</span>
+                    </button>
+                    <button
+                      onClick={() => stopUpnp()}
+                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
+                      title="Stop UPnP Port Mapping"
+                    >
+                      <span>Turn Off</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 bg-obsidian-950/40 p-3 rounded-lg border border-white/5 flex items-center justify-between">
+                  <span>UPnP port forwarding is offline.</span>
+                  <button
+                    onClick={() => startUpnp(activeServer?.port || 25565)}
+                    disabled={isLoadingNetwork}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    {isLoadingNetwork ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Power className="w-3.5 h-3.5" />
+                    )}
+                    <span>Turn On</span>
+                  </button>
+                </div>
+              )
+            ) : cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress ? (
+              <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-emerald-500/30">
+                <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
+                  {cloudTunnelStatus.serverAddress}
                 </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud')}
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition cursor-pointer"
+                  >
+                    {copiedKey === 'cloud' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cloud' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                  <button
+                    onClick={() => stopCloudTunnel()}
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
+                    title="Stop Tunnel"
+                  >
+                    <span>Turn Off</span>
+                  </button>
+                </div>
+              </div>
+            ) : cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'STARTING' ? (
+              <div className="flex items-center justify-between bg-obsidian-900 p-3 rounded-lg border border-white/10 text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400 shrink-0" />
+                  <span>Connecting to Playit.gg tunnel...</span>
+                </div>
                 <button
-                  onClick={() => handleCopy(ngrokStatus.serverAddress!, 'ngrok')}
-                  className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 rounded transition"
+                  onClick={() => stopCloudTunnel()}
+                  className="px-2.5 py-1 text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
                 >
-                  {copiedKey === 'ngrok' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedKey === 'ngrok' ? 'Copied' : 'Copy'}</span>
+                  Cancel
+                </button>
+              </div>
+            ) : cloudTunnelStatus.status === 'WAITING_CLAIM' && cloudTunnelStatus.claimUrl ? (
+              <div className="flex items-center justify-between bg-obsidian-900 p-3 rounded-lg border border-white/10 text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Free domain ready to claim</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.electronAPI?.openExternal) {
+                      window.electronAPI.openExternal(cloudTunnelStatus.claimUrl!);
+                    } else {
+                      window.open(cloudTunnelStatus.claimUrl!, '_blank');
+                    }
+                  }}
+                  className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded text-[11px] cursor-pointer"
+                >
+                  Claim Address →
+                </button>
+              </div>
+            ) : cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE' && !cloudTunnelStatus.serverAddress ? (
+              <div className="flex flex-col gap-2 bg-amber-950/20 p-3 rounded-lg border border-amber-500/20 text-xs">
+                <div className="flex items-center gap-2 text-amber-300">
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span className="font-semibold">Action Required: Tunnel Missing</span>
+                </div>
+                <p className="text-slate-400">Your agent is linked but needs a Minecraft tunnel.</p>
+                <button
+                  onClick={() => {
+                    if (window.electronAPI?.openExternal) {
+                      window.electronAPI.openExternal('https://playit.gg/account/tunnels');
+                    } else {
+                      window.open('https://playit.gg/account/tunnels', '_blank');
+                    }
+                  }}
+                  className="mt-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold rounded-lg self-start transition-all shadow-sm shadow-amber-500/10 cursor-pointer"
+                >
+                  Create Tunnel →
                 </button>
               </div>
             ) : (
               <div className="text-xs text-slate-400 bg-obsidian-950/40 p-3 rounded-lg border border-white/5 flex items-center justify-between">
-                <span>ngrok tunnel is not running.</span>
+                <span>Playit.gg tunnel is offline.</span>
                 <button
-                  onClick={() => onNavigateTab('network')}
-                  className="text-cyan-400 hover:underline font-medium"
+                  onClick={() => startCloudTunnel(activeServer?.port || 25565)}
+                  disabled={isLoadingNetwork}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
                 >
-                  Start in Network Tab →
+                  {isLoadingNetwork ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Power className="w-3.5 h-3.5" />
+                  )}
+                  <span>Turn On</span>
                 </button>
               </div>
             )}
