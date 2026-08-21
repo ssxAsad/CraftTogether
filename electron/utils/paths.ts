@@ -12,7 +12,7 @@ export class AppPaths {
   }
 
   static init(): void {
-    // Clean up any legacy DukeCraftora folders in Roaming
+    // Clean up any legacy Craftora folders in Roaming
     this.cleanUpRoamingFolders();
 
     // Read saved storage directory from workspace pointer
@@ -45,7 +45,7 @@ export class AppPaths {
   }
 
   /**
-   * Cleans up any DukeCraftora folders or server files created in the user's Roaming folder.
+   * Cleans up any Craftora folders or server files created in the user's Roaming folder.
    */
   static cleanUpRoamingFolders(): void {
     try {
@@ -53,7 +53,7 @@ export class AppPaths {
       const currentUserData = app ? app.getPath('userData') : '';
 
       if (appData) {
-        const legacyRoaming = path.join(appData, 'DukeCraftora');
+        const legacyRoaming = path.join(appData, 'Craftora');
         if (fs.existsSync(legacyRoaming) && path.resolve(legacyRoaming).toLowerCase() !== path.resolve(currentUserData).toLowerCase()) {
           try {
             fs.rmSync(legacyRoaming, { recursive: true, force: true });
@@ -62,8 +62,8 @@ export class AppPaths {
       }
 
       if (currentUserData && fs.existsSync(currentUserData)) {
-        // Clean up redundant nested DukeCraftora directory if present
-        const legacyNested = path.join(currentUserData, 'DukeCraftora');
+        // Clean up redundant nested Craftora directory if present
+        const legacyNested = path.join(currentUserData, 'Craftora');
         if (fs.existsSync(legacyNested)) {
           try {
             fs.rmSync(legacyNested, { recursive: true, force: true });
@@ -138,7 +138,7 @@ export class AppPaths {
     this.ensureDir(this.getDownloadsDir());
     this.ensureDir(this.getBackupsDir());
 
-    // Clean up any DukeCraftora folder in the user's Roaming directory
+    // Clean up any Craftora folder in the user's Roaming directory
     this.cleanUpRoamingFolders();
   }
 

@@ -13,6 +13,7 @@ export interface CloudTunnelStatus {
   status: 'STOPPED' | 'STARTING' | 'WAITING_CLAIM' | 'ONLINE' | 'ERROR';
   claimUrl: string | null;
   serverAddress: string | null;
+  bedrockAddress?: string | null;
   port: number;
   error?: string | null;
 }
@@ -27,6 +28,7 @@ export class PlayitService {
     status: 'STOPPED',
     claimUrl: null,
     serverAddress: null,
+    bedrockAddress: null,
     port: 25565,
     error: null
   };
@@ -494,55 +496,66 @@ export class PlayitService {
   /**
    * Queries playit.gg API for active public tunnel addresses.
    */
-  private static async queryPublicAddress(secretKey: string, port: number): Promise<{ isConnected: boolean, address: string | null }> {
+  private static async queryPublicAddress(secretKey: string, port: number): Promise<{ isConnected: boolean, address: string | null, bedrockAddress: string | null }> {
     try {
-      const checkRawJson = (rawJson: string): string | null => {
+      let address: string | null = null;
+      let bedrockAddress: string | null = null;
+
+      // 1. Check tunnels list
+      const listRes = await this.apiRequest('/tunnels/list', {}, secretKey);
+      if (listRes && listRes.status === 'success' && Array.isArray(listRes.data?.tunnels)) {
+        for (const tunnel of listRes.data.tunnels) {
+          const alloc = tunnel.alloc?.data;
+          if (!alloc) continue;
+          
+          const tunnelAddr = alloc.assigned_domain ? `${alloc.assigned_domain}:${alloc.port_start}` : null;
+          
+          if (tunnel.tunnel_type === 'minecraft-bedrock' || tunnel.port_type === 'udp' || (tunnel.origin?.data?.local_port === 19132)) {
+             bedrockAddress = tunnelAddr;
+          } else if (tunnel.tunnel_type === 'minecraft-java' || tunnel.port_type === 'tcp' || (tunnel.origin?.data?.local_port === 25565)) {
+             address = tunnelAddr;
+          }
+        }
+        
+        // If we found any valid address from list, we are good
+        if (address || bedrockAddress) {
+           return { isConnected: true, address, bedrockAddress };
+        }
+      }
+      
+      // Fallback to check raw agent run data if list didn't give what we want
+      const runRes = await this.apiRequest('/agents/rundata', {}, secretKey);
+      if (runRes && runRes.status === 'success') {
+        const rawJson = JSON.stringify(runRes);
         const addressMatch =
           rawJson.match(/([a-zA-Z0-9_\-]+\.craft\.ply\.gg(?::\d+)?)/i) ||
           rawJson.match(/([a-zA-Z0-9_\-]+\.tun\.ply\.gg(?::\d+)?)/i) ||
           rawJson.match(/([a-zA-Z0-9_\-]+\.ply\.gg:\d+)/i) ||
-          rawJson.match(/([a-zA-Z0-9_\-]+\.playit\.gg:\d+)/i) ||
-          rawJson.match(/"assigned_domain":"([^"]+)"/i) ||
-          rawJson.match(/"domain":"([^"]+)"/i) ||
-          rawJson.match(/"address":"([^"]+)"/i);
+          rawJson.match(/([a-zA-Z0-9_\-]+\.playit\.gg:\d+)/i);
 
         if (addressMatch && addressMatch[1]) {
-           let address = addressMatch[1].trim().replace(/^tcp:\/\//i, '');
-           if (address.includes('localhost') || address.includes('127.0.0.1')) return null;
-           
-           if (!address.includes(':')) {
-              const portMatch = rawJson.match(/"port_start":(\d+)/) || rawJson.match(/"port":(\d+)/);
-              if (portMatch && portMatch[1] && portMatch[1] !== '25565') {
-                 address = `${address}:${portMatch[1]}`;
+           let cleanAddress = addressMatch[1].trim().replace(/^tcp:\/\//i, '');
+           if (!cleanAddress.includes('localhost') && !cleanAddress.includes('127.0.0.1')) {
+              if (!cleanAddress.includes(':')) {
+                 const portMatch = rawJson.match(/"port_start":(\d+)/) || rawJson.match(/"port":(\d+)/);
+                 if (portMatch && portMatch[1]) {
+                    cleanAddress = `${cleanAddress}:${portMatch[1]}`;
+                 }
               }
+              address = cleanAddress;
+              return { isConnected: true, address, bedrockAddress };
            }
-           return address;
         }
-        return null;
-      };
-
-      let address = null;
-
-      // 1. Check tunnels list
-      const listRes = await this.apiRequest('/tunnels/list', {}, secretKey);
+      }
+      
+      // If API succeeded but no address was found, we are connected but waiting for tunnel
       if (listRes && listRes.status === 'success') {
-        address = checkRawJson(JSON.stringify(listRes));
-        if (address) return { isConnected: true, address };
-        
-        // 2. Check agent run data
-        const runRes = await this.apiRequest('/agents/rundata', {}, secretKey);
-        if (runRes && runRes.status === 'success') {
-          address = checkRawJson(JSON.stringify(runRes));
-          if (address) return { isConnected: true, address };
-        }
-        
-        // If API succeeded but no address was found, we are connected but waiting for tunnel
-        return { isConnected: true, address: null };
+         return { isConnected: true, address: null, bedrockAddress: null };
       }
     } catch (e) {
       logger.warn('Failed to query public tunnel address from API', e);
     }
-    return { isConnected: false, address: null };
+    return { isConnected: false, address: null, bedrockAddress: null };
   }
 
   /**
@@ -554,15 +567,16 @@ export class PlayitService {
     const checkAddress = async () => {
       const result = await this.queryPublicAddress(secretKey, port);
       if (result.isConnected) {
-        logger.info(`PlayIt.gg Agent authenticated. Address: ${result.address || 'none yet'}`);
+        logger.info(`PlayIt.gg Agent authenticated. Address: ${result.address || 'none yet'}, Bedrock: ${result.bedrockAddress || 'none yet'}`);
         this.updateStatus({
           status: 'ONLINE',
           serverAddress: result.address,
+          bedrockAddress: result.bedrockAddress,
           claimUrl: null,
           error: null
         });
         
-        if (result.address && this.tunnelQueryInterval) {
+        if ((result.address || result.bedrockAddress) && this.tunnelQueryInterval) {
           clearInterval(this.tunnelQueryInterval);
           this.tunnelQueryInterval = null;
         }

@@ -42,12 +42,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
   } = useNetwork();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [bedrockPort, setBedrockPort] = useState<number>(19132);
+  const [cloneRemotePort, setCloneRemotePort] = useState<boolean>(true);
 
   useEffect(() => {
     if (activeServer && window.electronAPI) {
       window.electronAPI.getGeyserConfig(activeServer.id).then((cfg: any) => {
-        if (cfg && cfg.bedrockPort) {
-          setBedrockPort(cfg.bedrockPort);
+        if (cfg) {
+          if (cfg.bedrockPort) setBedrockPort(cfg.bedrockPort);
+          if (cfg.cloneRemotePort !== undefined) setCloneRemotePort(cfg.cloneRemotePort);
         }
       }).catch(() => {});
     }
@@ -60,13 +62,34 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
     if (activeServer?.networkMode === 'upnp') {
       return publicIp || upnpStatus.externalIp || localIp;
     }
+    if (cloudTunnelStatus.bedrockAddress) {
+      return cloudTunnelStatus.bedrockAddress.split(':')[0];
+    }
     if (cloudTunnelStatus.serverAddress) {
       return cloudTunnelStatus.serverAddress.split(':')[0];
     }
     return localIp;
   };
 
+  const getDisplayBedrockPort = () => {
+    if (activeServer?.networkMode === 'cloud_relay') {
+      if (cloudTunnelStatus.bedrockAddress) {
+        const parts = cloudTunnelStatus.bedrockAddress.split(':');
+        if (parts.length > 1) {
+          return parseInt(parts[1], 10);
+        }
+      } else if (cloudTunnelStatus.serverAddress) {
+        const parts = cloudTunnelStatus.serverAddress.split(':');
+        if (parts.length > 1) {
+          return parseInt(parts[1], 10);
+        }
+      }
+    }
+    return cloneRemotePort ? (activeServer?.port || 25565) : bedrockPort;
+  };
+
   const bedrockIp = getBedrockIp();
+  const displayBedrockPort = getDisplayBedrockPort();
 
   const prevStatusRef = useRef(status);
 
@@ -119,7 +142,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 }`}
               />
               <h1 className="text-xl font-bold text-white tracking-tight">
-                {activeServer?.name || 'DukeCraftora Server'}
+                {activeServer?.name || 'Craftora Server'}
               </h1>
               <span className="text-xs uppercase font-semibold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
                 {activeServer?.serverSoftware.toUpperCase()} {activeServer?.version}
@@ -516,11 +539,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             <div className="bg-obsidian-950/80 p-2.5 rounded-lg border border-white/5 space-y-1">
               <span className="text-[10px] text-slate-400 uppercase font-bold">Port</span>
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-emerald-300 font-semibold font-mono">
-                  {bedrockPort}
+                <span className="font-mono text-xs text-emerald-300 font-semibold">
+                  {displayBedrockPort}
                 </span>
                 <button
-                  onClick={() => handleCopy(bedrockPort.toString(), 'bedrock-port')}
+                  onClick={() => handleCopy(displayBedrockPort.toString(), 'bedrock-port')}
                   className="text-slate-400 hover:text-white"
                   title="Copy Port"
                 >

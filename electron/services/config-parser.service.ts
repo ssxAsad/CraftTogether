@@ -33,7 +33,7 @@ export class ConfigParserService {
    */
   static acceptEula(serverDir: string): void {
     const eulaPath = path.join(serverDir, 'eula.txt');
-    const content = `# Minecraft EULA accepted via DukeCraftora\neula=true\n`;
+    const content = `# Minecraft EULA accepted via Craftora\neula=true\n`;
     fs.writeFileSync(eulaPath, content, 'utf-8');
     logger.info(`EULA accepted for server at: ${serverDir}`);
   }
@@ -46,7 +46,7 @@ export class ConfigParserService {
     const defaultProperties: ServerProperties = {
       'server-port': 25565,
       'online-mode': true,
-      'motd': 'A DukeCraftora Minecraft Server',
+      'motd': 'A Craftora Minecraft Server',
       'max-players': 20,
       'difficulty': 'normal',
       'gamemode': 'survival',
@@ -102,7 +102,7 @@ export class ConfigParserService {
     const merged = { ...current, ...updatedProps };
 
     const lines: string[] = [
-      '# Minecraft server properties - Managed by DukeCraftora',
+      '# Minecraft server properties - Managed by Craftora',
       `# Last updated: ${new Date().toISOString()}`
     ];
 

@@ -23,7 +23,7 @@ export const App: React.FC = () => {
           setIsSetupComplete(true);
         }
       } else {
-        const stored = localStorage.getItem('dukecraftora_setup_complete');
+        const stored = localStorage.getItem('craftora_setup_complete');
         setIsSetupComplete(stored === 'true');
       }
     };
@@ -32,7 +32,7 @@ export const App: React.FC = () => {
 
   const handleSetupComplete = async (chosenDirectory: string) => {
     if (!window.electronAPI) {
-      localStorage.setItem('dukecraftora_setup_complete', 'true');
+      localStorage.setItem('craftora_setup_complete', 'true');
     }
     setIsSetupComplete(true);
     await refreshServers();

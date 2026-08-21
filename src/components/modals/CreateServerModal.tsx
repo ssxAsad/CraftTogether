@@ -79,7 +79,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [gamemode, setGamemode] = useState('survival');
   const [pvp, setPvp] = useState(true);
   const [maxPlayers, setMaxPlayers] = useState(20);
-  const [motd, setMotd] = useState('A DukeCraftora Minecraft Server');
+  const [motd, setMotd] = useState('A Craftora Minecraft Server');
 
   // 5. Network Sharing (Cloud Relay, Direct UPnP, Only LAN)
   const [networkMode, setNetworkMode] = useState<NetworkMode>('cloud_relay');
@@ -567,7 +567,10 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 
                 <div className="grid grid-cols-1 gap-2.5">
                   {/* Keep Inventory */}
-                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div 
+                    onClick={() => setKeepInventory(!keepInventory)}
+                    className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
+                  >
                     <div className="flex items-center gap-3">
                       <PackageCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
@@ -579,12 +582,15 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="checkbox"
                       checked={keepInventory}
                       onChange={(e) => setKeepInventory(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
 
                   {/* Show Coordinates */}
-                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div 
+                    onClick={() => setShowCoordinates(!showCoordinates)}
+                    className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
+                  >
                     <div className="flex items-center gap-3">
                       <Compass className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
@@ -596,12 +602,15 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="checkbox"
                       checked={showCoordinates}
                       onChange={(e) => setShowCoordinates(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
 
                   {/* 1-Player Sleep */}
-                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div 
+                    onClick={() => setOnePlayerSleep(!onePlayerSleep)}
+                    className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
+                  >
                     <div className="flex items-center gap-3">
                       <Moon className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
@@ -613,12 +622,15 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="checkbox"
                       checked={onePlayerSleep}
                       onChange={(e) => setOnePlayerSleep(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
 
                   {/* Disable Mob Griefing */}
-                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div 
+                    onClick={() => setDisableMobGriefing(!disableMobGriefing)}
+                    className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
+                  >
                     <div className="flex items-center gap-3">
                       <ShieldAlert className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
@@ -630,12 +642,15 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="checkbox"
                       checked={disableMobGriefing}
                       onChange={(e) => setDisableMobGriefing(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
 
                   {/* Disable Fire Spread */}
-                  <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
+                  <div 
+                    onClick={() => setDisableFireSpread(!disableFireSpread)}
+                    className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
+                  >
                     <div className="flex items-center gap-3">
                       <Flame className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
@@ -647,7 +662,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="checkbox"
                       checked={disableFireSpread}
                       onChange={(e) => setDisableFireSpread(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
                 </div>

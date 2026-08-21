@@ -69,7 +69,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // 2. Fetch server instances from local storage directory immediately (<2ms)
         const list = await window.electronAPI.listServers();
         if (list && list.length > 0) {
-          const savedActiveId = localStorage.getItem('dukecraftora_active_server_id');
+          const savedActiveId = localStorage.getItem('craftora_active_server_id');
           const mapped: ServerInstanceConfig[] = list.map((s: any) => ({
             id: s.id,
             name: s.name || s.id,
@@ -81,7 +81,12 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             useAikarFlags: s.useAikarFlags !== false,
             port: s.port || 25565,
             isCracked: s.isCracked || false,
-            networkMode: s.networkMode === 'lan_only' ? 'lan_only' : s.networkMode === 'upnp' ? 'upnp' : 'cloud_relay'
+            networkMode: s.networkMode === 'lan_only' ? 'lan_only' : s.networkMode === 'upnp' ? 'upnp' : 'cloud_relay',
+            keepInventory: s.keepInventory,
+            showCoordinates: s.showCoordinates,
+            onePlayerSleep: s.onePlayerSleep,
+            disableMobGriefing: s.disableMobGriefing,
+            disableFireSpread: s.disableFireSpread
           }));
 
           setServers(mapped);
@@ -111,7 +116,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { path: 'java.exe', version: '21.0.9', majorVersion: 21, isDefault: true, vendor: 'Eclipse Temurin' }
       ];
       setJavaRuntimes(mockJavas);
-      const savedMock = localStorage.getItem('dukecraftora_mock_servers');
+      const savedMock = localStorage.getItem('craftora_mock_servers');
       if (savedMock) {
         try {
           const parsed = JSON.parse(savedMock);
@@ -176,7 +181,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setStatus('STARTING');
       setTimeout(() => {
         setStatus('ONLINE');
-        setLogs(prev => [...prev, { line: '[DukeCraftora Mock] Server is ONLINE and accepting connections! ✨', type: 'system' }]);
+        setLogs(prev => [...prev, { line: '[Craftora Mock] Server is ONLINE and accepting connections! ✨', type: 'system' }]);
       }, 1500);
       return true;
     }
@@ -228,7 +233,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           properties: {
             'server-port': config.port,
             'online-mode': !config.isCracked,
-            'motd': `DukeCraftora ${config.name}`
+            'motd': `Craftora ${config.name}`
           }
         });
 
@@ -254,7 +259,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         await refreshServers();
-        localStorage.setItem('dukecraftora_active_server_id', cleanId);
+        localStorage.setItem('craftora_active_server_id', cleanId);
         setIsDownloading(false);
       } catch (err) {
         console.error('Error creating server', err);
@@ -267,7 +272,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const newServer: ServerInstanceConfig = {
           ...config,
           id: cleanId,
-          serverDir: `C:/DukeCraftora/servers/${cleanId}`,
+          serverDir: `C:/Craftora/servers/${cleanId}`,
           keepInventory: config.keepInventory !== undefined ? config.keepInventory : true,
           showCoordinates: config.showCoordinates !== undefined ? config.showCoordinates : true,
           onePlayerSleep: config.onePlayerSleep !== undefined ? config.onePlayerSleep : true,
@@ -276,11 +281,11 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
         setServers(prev => {
           const updated = [...prev, newServer];
-          localStorage.setItem('dukecraftora_mock_servers', JSON.stringify(updated));
+          localStorage.setItem('craftora_mock_servers', JSON.stringify(updated));
           return updated;
         });
         setActiveServer(newServer);
-        localStorage.setItem('dukecraftora_active_server_id', cleanId);
+        localStorage.setItem('craftora_active_server_id', cleanId);
         setIsDownloading(false);
       }, 1500);
     }
@@ -297,7 +302,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setServers(prev => {
       const updated = prev.map(s => s.id === serverId ? { ...s, ...partial } : s);
       if (!window.electronAPI) {
-        localStorage.setItem('dukecraftora_mock_servers', JSON.stringify(updated));
+        localStorage.setItem('craftora_mock_servers', JSON.stringify(updated));
       }
       return updated;
     });
@@ -315,15 +320,15 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const remaining = servers.filter(s => s.id !== serverId);
     setServers(remaining);
     if (!window.electronAPI) {
-      localStorage.setItem('dukecraftora_mock_servers', JSON.stringify(remaining));
+      localStorage.setItem('craftora_mock_servers', JSON.stringify(remaining));
     }
     if (activeServer?.id === serverId) {
       const nextActive = remaining.length > 0 ? remaining[0] : null;
       setActiveServer(nextActive);
       if (nextActive) {
-        localStorage.setItem('dukecraftora_active_server_id', nextActive.id);
+        localStorage.setItem('craftora_active_server_id', nextActive.id);
       } else {
-        localStorage.removeItem('dukecraftora_active_server_id');
+        localStorage.removeItem('craftora_active_server_id');
       }
     }
     await refreshServers();
@@ -333,7 +338,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const selectServer = (server: ServerInstanceConfig) => {
     if (status !== 'STOPPED' && activeServer?.id !== server.id) return;
     setActiveServer(server);
-    localStorage.setItem('dukecraftora_active_server_id', server.id);
+    localStorage.setItem('craftora_active_server_id', server.id);
     setLogs([]);
   };
 

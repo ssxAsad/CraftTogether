@@ -237,7 +237,7 @@ export class JarDownloaderService {
       const file = fs.createWriteStream(destPath);
       const client = url.startsWith('https') ? https : http;
 
-      const request = client.get(url, { headers: { 'User-Agent': 'DukeCraftora/1.0.0' } }, (res) => {
+      const request = client.get(url, { headers: { 'User-Agent': 'Craftora/1.0.0' } }, (res) => {
         // Follow redirects (both relative and absolute)
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           file.close();
@@ -287,7 +287,7 @@ export class JarDownloaderService {
    */
   static fetchJson<T>(url: string): Promise<T> {
     return new Promise((resolve, reject) => {
-      https.get(url, { headers: { 'User-Agent': 'DukeCraftora/1.0.0' } }, (res) => {
+      https.get(url, { headers: { 'User-Agent': 'Craftora/1.0.0' } }, (res) => {
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           try {
             const redirectUrl = new URL(res.headers.location, url).href;

@@ -364,7 +364,7 @@ export class UpnpService {
   static async openPort(
     port: number = 25565,
     protocol: 'TCP' | 'UDP' = 'TCP',
-    description: string = 'DukeCraftora Minecraft Server'
+    description: string = 'Craftora Minecraft Server'
   ): Promise<UpnpStatusResult> {
     try {
       const endpoint = await this.resolveIgdEndpoint();

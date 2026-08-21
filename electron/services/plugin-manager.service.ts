@@ -95,6 +95,14 @@ export class PluginManagerService {
       category: 'Security',
       downloadUrl: 'https://mediafilez.forgecdn.net/files/5465/321/CoreProtect-22.4.jar',
       icon: 'Lock'
+    },
+    {
+      id: 'onlysleep',
+      name: 'OnlySleep',
+      description: 'Modern 1-player sleep plugin with bossbars, percentages, and custom messages.',
+      category: 'Core Gameplay',
+      downloadUrl: 'https://github.com/onlysleep', // Will be resolved dynamically
+      icon: 'Moon'
     }
   ];
 
@@ -152,7 +160,8 @@ export class PluginManagerService {
       essentialsx: 'essentialsx',
       chunky: 'chunky',
       skinsrestorer: 'skinsrestorer',
-      coreprotect: 'coreprotect'
+      coreprotect: 'coreprotect',
+      onlysleep: 'onlysleep'
     };
 
     if (modrinthSlugs[pluginId]) {

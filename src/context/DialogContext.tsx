@@ -116,7 +116,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <DialogContext.Provider value={{ showAlert, showConfirm, showPrompt }}>
       {children}
 
-      {/* DukeCraftora Themed Modal Dialog */}
+      {/* Craftora Themed Modal Dialog */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans">
           <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">

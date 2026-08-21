@@ -54,12 +54,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center p-1 shadow-sm shrink-0 titlebar-no-drag">
             <img
               src={logoImg}
-              alt="DukeCraftora"
+              alt="Craftora"
               className="w-full h-full object-contain"
             />
           </div>
           <span className="font-bold text-base text-white tracking-tight titlebar-no-drag select-none">
-            DukeCraftora
+            Craftora
           </span>
         </div>
 

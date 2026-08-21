@@ -79,7 +79,7 @@ async function createWindow() {
   // Smooth window reveal
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
-    logger.info('DukeCraftora main window displayed');
+    logger.info('Craftora main window displayed');
   });
 
   if (process.env.VITE_DEV_SERVER_URL) {

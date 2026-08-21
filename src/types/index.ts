@@ -64,6 +64,7 @@ export interface CloudTunnelStatus {
   status: 'STOPPED' | 'STARTING' | 'WAITING_CLAIM' | 'ONLINE' | 'ERROR';
   claimUrl: string | null;
   serverAddress: string | null;
+  bedrockAddress?: string | null;
   port: number;
   error?: string | null;
 }

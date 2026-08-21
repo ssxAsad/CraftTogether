@@ -30,7 +30,7 @@ export const ConfigTab: React.FC = () => {
   const [properties, setProperties] = useState<ServerProperties>({
     'server-port': 25565,
     'online-mode': true,
-    'motd': 'A DukeCraftora Minecraft Server',
+    'motd': 'A Craftora Minecraft Server',
     'max-players': 20,
     'difficulty': 'normal',
     'gamemode': 'survival',
@@ -238,7 +238,7 @@ export const ConfigTab: React.FC = () => {
               <div className="bg-obsidian-900 border border-white/10 p-3.5 rounded-lg flex items-start gap-3 text-xs text-slate-300">
                 <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Skin Restoration Active:</strong> DukeCraftora auto-injects SkinsRestorer so cracked players keep their skins and can use <code>/skin &lt;name&gt;</code> in-game!
+                  <strong>Skin Restoration Active:</strong> Craftora auto-injects SkinsRestorer so cracked players keep their skins and can use <code>/skin &lt;name&gt;</code> in-game!
                 </div>
               </div>
             )}

@@ -365,7 +365,7 @@ export const NetworkTab: React.FC = () => {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Your browser has been opened automatically. Log into your PlayIt.gg account and click the{' '}
                 <strong className="text-emerald-400">"Claim Agent"</strong>{' '}
-                button on the page. DukeCraftora will detect it instantly.
+                button on the page. Craftora will detect it instantly.
               </p>
 
               <div className="flex flex-wrap items-center gap-3">

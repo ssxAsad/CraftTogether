@@ -221,6 +221,13 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                   {tunnelStatus.serverAddress}
                 </code>
               </div>
+              
+              {!tunnelStatus.bedrockAddress && (
+                <div className="mt-5 p-3.5 bg-blue-950/40 border border-blue-500/30 rounded-xl text-left text-xs text-blue-200 leading-relaxed max-w-md mx-auto">
+                  <strong className="text-white block mb-1">Hosting for mobile/console players?</strong>
+                  To allow Minecraft Bedrock players to join over the internet, you must go to your <button onClick={() => window.electronAPI?.openExternal('https://playit.gg/account/tunnels')} className="text-blue-400 hover:underline font-semibold cursor-pointer">PlayIt Tunnels Dashboard</button> and click <strong>Add Tunnel &rarr; Minecraft Bedrock</strong>. Ensure the <strong>Local Port</strong> is set to <strong>25565</strong>.
+                </div>
+              )}
             </div>
           </div>
         ) : isAgentLinked && !isTunnelReady ? (
@@ -233,6 +240,9 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <h4 className="text-base font-bold text-white">Checking for Tunnel...</h4>
               <p className="text-sm text-slate-300 mt-2 max-w-md mx-auto leading-relaxed">
                 We've successfully connected to your PlayIt account! Now, please ensure you have added a Minecraft Java tunnel on the PlayIt website and assigned it to this new agent.
+              </p>
+              <p className="text-xs text-blue-300 mt-3 max-w-md mx-auto leading-relaxed bg-blue-950/30 p-2 rounded-lg border border-blue-500/20">
+                <strong>Tip for Bedrock Cross-play:</strong> If you want mobile players to join, add a second <strong>Minecraft Bedrock</strong> tunnel and set its Local Port to <strong>25565</strong>.
               </p>
             </div>
             <div className="flex items-center justify-center gap-3">
@@ -332,7 +342,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <p className="text-xs text-slate-400">
                 Log into your PlayIt.gg account if prompted, then click the green{' '}
                 <strong className="text-emerald-400">"Claim Agent"</strong>{' '}
-                button on the page. DukeCraftora will detect it automatically.
+                button on the page. Craftora will detect it automatically.
               </p>
             </div>
 

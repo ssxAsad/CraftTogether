@@ -132,7 +132,7 @@ export class ServerManagerService {
 
     const jarPath = path.join(config.serverDir, 'server.jar');
     if (!fs.existsSync(jarPath)) {
-      this.emitLog(`[DukeCraftora] Error: server.jar not found at ${jarPath}`, 'system');
+      this.emitLog(`[Craftora] Error: server.jar not found at ${jarPath}`, 'system');
       return false;
     }
 
@@ -167,7 +167,7 @@ export class ServerManagerService {
     let currentJava = await JavaDetectorService.probeJavaPath(javaExecutable);
 
     if (!currentJava || currentJava.majorVersion < requiredMajor) {
-      this.emitLog(`[DukeCraftora] Minecraft ${config.version} requires Java ${requiredMajor}+ (Selected: ${currentJava ? `Java ${currentJava.majorVersion}` : 'Default PATH'}). Searching for compatible runtime...`, 'system');
+      this.emitLog(`[Craftora] Minecraft ${config.version} requires Java ${requiredMajor}+ (Selected: ${currentJava ? `Java ${currentJava.majorVersion}` : 'Default PATH'}). Searching for compatible runtime...`, 'system');
 
       const allRuntimes = await JavaDetectorService.detectJavaRuntimes();
       const compatible = allRuntimes.find(r => r.majorVersion >= requiredMajor);
@@ -175,25 +175,25 @@ export class ServerManagerService {
       if (compatible) {
         javaExecutable = compatible.path;
         config.javaPath = compatible.path;
-        this.emitLog(`[DukeCraftora] Auto-selected compatible Java ${compatible.majorVersion} (${compatible.path})`, 'system');
+        this.emitLog(`[Craftora] Auto-selected compatible Java ${compatible.majorVersion} (${compatible.path})`, 'system');
       } else {
-        this.emitLog(`[DukeCraftora] Downloading portable OpenJDK ${requiredMajor} to workspace...`, 'system');
+        this.emitLog(`[Craftora] Downloading portable OpenJDK ${requiredMajor} to workspace...`, 'system');
         const downloadedJava = await JavaDetectorService.downloadAndExtractPortableJdk(requiredMajor, (pct) => {
-          this.emitLog(`[DukeCraftora] Downloading Java ${requiredMajor}... ${pct}%`, 'system');
+          this.emitLog(`[Craftora] Downloading Java ${requiredMajor}... ${pct}%`, 'system');
         });
         if (downloadedJava) {
           javaExecutable = downloadedJava;
           config.javaPath = downloadedJava;
-          this.emitLog(`[DukeCraftora] Portable Java ${requiredMajor} is ready! Launching server...`, 'system');
+          this.emitLog(`[Craftora] Portable Java ${requiredMajor} is ready! Launching server...`, 'system');
         } else {
-          this.emitLog(`[DukeCraftora] Warning: Could not auto-download Java ${requiredMajor}. Attempting launch with current runtime...`, 'system');
+          this.emitLog(`[Craftora] Warning: Could not auto-download Java ${requiredMajor}. Attempting launch with current runtime...`, 'system');
         }
       }
     }
 
     const jvmArgs = this.buildJvmArguments(config.allocatedRamGb, config.useAikarFlags);
-    this.emitLog(`[DukeCraftora] Launching ${config.serverSoftware.toUpperCase()} (${config.version}) with ${config.allocatedRamGb}GB RAM...`, 'system');
-    this.emitLog(`[DukeCraftora] Java: ${javaExecutable}`, 'system');
+    this.emitLog(`[Craftora] Launching ${config.serverSoftware.toUpperCase()} (${config.version}) with ${config.allocatedRamGb}GB RAM...`, 'system');
+    this.emitLog(`[Craftora] Java: ${javaExecutable}`, 'system');
 
     try {
       this.activeProcess = spawn(javaExecutable, jvmArgs, {
@@ -226,14 +226,14 @@ export class ServerManagerService {
       // Handle process exit
       this.activeProcess.on('exit', (code, signal) => {
         logger.info(`Server process exited with code ${code}, signal ${signal}`);
-        this.emitLog(`[DukeCraftora] Server stopped with exit code: ${code}`, 'system');
+        this.emitLog(`[Craftora] Server stopped with exit code: ${code}`, 'system');
         this.cleanUpProcess();
         this.setStatus('STOPPED');
       });
 
       this.activeProcess.on('error', (err) => {
         logger.error('Failed to spawn server process', err);
-        this.emitLog(`[DukeCraftora] Process error: ${err.message}`, 'system');
+        this.emitLog(`[Craftora] Process error: ${err.message}`, 'system');
         this.cleanUpProcess();
         this.setStatus('CRASHED');
       });
@@ -242,7 +242,7 @@ export class ServerManagerService {
       return true;
     } catch (err: any) {
       logger.error('Failed to start server', err);
-      this.emitLog(`[DukeCraftora] Start error: ${err.message}`, 'system');
+      this.emitLog(`[Craftora] Start error: ${err.message}`, 'system');
       this.setStatus('CRASHED');
       return false;
     }
@@ -259,7 +259,7 @@ export class ServerManagerService {
       }
 
       this.setStatus('STOPPING');
-      this.emitLog('[DukeCraftora] Sending graceful stop command to server...', 'system');
+      this.emitLog('[Craftora] Sending graceful stop command to server...', 'system');
 
       try {
         this.activeProcess.stdin?.write('stop\n');
@@ -271,7 +271,7 @@ export class ServerManagerService {
       // Timeout fallback: force kill after 15 seconds if hanging
       const forceTimeout = setTimeout(() => {
         if (this.activeProcess) {
-          this.emitLog('[DukeCraftora] Server hung on shutdown. Force terminating...', 'system');
+          this.emitLog('[Craftora] Server hung on shutdown. Force terminating...', 'system');
           this.activeProcess.kill('SIGKILL');
         }
         resolve(true);
@@ -289,7 +289,7 @@ export class ServerManagerService {
    */
   static killServer(): void {
     if (this.activeProcess) {
-      this.emitLog('[DukeCraftora] Killing server process...', 'system');
+      this.emitLog('[Craftora] Killing server process...', 'system');
       this.activeProcess.kill('SIGKILL');
       this.cleanUpProcess();
       this.setStatus('STOPPED');
@@ -301,7 +301,7 @@ export class ServerManagerService {
    */
   static sendCommand(cmd: string): boolean {
     if (!this.activeProcess || this.status !== 'ONLINE') {
-      this.emitLog(`[DukeCraftora] Cannot send command: Server is not online.`, 'system');
+      this.emitLog(`[Craftora] Cannot send command: Server is not online.`, 'system');
       return false;
     }
 
@@ -322,7 +322,7 @@ export class ServerManagerService {
     // 1. Detect Server Ready
     if (line.includes('Done (') && line.includes('For help, type "help"')) {
       this.setStatus('ONLINE');
-      this.emitLog('[DukeCraftora] Server is ONLINE and accepting connections! ✨', 'system');
+      this.emitLog('[Craftora] Server is ONLINE and accepting connections! ✨', 'system');
       this.applyGamerules();
     }
 
@@ -368,35 +368,35 @@ export class ServerManagerService {
       if (this.activeConfig.keepInventory !== undefined) {
         const val = this.activeConfig.keepInventory ? 'true' : 'false';
         this.sendCommand(`gamerule keepInventory ${val}`);
-        this.emitLog(`[DukeCraftora] Applied gamerule: keepInventory = ${val}`, 'system');
+        this.emitLog(`[Craftora] Applied gamerule: keepInventory = ${val}`, 'system');
       }
 
       // 2. Show Coordinates HUD
       if (this.activeConfig.showCoordinates !== undefined) {
         const val = this.activeConfig.showCoordinates ? 'true' : 'false';
         this.sendCommand(`gamerule showCoordinates ${val}`);
-        this.emitLog(`[DukeCraftora] Applied gamerule: showCoordinates = ${val}`, 'system');
+        this.emitLog(`[Craftora] Applied gamerule: showCoordinates = ${val}`, 'system');
       }
 
       // 3. 1-Player Instant Sleep Percentage
       if (this.activeConfig.onePlayerSleep !== undefined) {
         const pct = this.activeConfig.onePlayerSleep ? 1 : 100;
         this.sendCommand(`gamerule playersSleepingPercentage ${pct}`);
-        this.emitLog(`[DukeCraftora] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
+        this.emitLog(`[Craftora] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
       }
 
       // 4. Disable Mob Griefing
       if (this.activeConfig.disableMobGriefing !== undefined) {
         const val = this.activeConfig.disableMobGriefing ? 'false' : 'true';
         this.sendCommand(`gamerule mobGriefing ${val}`);
-        this.emitLog(`[DukeCraftora] Applied gamerule: mobGriefing = ${val}`, 'system');
+        this.emitLog(`[Craftora] Applied gamerule: mobGriefing = ${val}`, 'system');
       }
 
       // 5. Disable Fire Spread
       if (this.activeConfig.disableFireSpread !== undefined) {
         const val = this.activeConfig.disableFireSpread ? 'false' : 'true';
         this.sendCommand(`gamerule doFireTick ${val}`);
-        this.emitLog(`[DukeCraftora] Applied gamerule: doFireTick = ${val}`, 'system');
+        this.emitLog(`[Craftora] Applied gamerule: doFireTick = ${val}`, 'system');
       }
     }, 1500);
   }

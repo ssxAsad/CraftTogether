@@ -8,6 +8,7 @@ const logger = new Logger('GeyserService');
 export interface GeyserConfig {
   bedrockPort: number;
   bedrockAddress: string;
+  cloneRemotePort: boolean;
   authType: 'floodgate' | 'online' | 'offline';
   motd1: string;
   motd2: string;
@@ -68,8 +69,9 @@ export class GeyserService {
     this.ensureGeyserConfig(serverDir, {
       bedrockPort: 19132,
       bedrockAddress: '0.0.0.0',
+      cloneRemotePort: true,
       authType: 'floodgate',
-      motd1: 'DukeCraftora Cross-Play Server',
+      motd1: 'Craftora Cross-Play Server',
       motd2: 'Java & Bedrock Supported!',
       passthroughMotd: true,
       passthroughMaxPlayers: true
@@ -86,8 +88,9 @@ export class GeyserService {
     const defaultConfig: GeyserConfig = {
       bedrockPort: 19132,
       bedrockAddress: '0.0.0.0',
+      cloneRemotePort: true,
       authType: 'floodgate',
-      motd1: 'DukeCraftora Server',
+      motd1: 'Craftora Server',
       motd2: 'Cross-Play Active',
       passthroughMotd: true,
       passthroughMaxPlayers: true
@@ -101,10 +104,12 @@ export class GeyserService {
       const authMatch = content.match(/auth-type:\s*(\w+)/);
       const motd1Match = content.match(/motd1:\s*["']?([^"'\n\r]+)["']?/);
       const motd2Match = content.match(/motd2:\s*["']?([^"'\n\r]+)["']?/);
+      const cloneRemotePort = content.includes('clone-remote-port: true');
 
       return {
         bedrockPort: portMatch ? parseInt(portMatch[1], 10) : 19132,
         bedrockAddress: '0.0.0.0',
+        cloneRemotePort: cloneRemotePort,
         authType: (authMatch ? authMatch[1] : 'floodgate') as 'floodgate' | 'online' | 'offline',
         motd1: motd1Match ? motd1Match[1] : defaultConfig.motd1,
         motd2: motd2Match ? motd2Match[1] : defaultConfig.motd2,
@@ -129,14 +134,14 @@ export class GeyserService {
     const configPath = path.join(geyserFolder, 'config.yml');
     
     // Clean YAML template with proper GeyserMC bindings
-    const yamlContent = `# GeyserMC Configuration - Managed by DukeCraftora
+    const yamlContent = `# GeyserMC Configuration - Managed by Craftora
 bedrock:
   address: 0.0.0.0
   port: ${config.bedrockPort}
-  clone-remote-port: false
+  clone-remote-port: ${config.cloneRemotePort}
   motd1: "${config.motd1}"
   motd2: "${config.motd2}"
-  server-name: "DukeCraftora"
+  server-name: "Craftora"
   enable-proxy-connections: false
 
 remote:

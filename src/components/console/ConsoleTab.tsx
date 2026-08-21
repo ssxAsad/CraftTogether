@@ -57,7 +57,7 @@ export const ConsoleTab: React.FC = () => {
     xtermInstance.current = term;
     fitAddonInstance.current = fitAddon;
 
-    term.writeln('\x1b[1;32m=== DukeCraftora Interactive Minecraft Server Console ===\x1b[0m');
+    term.writeln('\x1b[1;32m=== Craftora Interactive Minecraft Server Console ===\x1b[0m');
     term.writeln('\x1b[90mReady for server output and commands...\x1b[0m\r\n');
 
     const handleResize = () => fitAddon.fit();

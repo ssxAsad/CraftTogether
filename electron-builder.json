@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "com.dukecraftora.app",
-  "productName": "DukeCraftora",
+  "appId": "com.craftora.app",
+  "productName": "Craftora",
   "directories": {
     "output": "release"
   },
@@ -29,7 +29,6 @@
     "allowToChangeInstallationDirectory": true,
     "deleteAppDataOnUninstall": false,
     "installerIcon": "src/assets/DC.ico",
-    "uninstallerIcon": "src/assets/DC.ico",
-    "loadingGif": "build/splash.gif"
+    "uninstallerIcon": "src/assets/DC.ico"
   }
 }

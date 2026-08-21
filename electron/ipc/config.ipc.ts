@@ -108,7 +108,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
       const serverPath = path.join(sDir, e.name);
       const props = ConfigParserService.readProperties(serverPath);
       let meta: any = {};
-      const metaPath = path.join(serverPath, 'dukecraftora.json');
+      const metaPath = path.join(serverPath, 'craftora.json');
       if (fs.existsSync(metaPath)) {
         try {
           meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
@@ -129,7 +129,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
         port: props['server-port'] || meta.port || 25565,
         isCracked: props['online-mode'] === false || meta.isCracked === true,
         networkMode: meta.networkMode === 'lan_only' ? 'lan_only' : meta.networkMode === 'upnp' ? 'upnp' : 'cloud_relay',
-        motd: props['motd'] || meta.motd || 'DukeCraftora Server',
+        motd: props['motd'] || meta.motd || 'Craftora Server',
         keepInventory: meta.keepInventory !== undefined ? meta.keepInventory : true,
         showCoordinates: meta.showCoordinates !== undefined ? meta.showCoordinates : true,
         onePlayerSleep: meta.onePlayerSleep !== undefined ? meta.onePlayerSleep : true,
@@ -143,7 +143,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
     try {
       const serverDir = AppPaths.getServerPath(serverId);
       AppPaths.ensureDir(serverDir);
-      const metaPath = path.join(serverDir, 'dukecraftora.json');
+      const metaPath = path.join(serverDir, 'craftora.json');
       let existing: any = {};
       if (fs.existsSync(metaPath)) {
         try {
