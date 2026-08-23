@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FolderOpen,
-  AlertTriangle,
-  CheckCircle2,
-  ArrowRight,
-  HardDrive
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import logoImg from '../../assets/DC.png';
 
 import { GlobalSetupScreen } from './GlobalSetupScreen';
@@ -108,7 +102,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
             <img src={logoImg} alt="Craftora" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-            Welcome to <span className="text-emerald-400">Craftora</span>
+            Welcome to <span className="text-slate-200">Craftora</span>
           </h1>
           <p className="text-slate-400 text-sm">
             Set up your dedicated workspace folder to get started.
@@ -119,7 +113,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
           <div className="mb-8">
             <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-emerald-400" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200" />
                 Server Files Directory
               </span>
               <span className="text-slate-400 text-xs font-semibold">Must be a strictly empty folder</span>
@@ -130,7 +124,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
                 validationResult?.error || (validationResult && !validationResult.isEmpty)
                   ? 'border-red-500/50 bg-red-500/5 ring-1 ring-red-500/30' 
                   : isDirectoryValid
-                    ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/30' 
+                    ? 'border-white/10 bg-emerald-500/5 ring-1 ring-emerald-500/30' 
                     : 'border-white/10 bg-obsidian-950/50'
               }`}>
                 <input
@@ -145,16 +139,16 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
                   spellCheck={false}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isValidating && <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />}
-                  {!isValidating && isDirectoryValid && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-in zoom-in" />}
-                  {!isValidating && (validationResult?.error || (validationResult && !validationResult.isEmpty)) && <AlertTriangle className="w-5 h-5 text-red-500 animate-in zoom-in" />}
+                  {isValidating && <div className="w-5 h-5 border-2 border-white/10 border-t-transparent rounded-full animate-spin" />}
+                  {!isValidating && isDirectoryValid && <PlaceholderIcon className="w-5 h-5 text-slate-300 animate-in zoom-in" />}
+                  {!isValidating && (validationResult?.error || (validationResult && !validationResult.isEmpty)) && <PlaceholderIcon className="w-5 h-5 text-red-500 animate-in zoom-in" />}
                 </div>
               </div>
               <button
                 onClick={handleBrowse}
                 className="px-6 py-4 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-slate-200 font-medium transition-colors border border-white/5 hover:border-white/10 flex items-center gap-2 active:scale-95 cursor-pointer"
               >
-                <FolderOpen className="w-5 h-5 text-emerald-400" />
+                <PlaceholderIcon className="w-5 h-5 text-slate-200" />
                 Browse
               </button>
             </div>
@@ -163,7 +157,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
             <div className={`mt-3 flex items-start gap-2 text-sm transition-all duration-300 ${
               validationResult?.error ? 'text-red-400 opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0'
             }`}>
-              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <PlaceholderIcon className="w-4 h-4 mt-0.5 shrink-0" />
               <p>{validationResult?.error}</p>
             </div>
           </div>
@@ -179,7 +173,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
               }`}
             >
               Next Step
-              <ArrowRight className="w-5 h-5" />
+              <PlaceholderIcon className="w-5 h-5" />
             </button>
           </div>
         </div>

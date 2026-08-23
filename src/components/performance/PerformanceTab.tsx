@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Zap,
-  HardDrive,
-  Cpu,
-  ShieldCheck,
-  CheckCircle2,
-  Sliders,
-  Code,
-  Info
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { useServer } from '../../context/ServerContext';
 
 export const PerformanceTab: React.FC = () => {
@@ -57,8 +48,8 @@ export const PerformanceTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-            <Zap className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl bg-white/5 text-slate-200 flex items-center justify-center">
+            <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-white">Performance & JVM Optimizer</h1>
@@ -72,7 +63,7 @@ export const PerformanceTab: React.FC = () => {
           onClick={handleSave}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
         >
-          {saved ? <CheckCircle2 className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+          {saved ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
           <span>{saved ? 'Applied Settings' : 'Apply JVM Settings'}</span>
         </button>
       </div>
@@ -81,13 +72,13 @@ export const PerformanceTab: React.FC = () => {
       <div className="glass-card rounded-xl p-6 border border-white/10 space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <HardDrive className="w-5 h-5 text-emerald-400" />
+            <PlaceholderIcon className="w-5 h-5 text-slate-200" />
             <div>
               <h2 className="text-base font-bold text-white">Dedicated Server RAM (Memory)</h2>
               <p className="text-xs text-slate-400">Allocates both -Xms (initial) and -Xmx (maximum) for zero-stutter garbage collection</p>
             </div>
           </div>
-          <span className="text-2xl font-black text-emerald-400 font-mono">
+          <span className="text-2xl font-black text-slate-200 font-mono">
             {ramGb} GB
           </span>
         </div>
@@ -124,7 +115,7 @@ export const PerformanceTab: React.FC = () => {
       {/* Java Runtime Selector */}
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <div className="flex items-center gap-2.5">
-          <Cpu className="w-5 h-5 text-emerald-400" />
+          <PlaceholderIcon className="w-5 h-5 text-slate-200" />
           <div>
             <h2 className="text-base font-bold text-white">Detected Java Runtime (JRE / JDK)</h2>
             <p className="text-xs text-slate-400">Java 21 is required for Minecraft 1.20.5+; Java 17 for 1.18 - 1.20.4</p>
@@ -134,7 +125,7 @@ export const PerformanceTab: React.FC = () => {
         <select
           value={selectedJava}
           onChange={(e) => setSelectedJava(e.target.value)}
-          className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+          className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-white/10"
         >
           {javaRuntimes.length > 0 ? (
             javaRuntimes.map((j) => (
@@ -152,7 +143,7 @@ export const PerformanceTab: React.FC = () => {
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Code className="w-5 h-5 text-emerald-400" />
+            <PlaceholderIcon className="w-5 h-5 text-slate-200" />
             <div>
               <h2 className="text-base font-bold text-white">Aikar's Optimized G1GC Flags</h2>
               <p className="text-xs text-slate-400">Industry-standard flags used by top Minecraft networks to eliminate GC lag spikes</p>
@@ -174,7 +165,7 @@ export const PerformanceTab: React.FC = () => {
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
             Generated JVM Launch Command:
           </span>
-          <p className="font-mono text-xs text-emerald-400/90 break-all leading-relaxed select-all">
+          <p className="font-mono text-xs text-slate-200 break-all leading-relaxed select-all">
             java {aikarFlagsPreview.join(' ')} -jar server.jar nogui
           </p>
         </div>

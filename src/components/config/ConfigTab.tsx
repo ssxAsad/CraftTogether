@@ -1,24 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Sliders,
-  Save,
-  ShieldAlert,
-  Users,
-  Eye,
-  Swords,
-  Lock,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  Zap,
-  HardDrive,
-  Cpu,
-  ShieldCheck,
-  Compass,
-  Moon,
-  Flame,
-  PackageCheck
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { JavaIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { ServerProperties } from '../../types';
@@ -136,8 +117,8 @@ export const ConfigTab: React.FC = () => {
       {/* Header with Section Pill Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-            <Sliders className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+            <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Server Settings & Configuration</h1>
@@ -152,24 +133,24 @@ export const ConfigTab: React.FC = () => {
           <div className="flex items-center gap-1 bg-obsidian-900 p-1 rounded-lg border border-white/10">
             <button
               onClick={() => setActiveSection('game')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                 activeSection === 'game'
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold'
+                  ? 'bg-emerald-500/15 text-white border border-white/10 font-bold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Swords className="w-3.5 h-3.5" />
+              <PlaceholderIcon className="w-3.5 h-3.5" />
               <span>Gameplay & World</span>
             </button>
             <button
               onClick={() => setActiveSection('performance')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                 activeSection === 'performance'
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold'
+                  ? 'bg-emerald-500/15 text-white border border-white/10 font-bold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <PlaceholderIcon className="w-3.5 h-3.5" />
               <span>RAM & Performance</span>
             </button>
           </div>
@@ -179,8 +160,8 @@ export const ConfigTab: React.FC = () => {
             disabled={saving}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
           >
-            {saveSuccess ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-            <span>{saveSuccess ? 'Saved!' : 'Save Changes'}</span>
+            {saveSuccess ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
+            <span>{saveSuccess ? 'Saved!' : 'PlaceholderIcon Changes'}</span>
           </button>
         </div>
       </div>
@@ -196,7 +177,7 @@ export const ConfigTab: React.FC = () => {
                   <span
                     className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
                       isCracked
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        ? 'bg-white/5 text-slate-200 border-white/10'
                         : 'bg-zinc-800 text-zinc-400 border-white/5'
                     }`}
                   >
@@ -212,7 +193,7 @@ export const ConfigTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleToggleCracked(false)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                  className={`px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                     !isCracked
                       ? 'bg-zinc-800 text-white border border-white/10'
                       : 'text-slate-400 hover:text-white'
@@ -223,7 +204,7 @@ export const ConfigTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleToggleCracked(true)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                  className={`px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                     isCracked
                       ? 'bg-emerald-500 text-obsidian-950 font-bold'
                       : 'text-slate-400 hover:text-white'
@@ -236,7 +217,7 @@ export const ConfigTab: React.FC = () => {
 
             {isCracked && (
               <div className="bg-obsidian-900 border border-white/10 p-3.5 rounded-lg flex items-start gap-3 text-xs text-slate-300">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0 mt-0.5" />
                 <div>
                   <strong>Skin Restoration Active:</strong> Craftora auto-injects SkinsRestorer so cracked players keep their skins and can use <code>/skin &lt;name&gt;</code> in-game!
                 </div>
@@ -249,7 +230,7 @@ export const ConfigTab: React.FC = () => {
         {/* Popular Gameplay Enhancements (Gamerules) Card */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4 md:col-span-2">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-            <PackageCheck className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
             <span>Popular Gameplay Enhancements (Live GameRules)</span>
           </h3>
 
@@ -257,7 +238,7 @@ export const ConfigTab: React.FC = () => {
             {/* Keep Inventory */}
             <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
               <div className="flex items-center gap-2.5">
-                <PackageCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-white block">Keep Inventory</span>
                   <span className="text-[10px] text-slate-400">Keep items & XP upon dying</span>
@@ -274,7 +255,7 @@ export const ConfigTab: React.FC = () => {
             {/* Show Coordinates */}
             <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
               <div className="flex items-center gap-2.5">
-                <Compass className="w-4 h-4 text-emerald-400 shrink-0" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-white block">Show Coordinates HUD</span>
                   <span className="text-[10px] text-slate-400">Live X, Y, Z on screen for Bedrock & Java</span>
@@ -291,7 +272,7 @@ export const ConfigTab: React.FC = () => {
             {/* Instant 1-Player Sleep */}
             <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
               <div className="flex items-center gap-2.5">
-                <Moon className="w-4 h-4 text-emerald-400 shrink-0" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-white block">Instant 1-Player Sleep</span>
                   <span className="text-[10px] text-slate-400">1 player in bed skips the night</span>
@@ -308,7 +289,7 @@ export const ConfigTab: React.FC = () => {
             {/* Disable Mob Griefing */}
             <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
               <div className="flex items-center gap-2.5">
-                <ShieldAlert className="w-4 h-4 text-emerald-400 shrink-0" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-white block">Anti-Creeper / Mob Griefing</span>
                   <span className="text-[10px] text-slate-400">Prevent Creeper/Enderman block damage</span>
@@ -325,7 +306,7 @@ export const ConfigTab: React.FC = () => {
             {/* Disable Fire Spread */}
             <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/5">
               <div className="flex items-center gap-2.5">
-                <Flame className="w-4 h-4 text-emerald-400 shrink-0" />
+                <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-white block">Disable Fire Spread</span>
                   <span className="text-[10px] text-slate-400">Prevent fire from spreading to wood</span>
@@ -344,7 +325,7 @@ export const ConfigTab: React.FC = () => {
         {/* Core Gameplay Card */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-            <Swords className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
             <span>Gameplay & Rules</span>
           </h3>
 
@@ -354,7 +335,7 @@ export const ConfigTab: React.FC = () => {
             <select
               value={properties.difficulty || 'normal'}
               onChange={(e) => setProperties({ ...properties, difficulty: e.target.value as any })}
-              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
             >
               <option value="peaceful">Peaceful (No monsters, auto-regen)</option>
               <option value="easy">Easy</option>
@@ -369,7 +350,7 @@ export const ConfigTab: React.FC = () => {
             <select
               value={properties.gamemode || 'survival'}
               onChange={(e) => setProperties({ ...properties, gamemode: e.target.value as any })}
-              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
             >
               <option value="survival">Survival</option>
               <option value="creative">Creative</option>
@@ -410,7 +391,7 @@ export const ConfigTab: React.FC = () => {
         {/* World & Performance Tuning */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-            <Eye className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
             <span>World & Limits</span>
           </h3>
 
@@ -425,7 +406,7 @@ export const ConfigTab: React.FC = () => {
               onChange={(e) =>
                 setProperties({ ...properties, 'max-players': parseInt(e.target.value, 10) || 20 })
               }
-              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-white/10"
             />
           </div>
 
@@ -433,7 +414,7 @@ export const ConfigTab: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold text-slate-300">
               <span>View Distance (Chunks): {properties['view-distance'] || 10}</span>
-              <span className="text-emerald-400 font-mono">{properties['view-distance'] || 10} Chunks</span>
+              <span className="text-slate-200 font-mono">{properties['view-distance'] || 10} Chunks</span>
             </div>
             <input
               type="range"
@@ -452,7 +433,7 @@ export const ConfigTab: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold text-slate-300">
               <span>Simulation Distance: {properties['simulation-distance'] || 10}</span>
-              <span className="text-emerald-400 font-mono">{properties['simulation-distance'] || 10} Chunks</span>
+              <span className="text-slate-200 font-mono">{properties['simulation-distance'] || 10} Chunks</span>
             </div>
             <input
               type="range"
@@ -490,11 +471,11 @@ export const ConfigTab: React.FC = () => {
             value={properties.motd || ''}
             onChange={(e) => setProperties({ ...properties, motd: e.target.value })}
             placeholder="A Minecraft Server"
-            className="w-full px-4 py-3 bg-obsidian-950 border border-white/10 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-emerald-500"
+            className="w-full px-4 py-3 bg-obsidian-950 border border-white/10 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-white/10"
           />
           <div className="bg-obsidian-950/90 p-3 rounded-lg border border-white/5 text-xs">
             <span className="text-slate-400 block mb-1">In-Game Server List Preview:</span>
-            <span className="font-mono text-emerald-400 font-bold">{properties.motd || 'A Minecraft Server'}</span>
+            <span className="font-mono text-slate-200 font-bold">{properties.motd || 'A Minecraft Server'}</span>
           </div>
         </div>
         </>
@@ -505,15 +486,15 @@ export const ConfigTab: React.FC = () => {
           <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <HardDrive className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center">
+                  <PlaceholderIcon className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Allocated Memory (RAM)</h3>
                   <p className="text-xs text-slate-400">Controls heap size (-Xms and -Xmx)</p>
                 </div>
               </div>
-              <div className="text-xl font-extrabold text-emerald-400 font-mono">
+              <div className="text-xl font-extrabold text-slate-200 font-mono">
                 {ramGb} GB
               </div>
             </div>
@@ -542,9 +523,9 @@ export const ConfigTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <PlaceholderIcon className="w-4 h-4 text-slate-200" />
                   <h3 className="text-sm font-bold text-white">Aikar's G1GC Garbage Collection Flags</h3>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-obsidian-950 text-white border border-white/10">
                     Recommended
                   </span>
                 </div>
@@ -565,7 +546,7 @@ export const ConfigTab: React.FC = () => {
           {/* Java Runtime Selector */}
           <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 p-1.5">
+              <div className="w-8 h-8 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10 p-1.5">
                 <JavaIcon className="w-5 h-5" />
               </div>
               <div>
@@ -577,7 +558,7 @@ export const ConfigTab: React.FC = () => {
             <select
               value={selectedJava}
               onChange={(e) => setSelectedJava(e.target.value)}
-              className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-white/10"
             >
               {javaRuntimes.length > 0 ? (
                 javaRuntimes.map((j) => (

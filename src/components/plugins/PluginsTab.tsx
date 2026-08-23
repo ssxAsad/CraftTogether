@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Puzzle,
-  Download,
-  Trash2,
-  CheckCircle2,
-  Sparkles,
-  Layers,
-  Shield,
-  Zap,
-  Lock,
-  Wrench,
-  UserCheck,
-  Smartphone,
-  History,
-  ToggleLeft,
-  ToggleRight
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { Blocks, CheckCircle2, Trash2, Download } from 'lucide-react';
 import { useServer } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 import { PluginInfo, PopularPlugin } from '../../types';
@@ -44,7 +29,7 @@ export const PluginsTab: React.FC = () => {
           description: 'Restores player skins for cracked (offline-mode) servers & allows /skin commands.',
           category: 'Cracked / Cosmetic',
           downloadUrl: '',
-          icon: 'UserCheck',
+          icon: 'PlaceholderIcon',
           recommendedForCracked: true
         },
         {
@@ -53,7 +38,7 @@ export const PluginsTab: React.FC = () => {
           description: 'Allows newer Minecraft client versions to connect to your server.',
           category: 'Compatibility',
           downloadUrl: '',
-          icon: 'Layers'
+          icon: 'PlaceholderIcon'
         },
         {
           id: 'luckperms',
@@ -61,7 +46,7 @@ export const PluginsTab: React.FC = () => {
           description: 'Industry standard permissions and group management system.',
           category: 'Admin',
           downloadUrl: '',
-          icon: 'Shield'
+          icon: 'PlaceholderIcon'
         },
         {
           id: 'essentialsx',
@@ -69,7 +54,7 @@ export const PluginsTab: React.FC = () => {
           description: '100+ essential commands, kits, teleports, and player management.',
           category: 'Core Gameplay',
           downloadUrl: '',
-          icon: 'Wrench'
+          icon: 'PlaceholderIcon'
         }
       ]);
     }
@@ -126,17 +111,7 @@ export const PluginsTab: React.FC = () => {
   };
 
   const renderIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'UserCheck': return <UserCheck className="w-5 h-5 text-emerald-400" />;
-      case 'Smartphone': return <Smartphone className="w-5 h-5 text-emerald-400" />;
-      case 'Layers': return <Layers className="w-5 h-5 text-emerald-400" />;
-      case 'History': return <History className="w-5 h-5 text-emerald-400" />;
-      case 'Shield': return <Shield className="w-5 h-5 text-emerald-400" />;
-      case 'Wrench': return <Wrench className="w-5 h-5 text-emerald-400" />;
-      case 'Zap': return <Zap className="w-5 h-5 text-emerald-400" />;
-      case 'Lock': return <Lock className="w-5 h-5 text-red-400" />;
-      default: return <Puzzle className="w-5 h-5 text-emerald-400" />;
-    }
+    return <Blocks className="w-5 h-5 text-slate-200" />;
   };
 
   const isPluginInstalled = (name: string) => {
@@ -148,8 +123,8 @@ export const PluginsTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-            <Puzzle className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+            <Blocks className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Plugin Store & Manager</h1>
@@ -159,7 +134,7 @@ export const PluginsTab: React.FC = () => {
           </div>
         </div>
 
-        <span className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 text-emerald-300 rounded-lg border border-emerald-500/20">
+        <span className="text-xs font-semibold px-3 py-2 leading-none bg-white/5 text-white rounded-lg border border-white/10">
           {installed.length} Installed Plugins
         </span>
       </div>
@@ -167,7 +142,7 @@ export const PluginsTab: React.FC = () => {
       {/* Popular 1-Click Plugins Catalog */}
       <div className="space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <Blocks className="w-3.5 h-3.5 text-slate-200" />
           <span>Curated 1-Click Popular Plugins</span>
         </h2>
 
@@ -197,7 +172,7 @@ export const PluginsTab: React.FC = () => {
 
                 <div className="pt-2 border-t border-white/5">
                   {alreadyInstalled ? (
-                    <div className="flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 py-2 rounded-lg border border-emerald-500/20">
+                    <div className="flex items-center justify-center gap-1 text-xs font-semibold text-slate-200 bg-white/5 py-2 rounded-lg border border-white/10">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Installed</span>
                     </div>
@@ -239,20 +214,15 @@ export const PluginsTab: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleToggle(plugin.filename)}
-                    className="flex items-center gap-1 text-slate-300 hover:text-white transition"
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${plugin.enabled ? 'bg-emerald-500' : 'bg-slate-600'}`}
                     title={plugin.enabled ? 'Disable Plugin' : 'Enable Plugin'}
                   >
-                    {plugin.enabled ? (
-                      <ToggleRight className="w-6 h-6 text-emerald-400" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-slate-500" />
-                    )}
-                    <span>{plugin.enabled ? 'Enabled' : 'Disabled'}</span>
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${plugin.enabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
                   </button>
 
                   <button
                     onClick={() => handleDelete(plugin.filename)}
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
+                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition"
                     title="Delete Plugin"
                   >
                     <Trash2 className="w-4 h-4" />

@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Smartphone,
-  CheckCircle2,
-  AlertCircle,
-  Download,
-  Trash2,
-  Save,
-  HelpCircle,
-  ShieldCheck,
-  Globe,
-  Layers,
-  Copy,
-  Check
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { useServer } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 import { GeyserConfig } from '../../types';
@@ -98,8 +85,8 @@ export const CrossplayTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-            <Smartphone className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+            <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">GeyserMC Cross-Play Engine</h1>
@@ -113,9 +100,9 @@ export const CrossplayTab: React.FC = () => {
           <button
             onClick={handleUninstall}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-lg text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-2 leading-none bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-lg text-xs font-semibold transition"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <PlaceholderIcon className="w-3.5 h-3.5" />
             <span>Remove GeyserMC</span>
           </button>
         ) : (
@@ -124,7 +111,7 @@ export const CrossplayTab: React.FC = () => {
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
           >
-            <Download className="w-4 h-4" />
+            <PlaceholderIcon className="w-4 h-4" />
             <span>{loading ? 'Installing...' : '1-Click Install Geyser + Floodgate'}</span>
           </button>
         )}
@@ -152,7 +139,7 @@ export const CrossplayTab: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
               Floodgate 2.0
             </span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
@@ -167,15 +154,15 @@ export const CrossplayTab: React.FC = () => {
         <div className="glass-card rounded-xl p-6 border border-white/10 space-y-6">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-emerald-400" />
+              <PlaceholderIcon className="w-4 h-4 text-slate-200" />
               <span>Bedrock Server Settings (config.yml)</span>
             </h3>
             <button
               onClick={handleSaveConfig}
               className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>Save Geyser Config</span>
+              <PlaceholderIcon className="w-3.5 h-3.5" />
+              <span>PlaceholderIcon Geyser Config</span>
             </button>
           </div>
 
@@ -189,7 +176,7 @@ export const CrossplayTab: React.FC = () => {
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, bedrockPort: parseInt(e.target.value, 10) || 19132 })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-white/10"
               />
               <span className="text-[11px] text-slate-400">Default Bedrock port is 19132.</span>
             </div>
@@ -197,7 +184,7 @@ export const CrossplayTab: React.FC = () => {
             {/* Auth Type */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <PlaceholderIcon className="w-3.5 h-3.5 text-slate-200" />
                 <span>Authentication Mode</span>
               </label>
               <select
@@ -205,7 +192,7 @@ export const CrossplayTab: React.FC = () => {
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, authType: e.target.value as any })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
               >
                 <option value="floodgate">Floodgate (Recommended - No Java MC account needed for Bedrock)</option>
                 <option value="online">Online Mode (Requires Mojang/Microsoft Java account)</option>
@@ -223,7 +210,7 @@ export const CrossplayTab: React.FC = () => {
                 type="text"
                 value={geyserConfig.motd1}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd1: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
               />
             </div>
 
@@ -234,7 +221,7 @@ export const CrossplayTab: React.FC = () => {
                 type="text"
                 value={geyserConfig.motd2}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd2: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
               />
             </div>
           </div>
@@ -244,27 +231,27 @@ export const CrossplayTab: React.FC = () => {
       {/* How to Join Guide for Bedrock Players */}
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-emerald-400" />
+          <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           <span>How Bedrock Friends Join Your Server</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-emerald-400 block font-semibold">📱 Phones & Tablets (Android / iOS)</strong>
+            <strong className="text-slate-200 block font-semibold">📱 Phones & Tablets (Android / iOS)</strong>
             <p className="text-slate-400 leading-relaxed">
               Open Minecraft Bedrock → Play → Servers tab → Scroll to bottom → <strong>Add Server</strong>. Enter your IP and Port <strong>19132</strong>.
             </p>
           </div>
 
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-emerald-400 block font-semibold">💻 Windows 10/11 Bedrock</strong>
+            <strong className="text-slate-200 block font-semibold">💻 Windows 10/11 Bedrock</strong>
             <p className="text-slate-400 leading-relaxed">
               Open Minecraft for Windows → Play → Servers → Add Server. Type your server IP and port <strong>19132</strong>.
             </p>
           </div>
 
           <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-emerald-400 block font-semibold">🎮 Consoles (Xbox / PS / Switch)</strong>
+            <strong className="text-slate-200 block font-semibold">🎮 Consoles (Xbox / PS / Switch)</strong>
             <p className="text-slate-400 leading-relaxed">
               Use the free <strong>BedrockTogether</strong> mobile app or custom DNS on console to redirect to your server IP seamlessly.
             </p>

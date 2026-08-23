@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Globe2,
-  Wifi,
-  Radio,
-  Copy,
-  Check,
-  ExternalLink,
-  RefreshCw,
-  Info,
-  ShieldCheck,
-  ShieldAlert,
-  Zap,
-  Lock,
-  ChevronRight,
-  Sparkles,
-  Loader2
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { Copy, Check, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PlayItIcon } from '../common/Icons';
 import { useNetwork } from '../../context/NetworkContext';
 import { useServer } from '../../context/ServerContext';
@@ -92,8 +77,8 @@ export const NetworkTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-            <Globe2 className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+            <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-white">Network & Multiplayer Sharing</h1>
@@ -109,9 +94,9 @@ export const NetworkTab: React.FC = () => {
             checkUpnpSupport(true);
           }}
           disabled={isLoadingNetwork}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 transition border border-white/5"
+          className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 transition border border-white/5"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoadingNetwork ? 'animate-spin' : ''}`} />
+          <PlaceholderIcon className={`w-3.5 h-3.5 ${isLoadingNetwork ? 'animate-spin' : ''}`} />
           <span>Re-probe Network</span>
         </button>
       </div>
@@ -134,7 +119,7 @@ export const NetworkTab: React.FC = () => {
             onClick={() => handleSwitchMode('cloud_relay')}
             className={`p-4 rounded-xl text-left border transition-all relative flex flex-col justify-between ${
               currentMode === 'cloud_relay'
-                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5'
+                ? 'bg-white/5 border-white/10 shadow-lg shadow-emerald-500/5'
                 : 'bg-obsidian-900 border-white/5 hover:border-white/15'
             }`}
           >
@@ -147,7 +132,7 @@ export const NetworkTab: React.FC = () => {
                   <strong className="text-xs font-bold text-white">PlayIt.gg Tunnel</strong>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
                     Recommended
                   </span>
                   {currentMode === 'cloud_relay' && (
@@ -162,8 +147,8 @@ export const NetworkTab: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-              <Sparkles className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-200 font-medium">
+              <PlaceholderIcon className="w-3 h-3" />
               <span>Worldwide Play • Works Everywhere</span>
             </div>
           </button>
@@ -179,7 +164,7 @@ export const NetworkTab: React.FC = () => {
               !upnpStatus.isSupported
                 ? 'bg-obsidian-950/60 border-red-500/20 opacity-75 cursor-not-allowed'
                 : currentMode === 'upnp'
-                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5 cursor-pointer'
+                ? 'bg-white/5 border-white/10 shadow-lg shadow-emerald-500/5 cursor-pointer'
                 : 'bg-obsidian-900 border-white/5 hover:border-white/15 cursor-pointer'
             }`}
           >
@@ -191,15 +176,15 @@ export const NetworkTab: React.FC = () => {
                       ? 'bg-red-500/10 text-red-400'
                       : currentMode === 'upnp'
                       ? 'bg-emerald-500 text-obsidian-950'
-                      : 'bg-white/5 text-emerald-400'
+                      : 'bg-white/5 text-slate-200'
                   }`}>
-                    {upnpStatus.isSupported ? <Zap className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    {upnpStatus.isSupported ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
                   </div>
                   <strong className="text-xs font-bold text-white">Direct UPnP Port</strong>
                 </div>
                 <div className="flex items-center gap-1">
                   {upnpStatus.isSupported ? (
-                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
                       0ms Ping
                     </span>
                   ) : (
@@ -222,7 +207,7 @@ export const NetworkTab: React.FC = () => {
               ) : (
                 <div className="bg-red-950/40 border border-red-500/20 rounded-lg p-2.5 mb-3 text-[11px] text-red-300 leading-relaxed">
                   <div className="flex items-start gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                    <PlaceholderIcon className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                     <span>
                       UPnP is unavailable or disabled on your current network gateway. Your router or ISP does not allow automatic port mapping. Please use PlayIt.gg Tunnel.
                     </span>
@@ -232,7 +217,7 @@ export const NetworkTab: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between text-[11px]">
-              <span className={upnpStatus.isSupported ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
+              <span className={upnpStatus.isSupported ? 'text-slate-200 font-medium' : 'text-slate-400'}>
                 {upnpStatus.isSupported ? (upnpStatus.routerName || 'Router Gateway Ready') : 'Gateway Incompatible'}
               </span>
               {!upnpStatus.isSupported && (
@@ -242,10 +227,10 @@ export const NetworkTab: React.FC = () => {
                     e.stopPropagation();
                     checkUpnpSupport(true);
                   }}
-                  className="text-emerald-400 hover:underline flex items-center gap-0.5 text-[10px]"
+                  className="text-slate-200 hover:underline flex items-center gap-0.5 text-[10px]"
                 >
                   <span>Re-test</span>
-                  <RefreshCw className="w-2.5 h-2.5" />
+                  <PlaceholderIcon className="w-2.5 h-2.5" />
                 </button>
               )}
             </div>
@@ -257,7 +242,7 @@ export const NetworkTab: React.FC = () => {
             onClick={() => handleSwitchMode('lan_only')}
             className={`p-4 rounded-xl text-left border transition-all relative flex flex-col justify-between ${
               currentMode === 'lan_only'
-                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5'
+                ? 'bg-white/5 border-white/10 shadow-lg shadow-emerald-500/5'
                 : 'bg-obsidian-900 border-white/5 hover:border-white/15'
             }`}
           >
@@ -265,7 +250,7 @@ export const NetworkTab: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`p-1.5 rounded-lg ${currentMode === 'lan_only' ? 'bg-emerald-500 text-obsidian-950' : 'bg-white/5 text-slate-300'}`}>
-                    <Radio className="w-4 h-4" />
+                    <PlaceholderIcon className="w-4 h-4" />
                   </div>
                   <strong className="text-xs font-bold text-white">Local LAN Only</strong>
                 </div>
@@ -281,7 +266,7 @@ export const NetworkTab: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-              <Wifi className="w-3 h-3" />
+              <PlaceholderIcon className="w-3 h-3" />
               <span>Offline • Local Network</span>
             </div>
           </button>
@@ -301,7 +286,7 @@ export const NetworkTab: React.FC = () => {
                   <h2 className="text-base font-bold text-white">PlayIt.gg Tunnel</h2>
                   <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
                     cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress
-                      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                      ? 'bg-white/5 text-white border-white/10'
                       : cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE' && !cloudTunnelStatus.serverAddress
                       ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
                       : cloudTunnelStatus.status === 'WAITING_CLAIM'
@@ -337,7 +322,7 @@ export const NetworkTab: React.FC = () => {
                   : 'bg-emerald-500 hover:bg-emerald-400 text-obsidian-950'
               }`}
             >
-              <Radio className={`w-3.5 h-3.5 ${cloudTunnelStatus.isActive ? 'animate-pulse' : ''}`} />
+              <PlaceholderIcon className={`w-3.5 h-3.5 ${cloudTunnelStatus.isActive ? 'animate-pulse' : ''}`} />
               <span>{cloudTunnelStatus.isActive ? 'Disconnect Tunnel' : 'Start PlayIt.gg Tunnel'}</span>
             </button>
           </div>
@@ -345,7 +330,7 @@ export const NetworkTab: React.FC = () => {
           {/* Connecting Progress State */}
           {cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'STARTING' && (
             <div className="bg-obsidian-900 rounded-xl p-5 border border-white/10 flex items-center gap-3.5">
-              <Loader2 className="w-5 h-5 text-emerald-400 animate-spin shrink-0" />
+              <PlaceholderIcon className="w-5 h-5 text-slate-200 animate-spin shrink-0" />
               <div className="space-y-0.5">
                 <div className="text-xs font-bold text-white">Connecting to PlayIt.gg Tunnel Network...</div>
                 <div className="text-[11px] text-slate-400">
@@ -358,13 +343,13 @@ export const NetworkTab: React.FC = () => {
           {/* First Time 1-Click Claim Prompt */}
           {cloudTunnelStatus.status === 'WAITING_CLAIM' && cloudTunnelStatus.claimUrl && (
             <div className="bg-obsidian-900 rounded-xl p-5 border border-white/10 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-wider">
+                <PlaceholderIcon className="w-4 h-4 text-slate-200" />
                 <span>One-Time Free Linking Required:</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
                 Your browser has been opened automatically. Log into your PlayIt.gg account and click the{' '}
-                <strong className="text-emerald-400">"Claim Agent"</strong>{' '}
+                <strong className="text-slate-200">"Claim Agent"</strong>{' '}
                 button on the page. Craftora will detect it instantly.
               </p>
 
@@ -374,10 +359,10 @@ export const NetworkTab: React.FC = () => {
                   className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold text-xs rounded-lg flex items-center gap-2 transition shadow-md cursor-pointer"
                 >
                   <span>Re-open Claim Page in Browser</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <PlaceholderIcon className="w-3.5 h-3.5" />
                 </button>
                 <div className="flex items-center gap-1.5 text-xs text-amber-300">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <PlaceholderIcon className="w-3.5 h-3.5 animate-spin" />
                   <span>Waiting for you to claim in browser...</span>
                 </div>
               </div>
@@ -388,7 +373,7 @@ export const NetworkTab: React.FC = () => {
           {cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE' && !cloudTunnelStatus.serverAddress && (
             <div className="bg-amber-950/20 rounded-xl p-5 border border-amber-500/30 space-y-3">
               <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <PlaceholderIcon className="w-4 h-4 text-amber-400" />
                 <span>Action Required: Tunnel Missing</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
@@ -405,7 +390,7 @@ export const NetworkTab: React.FC = () => {
                 className="inline-flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold rounded-lg text-xs transition shadow-md cursor-pointer"
               >
                 <span>Create Tunnel on PlayIt.gg</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <PlaceholderIcon className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -413,9 +398,9 @@ export const NetworkTab: React.FC = () => {
 
           {/* Live Public Join Address Card */}
           {cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress && (
-            <div className="bg-obsidian-950/90 rounded-xl p-5 border border-emerald-500/30 space-y-3 shadow-xl">
+            <div className="bg-obsidian-950/90 rounded-xl p-5 border border-white/10 space-y-3 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                   Live Public Join Address:
                 </span>
@@ -439,7 +424,7 @@ export const NetworkTab: React.FC = () => {
 
           {cloudTunnelStatus.error && (
             <div className="bg-red-950/50 border border-red-500/30 p-3.5 rounded-xl text-xs text-red-300 flex items-start gap-2">
-              <Info className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <PlaceholderIcon className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{cloudTunnelStatus.error}</span>
             </div>
           )}
@@ -451,15 +436,15 @@ export const NetworkTab: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                <Zap className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+                <PlaceholderIcon className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold text-white">UPnP Router Port Forwarding</h2>
                   <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
                     upnpStatus.isActive
-                      ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30'
+                      ? 'bg-obsidian-950 text-white border-white/10'
                       : 'bg-white/5 text-slate-400 border-white/10'
                   }`}>
                     {upnpStatus.isActive ? 'Port Forwarded' : 'Port Closed'}
@@ -485,16 +470,16 @@ export const NetworkTab: React.FC = () => {
                   : 'bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-lg shadow-emerald-500/20'
               }`}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <PlaceholderIcon className="w-3.5 h-3.5" />
               <span>{upnpStatus.isActive ? 'Release Port' : 'Open Router Port'}</span>
             </button>
           </div>
 
           {/* Live Direct IP Card */}
           {upnpStatus.isActive && (
-            <div className="bg-obsidian-950/90 rounded-xl p-5 border border-emerald-500/40 space-y-3 shadow-xl">
+            <div className="bg-obsidian-950/90 rounded-xl p-5 border border-white/10 space-y-3 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                   Live Direct Join Address:
                 </span>
@@ -518,7 +503,7 @@ export const NetworkTab: React.FC = () => {
 
           {upnpStatus.error && (
             <div className="bg-red-950/50 border border-red-500/30 p-3.5 rounded-xl text-xs text-red-300 flex items-start gap-2">
-              <Info className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <PlaceholderIcon className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{upnpStatus.error}</span>
             </div>
           )}
@@ -529,8 +514,8 @@ export const NetworkTab: React.FC = () => {
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-              <Radio className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+              <PlaceholderIcon className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">Local LAN Multicast & Network Diagnostics</h3>
@@ -542,7 +527,7 @@ export const NetworkTab: React.FC = () => {
             onClick={() => toggleLan(activeServer?.name)}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               isLanBroadcasting
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                ? 'bg-white/5 text-white border border-white/10'
                 : 'bg-white/10 text-slate-300 hover:bg-white/20'
             }`}
           >
@@ -553,7 +538,7 @@ export const NetworkTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Local Wi-Fi IP:</span>
-            <div className="font-mono text-emerald-400 font-bold text-sm">{localIp}</div>
+            <div className="font-mono text-slate-200 font-bold text-sm">{localIp}</div>
           </div>
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Public Gateway IP:</span>
@@ -561,14 +546,14 @@ export const NetworkTab: React.FC = () => {
           </div>
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Router UPnP Status:</span>
-            <div className={`font-semibold text-xs flex items-center gap-1 ${upnpStatus.isSupported ? 'text-emerald-400' : 'text-red-400'}`}>
-              {upnpStatus.isSupported ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+            <div className={`font-semibold text-xs flex items-center gap-1 ${upnpStatus.isSupported ? 'text-slate-200' : 'text-red-500'}`}>
+              {upnpStatus.isSupported ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
               <span>{upnpStatus.isSupported ? 'Supported' : 'Disabled / CGNAT'}</span>
             </div>
           </div>
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Minecraft Port:</span>
-            <div className="font-mono text-emerald-400 font-bold text-sm">{activePort} (Java) / 19132 (Bedrock)</div>
+            <div className="font-mono text-slate-200 font-bold text-sm">{activePort} (Java) / 19132 (Bedrock)</div>
           </div>
         </div>
 
@@ -576,9 +561,9 @@ export const NetworkTab: React.FC = () => {
           <span className="font-mono text-slate-300">{localIp}:{activePort}</span>
           <button
             onClick={() => handleCopy(`${localIp}:${activePort}`, 'lan-ip')}
-            className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+            className="text-xs text-slate-200 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
           >
-            {copiedKey === 'lan-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiedKey === 'lan-ip' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copiedKey === 'lan-ip' ? 'Copied' : 'Copy LAN IP'}</span>
           </button>
         </div>

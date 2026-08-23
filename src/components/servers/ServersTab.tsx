@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Server,
-  PlusCircle,
-  LayoutDashboard,
-  Globe2,
-  Smartphone,
-  Sliders,
-  Users,
-  Puzzle,
-  Trash2,
-  AlertTriangle,
-  X,
-  Play,
-  Square,
-  RotateCw,
-  Sparkles
-} from 'lucide-react';
+import { PlaceholderIcon } from '../common/PlaceholderIcon';
+import { Trash2 } from 'lucide-react';
 import { useServer } from '../../context/ServerContext';
 import { DashboardTab } from '../dashboard/DashboardTab';
 import { NetworkTab } from '../network/NetworkTab';
@@ -64,7 +49,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   if (isLoadingServers) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-3">
-        <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-transparent animate-spin" />
         <p className="text-xs text-slate-400 font-medium">Detecting Minecraft servers...</p>
       </div>
     );
@@ -74,8 +59,8 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   if (servers.length === 0 || !activeServer) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-          <Server className="w-8 h-8 text-emerald-400 font-bold" />
+        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+          <PlaceholderIcon className="w-8 h-8 text-slate-200 font-bold" />
         </div>
 
         <div className="space-y-2 max-w-md">
@@ -89,7 +74,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
           onClick={onOpenCreateModal}
           className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs rounded-lg flex items-center gap-2 transition"
         >
-          <PlusCircle className="w-4 h-4" />
+          <PlaceholderIcon className="w-4 h-4" />
           <span>Create a New Server</span>
         </button>
       </div>
@@ -97,12 +82,12 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   }
 
   const subNavItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'network', label: 'Network', icon: Globe2 },
-    { id: 'crossplay', label: 'Cross-Play', icon: Smartphone },
-    { id: 'plugins', label: 'Plugins', icon: Puzzle },
-    { id: 'players', label: 'Players', icon: Users },
-    { id: 'config', label: 'Settings', icon: Sliders },
+    { id: 'overview', label: 'Overview', icon: PlaceholderIcon },
+    { id: 'network', label: 'Network', icon: PlaceholderIcon },
+    { id: 'crossplay', label: 'Cross-Play', icon: PlaceholderIcon },
+    { id: 'plugins', label: 'Plugins', icon: PlaceholderIcon },
+    { id: 'players', label: 'Players', icon: PlaceholderIcon },
+    { id: 'config', label: 'Settings', icon: PlaceholderIcon },
   ];
 
   const renderSubTab = () => {
@@ -142,13 +127,12 @@ export const ServersTab: React.FC<ServersTabProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as ServerSubTabType)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center px-4 py-2 leading-none rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                    ? 'bg-emerald-600 text-white font-bold shadow-sm border-transparent'
+                    : 'text-slate-400 hover:text-white hover:bg-white/10 border-transparent'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -161,7 +145,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
             onClick={() => setShowDeleteModal(true)}
             disabled={status !== 'STOPPED'}
             title={status !== 'STOPPED' ? 'Stop server first to delete' : 'Delete Server'}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/30 hover:bg-red-950/60 text-red-400 hover:text-red-200 border border-red-500/20 text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg bg-transparent hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-600 text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete Server</span>
@@ -180,7 +164,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
           <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
               <div className="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
-                <AlertTriangle className="w-5 h-5" />
+                <Trash2 className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-white">Delete Server</h3>
@@ -206,7 +190,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteConfirm}
-                className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{isDeleting ? 'Deleting...' : 'Delete Server'}</span>

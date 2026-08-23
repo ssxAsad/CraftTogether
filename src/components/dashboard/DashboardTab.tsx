@@ -1,23 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Play,
-  Square,
-  RotateCw,
-  Copy,
-  Check,
-  Cpu,
-  HardDrive,
-  Activity,
-  Users,
-  Wifi,
-  Smartphone,
-  ShieldAlert,
-  ArrowUpRight,
-  FolderOpen,
-  Loader2,
-  Sparkles,
-  Power
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { Play, Square, RotateCw, X, Copy, Check } from 'lucide-react';
 import { PlayItIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { useNetwork } from '../../context/NetworkContext';
@@ -150,7 +133,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <span className={`text-[11px] font-semibold uppercase px-2 py-0.5 rounded border ${
                 activeServer?.networkMode === 'lan_only'
                   ? 'bg-zinc-800 text-zinc-300 border-zinc-700/50'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-white/5 text-slate-200 border-white/10'
               }`}>
                 {activeServer?.networkMode === 'lan_only'
                   ? 'Only LAN'
@@ -167,7 +150,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                Default Port: <strong className="text-emerald-400 font-mono">{activeServer?.port || 25565}</strong>
+                Default Port: <strong className="text-slate-200 font-mono">{activeServer?.port || 25565}</strong>
               </span>
               {activeServer?.isCracked && (
                 <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10 text-[11px] font-medium">
@@ -192,7 +175,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 disabled
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/5 text-slate-300 border border-white/10 font-bold text-xs animate-pulse cursor-not-allowed"
               >
-                <RotateCw className="w-4 h-4 animate-spin text-emerald-400" />
+                <RotateCw className="w-4 h-4 animate-spin text-slate-200" />
                 <span>Starting Up...</span>
               </button>
             ) : (
@@ -209,7 +192,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   title="Force Kill (Emergency)"
                   className="p-2.5 rounded-lg bg-zinc-800 hover:bg-red-950/60 text-slate-400 hover:text-red-400 border border-white/10 transition"
                 >
-                  <ShieldAlert className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -223,7 +206,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">CPU Usage</span>
-            <Cpu className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           </div>
           <div className="text-2xl font-black text-white font-mono">
             {metrics.cpu}%
@@ -243,7 +226,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">RAM Usage</span>
-            <HardDrive className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           </div>
           <div className="text-2xl font-black text-white font-mono">
             {metrics.memoryMb} <span className="text-xs text-slate-400 font-sans font-normal">/ {ramMaxMb} MB</span>
@@ -262,11 +245,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">Server TPS</span>
-            <Activity className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           </div>
           <div className="text-2xl font-black text-white font-mono flex items-center gap-2">
             {status === 'ONLINE' ? metrics.tps.toFixed(1) : '--'}
-            <span className="text-xs text-emerald-400 font-sans font-medium">
+            <span className="text-xs text-slate-200 font-sans font-medium">
               {status === 'ONLINE' ? 'Optimal (20.0)' : 'Idle'}
             </span>
           </div>
@@ -282,15 +265,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         <div className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-slate-400 text-xs">
             <span className="font-semibold uppercase tracking-wider">Players</span>
-            <Users className="w-4 h-4 text-emerald-400" />
+            <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           </div>
           <div className="text-2xl font-black text-white font-mono flex items-center justify-between">
             <span>{metrics.onlinePlayers} <span className="text-xs text-slate-400 font-sans font-normal">/ {metrics.maxPlayers}</span></span>
             <button
               onClick={() => onNavigateTab('players')}
-              className="text-xs text-emerald-400 hover:underline flex items-center gap-0.5"
+              className="text-xs text-slate-200 hover:underline flex items-center gap-0.5"
             >
-              View <ArrowUpRight className="w-3 h-3" />
+              View <PlaceholderIcon className="w-3 h-3" />
             </button>
           </div>
           <div className="w-full h-1.5 bg-obsidian-850 rounded-full overflow-hidden">
@@ -306,12 +289,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Card 1: Internet / Public Access (Cloud Relay / UPnP) or Local Access (LAN) */}
         {activeServer?.networkMode === 'lan_only' ? (
-          <div className="glass-card rounded-xl p-5 border border-white/10 space-y-4">
+          <div className="glass-card rounded-xl p-5 border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                  <Wifi className="w-4 h-4" />
-                </div>
                 <div>
                   <h2 className="text-sm font-bold text-white">Only LAN Mode</h2>
                   <p className="text-xs text-slate-400">Offline network for friends on your same Wi-Fi</p>
@@ -323,14 +303,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             </div>
 
             <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
-              <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
+              <span className="font-mono text-xs text-white font-semibold select-all truncate">
                 {localIp}:{activeServer?.port || 25565}
               </span>
               <button
                 onClick={() => handleCopy(`${localIp}:${activeServer?.port || 25565}`, 'lan-only-ip')}
-                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition"
+                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-white/5 text-slate-200 hover:bg-white/5 rounded transition"
               >
-                {copiedKey === 'lan-only-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedKey === 'lan-only-ip' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedKey === 'lan-only-ip' ? 'Copied' : 'Copy Local IP'}</span>
               </button>
             </div>
@@ -340,9 +320,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="glass-card rounded-xl p-5 border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm shrink-0">
-                  {activeServer?.networkMode === 'upnp' ? <Wifi className="w-6 h-6 text-emerald-400" /> : <PlayItIcon className="w-9 h-9 rounded-lg" />}
-                </div>
                 <div>
                   <h2 className="text-sm font-bold text-white">
                     {activeServer?.networkMode === 'upnp' ? 'Direct UPnP IP' : 'PlayIt.gg Tunnel'}
@@ -353,7 +330,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <span
                 className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
                   (activeServer?.networkMode === 'upnp' ? upnpStatus.isActive : (cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE'))
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    ? 'bg-white/5 text-slate-200 border-white/10'
                     : cloudTunnelStatus.status === 'WAITING_CLAIM'
                     ? 'bg-red-500/10 text-red-400 border-red-500/30'
                     : cloudTunnelStatus.status === 'STARTING'
@@ -375,17 +352,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
 
             {activeServer?.networkMode === 'upnp' ? (
               upnpStatus.isActive ? (
-                <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-emerald-500/30">
-                  <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
+                <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
+                  <span className="font-mono text-xs text-white font-semibold select-all truncate">
                     {publicIp || upnpStatus.externalIp}:{activeServer.port || 25565}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activeServer.port || 25565}`, 'upnp-ip')}
-                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition cursor-pointer"
+                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-white/5 text-slate-200 hover:bg-white/5 rounded transition cursor-pointer"
                     >
-                      {copiedKey === 'upnp-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedKey === 'upnp-ip' ? 'Copied' : 'Copy'}</span>
+                      {copiedKey === 'upnp-ip' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedKey === 'upnp-ip' ? 'Copied' : 'Copy IP'}</span>
                     </button>
                     <button
                       onClick={() => stopUpnp()}
@@ -402,29 +379,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   <button
                     onClick={() => startUpnp(activeServer?.port || 25565)}
                     disabled={isLoadingNetwork}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 leading-none bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
                   >
                     {isLoadingNetwork ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <PlaceholderIcon className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <Power className="w-3.5 h-3.5" />
+                      <PlaceholderIcon className="w-3.5 h-3.5" />
                     )}
                     <span>Turn On</span>
                   </button>
                 </div>
               )
             ) : cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress ? (
-              <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-emerald-500/30">
-                <span className="font-mono text-xs text-emerald-300 font-semibold select-all truncate">
+              <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
+                <span className="font-mono text-xs text-white font-semibold select-all truncate">
                   {cloudTunnelStatus.serverAddress}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud')}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded transition cursor-pointer"
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-white/5 text-slate-200 hover:bg-white/5 rounded transition cursor-pointer"
                   >
-                    {copiedKey === 'cloud' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'cloud' ? 'Copied' : 'Copy'}</span>
+                    {copiedKey === 'cloud' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cloud' ? 'Copied' : 'Copy IP'}</span>
                   </button>
                   <button
                     onClick={() => stopCloudTunnel()}
@@ -438,7 +415,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             ) : cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'STARTING' ? (
               <div className="flex items-center justify-between bg-obsidian-900 p-3 rounded-lg border border-white/10 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400 shrink-0" />
+                  <PlaceholderIcon className="w-4 h-4 animate-spin text-slate-200 shrink-0" />
                   <span>Connecting to Playit.gg tunnel...</span>
                 </div>
                 <button
@@ -451,7 +428,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             ) : cloudTunnelStatus.status === 'WAITING_CLAIM' && cloudTunnelStatus.claimUrl ? (
               <div className="flex items-center justify-between bg-obsidian-900 p-3 rounded-lg border border-white/10 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <PlaceholderIcon className="w-4 h-4 text-slate-200 shrink-0" />
                   <span>Free domain ready to claim</span>
                 </div>
                 <button
@@ -470,7 +447,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             ) : cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE' && !cloudTunnelStatus.serverAddress ? (
               <div className="flex flex-col gap-2 bg-amber-950/20 p-3 rounded-lg border border-amber-500/20 text-xs">
                 <div className="flex items-center gap-2 text-amber-300">
-                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <PlaceholderIcon className="w-4 h-4 shrink-0" />
                   <span className="font-semibold">Action Required: Tunnel Missing</span>
                 </div>
                 <p className="text-slate-400">Your agent is linked but needs a Minecraft tunnel.</p>
@@ -482,7 +459,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                       window.open('https://playit.gg/account/tunnels', '_blank');
                     }
                   }}
-                  className="mt-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold rounded-lg self-start transition-all shadow-sm shadow-amber-500/10 cursor-pointer"
+                  className="mt-1 px-3 py-2 leading-none bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold rounded-lg self-start transition-all shadow-sm shadow-amber-500/10 cursor-pointer"
                 >
                   Create Tunnel →
                 </button>
@@ -493,12 +470,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 <button
                   onClick={() => startCloudTunnel(activeServer?.port || 25565)}
                   disabled={isLoadingNetwork}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-2 leading-none bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
                 >
                   {isLoadingNetwork ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Power className="w-3.5 h-3.5" />
+                    <Play className="w-3.5 h-3.5" />
                   )}
                   <span>Turn On</span>
                 </button>
@@ -509,47 +486,39 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
 
         {/* Card 2: Bedrock & Mobile Cross-Play Connection Guide */}
         <div className="glass-card rounded-xl p-5 border border-white/10 space-y-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-              <Smartphone className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white">Bedrock Server</h2>
-              <p className="text-xs text-slate-400">Enter IP and Port in Minecraft Bedrock to join</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div>
+                <h2 className="text-sm font-bold text-white">Bedrock Server</h2>
+                <p className="text-xs text-slate-400">Enter IP and Port to join</p>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-obsidian-950/80 p-2.5 rounded-lg border border-white/5 space-y-1">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">IP</span>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-slate-200 truncate select-all font-medium">
-                  {bedrockIp}
-                </span>
-                <button
-                  onClick={() => handleCopy(bedrockIp, 'bedrock-ip')}
-                  className="text-slate-400 hover:text-white"
-                  title="Copy IP"
-                >
-                  {copiedKey === 'bedrock-ip' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
+              <span className="font-mono text-xs text-white font-semibold select-all truncate">
+                {bedrockIp}
+              </span>
+              <button
+                onClick={() => handleCopy(bedrockIp, 'bedrock-ip')}
+                className="text-slate-400 hover:text-white shrink-0"
+                title="Copy IP"
+              >
+                {copiedKey === 'bedrock-ip' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
-
-            <div className="bg-obsidian-950/80 p-2.5 rounded-lg border border-white/5 space-y-1">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Port</span>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-emerald-300 font-semibold">
-                  {displayBedrockPort}
-                </span>
-                <button
-                  onClick={() => handleCopy(displayBedrockPort.toString(), 'bedrock-port')}
-                  className="text-slate-400 hover:text-white"
-                  title="Copy Port"
-                >
-                  {copiedKey === 'bedrock-port' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
+            <div className="w-24 flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
+              <span className="font-mono text-xs text-white font-semibold select-all truncate">
+                {displayBedrockPort}
+              </span>
+              <button
+                onClick={() => handleCopy(displayBedrockPort.toString(), 'bedrock-port')}
+                className="text-slate-400 hover:text-white shrink-0"
+                title="Copy Port"
+              >
+                {copiedKey === 'bedrock-port' ? <Check className="w-3.5 h-3.5 text-slate-200" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
           </div>
         </div>

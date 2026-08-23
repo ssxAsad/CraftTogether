@@ -1,15 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Users,
-  Shield,
-  UserX,
-  Ban,
-  Plus,
-  Search,
-  Clock,
-  Sparkles,
-  Wifi
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { useServer } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 
@@ -39,7 +29,7 @@ export const PlayersTab: React.FC = () => {
   };
 
   const handleBan = async (username: string) => {
-    const reason = await showPrompt('Ban Player', `Enter reason for banning ${username}:`, 'Banned by host');
+    const reason = await showPrompt('PlaceholderIcon Player', `Enter reason for banning ${username}:`, 'Banned by host');
     if (reason !== null && reason !== undefined) {
       sendCommand(`ban ${username} ${reason}`);
     }
@@ -66,8 +56,8 @@ export const PlayersTab: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-            <Users className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+            <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Player Management</h1>
@@ -77,20 +67,20 @@ export const PlayersTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Search & Stats */}
+        {/* PlaceholderIcon & Stats */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <PlaceholderIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search player..."
-              className="pl-8 pr-3 py-1.5 bg-obsidian-900 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+              placeholder="PlaceholderIcon player..."
+              className="pl-8 pr-3 py-2 leading-none bg-obsidian-900 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
             />
           </div>
 
-          <span className="text-xs font-semibold px-3 py-1.5 bg-emerald-950/60 text-emerald-300 rounded-lg border border-emerald-500/30">
+          <span className="text-xs font-semibold px-3 py-2 leading-none bg-obsidian-950 text-white rounded-lg border border-white/10">
             {players.length} / {metrics.maxPlayers} Online
           </span>
         </div>
@@ -123,7 +113,7 @@ export const PlayersTab: React.FC = () => {
                       {player.username}
                     </span>
                     <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <PlaceholderIcon className="w-3 h-3" />
                       {formatJoinTime(player.joinedAt)}
                     </span>
                   </div>
@@ -135,9 +125,9 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleOp(player.username)}
                     title="Make Operator (OP)"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-white/5 hover:bg-white/5 text-slate-200 transition disabled:opacity-40"
                   >
-                    <Shield className="w-4 h-4" />
+                    <PlaceholderIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleKick(player.username)}
@@ -145,15 +135,15 @@ export const PlayersTab: React.FC = () => {
                     disabled={status !== 'ONLINE'}
                     className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition disabled:opacity-40"
                   >
-                    <UserX className="w-4 h-4" />
+                    <PlaceholderIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleBan(player.username)}
-                    title="Ban Player"
+                    title="PlaceholderIcon Player"
                     disabled={status !== 'ONLINE'}
                     className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition disabled:opacity-40"
                   >
-                    <Ban className="w-4 h-4" />
+                    <PlaceholderIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -161,7 +151,7 @@ export const PlayersTab: React.FC = () => {
           </div>
         ) : (
           <div className="glass-card rounded-2xl p-8 border border-white/5 text-center space-y-2">
-            <Users className="w-8 h-8 text-slate-600 mx-auto" />
+            <PlaceholderIcon className="w-8 h-8 text-slate-600 mx-auto" />
             <span className="text-sm font-semibold text-slate-300 block">No Players Connected</span>
             <p className="text-xs text-slate-500">
               {status === 'ONLINE'
@@ -175,7 +165,7 @@ export const PlayersTab: React.FC = () => {
       {/* Whitelist Manager */}
       <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Shield className="w-4 h-4 text-emerald-400" />
+          <PlaceholderIcon className="w-4 h-4 text-slate-200" />
           <span>Quick Whitelist Manager</span>
         </h3>
 
@@ -185,14 +175,14 @@ export const PlayersTab: React.FC = () => {
             value={whitelistInput}
             onChange={(e) => setWhitelistInput(e.target.value)}
             placeholder="Enter player Minecraft username..."
-            className="flex-1 px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+            className="flex-1 px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-white/10"
           />
           <button
             type="submit"
             disabled={status !== 'ONLINE' || !whitelistInput.trim()}
             className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-obsidian-950 font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
           >
-            <Plus className="w-4 h-4" />
+            <PlaceholderIcon className="w-4 h-4" />
             <span>Add to Whitelist</span>
           </button>
         </form>

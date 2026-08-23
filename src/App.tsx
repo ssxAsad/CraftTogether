@@ -42,7 +42,7 @@ export const App: React.FC = () => {
   if (isSetupComplete === null) {
     return (
       <div className="flex h-screen w-screen bg-obsidian-950 items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ export const App: React.FC = () => {
           <div className="flex-1 flex flex-col overflow-hidden">
             <TitleBar />
 
-            <main className="flex-1 bg-gradient-to-b from-obsidian-900/60 to-obsidian-950 overflow-hidden relative">
+            <main className="flex-1 bg-obsidian-950 overflow-hidden relative">
               {activeTab === 'servers' ? (
                 <ServersTab
                   onOpenCreateModal={() => setIsCreateModalOpen(true)}

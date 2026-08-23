@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Download,
-  CheckCircle2,
-  Layers,
-  Plug,
-  ArrowRight,
-  Loader2,
-  Sparkles,
-  RefreshCw,
-  Clock
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { PlayItIcon, JavaIcon } from '../common/Icons';
 import { PlayitSetupScreen } from './PlayitSetupScreen';
 
@@ -154,7 +144,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         }
       } catch {
         setDependencies((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, status: 'error', progress: 0, details: 'Download error' } : item))
+          prev.map((item) => (item.id === id ? { ...item, status: 'error', progress: 0, details: 'PlaceholderIcon error' } : item))
         );
       }
       await checkAll();
@@ -203,20 +193,20 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     );
   }
 
-  // Step 1: Download dependencies
+  // Step 1: PlaceholderIcon dependencies
   return (
     <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-y-auto max-h-screen">
       {/* Header */}
       <div className="text-center mb-6 pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Step 1 of 2 — Download Required Files</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-200 text-xs font-bold uppercase tracking-wider mb-3">
+          <PlaceholderIcon className="w-3.5 h-3.5" />
+          <span>Step 1 of 2 — PlaceholderIcon Required Files</span>
         </div>
         <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
           Get Your Server Ready
         </h2>
         <p className="text-slate-400 text-sm max-w-2xl mx-auto">
-          Download the 4 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
+          PlaceholderIcon the 4 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
         </p>
       </div>
 
@@ -230,7 +220,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
             <p className="text-xs text-slate-400">
               {allReady
                 ? 'All components are downloaded and ready to use.'
-                : 'Click "Download All" to get everything at once.'}
+                : 'Click "PlaceholderIcon All" to get everything at once.'}
             </p>
           </div>
         </div>
@@ -242,7 +232,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
             className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition cursor-pointer border border-white/5"
             title="Refresh"
           >
-            <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+            <PlaceholderIcon className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
           </button>
 
           {!allReady && (
@@ -252,11 +242,11 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
               className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-obsidian-950 font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
             >
               {isInstallingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <PlaceholderIcon className="w-4 h-4 animate-spin" />
               ) : (
-                <Download className="w-4 h-4" />
+                <PlaceholderIcon className="w-4 h-4" />
               )}
-              <span>{isInstallingAll ? 'Downloading...' : 'Download All'}</span>
+              <span>{isInstallingAll ? 'Downloading...' : 'PlaceholderIcon All'}</span>
             </button>
           )}
         </div>
@@ -271,27 +261,27 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           dep={dependencies.find((d) => d.id === 'java')!}
           meta={DEP_META.java}
           onInstall={() => handleInstallSingle('java')}
-          buttonLabel="Download Java"
+          buttonLabel="PlaceholderIcon Java"
         />
 
         {/* PaperMC */}
         <DepCard
           id="papermc"
-          icon={<Layers className="w-8 h-8 text-emerald-400" />}
+          icon={<PlaceholderIcon className="w-8 h-8 text-slate-200" />}
           dep={dependencies.find((d) => d.id === 'papermc')!}
           meta={DEP_META.papermc}
           onInstall={() => handleInstallSingle('papermc')}
-          buttonLabel="Download Server"
+          buttonLabel="PlaceholderIcon Server"
         />
 
         {/* Plugins */}
         <DepCard
           id="plugins"
-          icon={<Plug className="w-8 h-8 text-emerald-400" />}
+          icon={<PlaceholderIcon className="w-8 h-8 text-slate-200" />}
           dep={dependencies.find((d) => d.id === 'plugins')!}
           meta={DEP_META.plugins}
           onInstall={() => handleInstallSingle('plugins')}
-          buttonLabel="Download Plugins"
+          buttonLabel="PlaceholderIcon Plugins"
         />
 
         {/* PlayIt.gg */}
@@ -302,7 +292,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           dep={dependencies.find((d) => d.id === 'cloud_relay')!}
           meta={DEP_META.cloud_relay}
           onInstall={() => handleInstallSingle('cloud_relay')}
-          buttonLabel="Download Tunnel"
+          buttonLabel="PlaceholderIcon Tunnel"
         />
       </div>
 
@@ -315,11 +305,11 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
             allReady 
               ? 'bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 cursor-pointer' 
-              : 'bg-emerald-500/20 text-emerald-500/50 cursor-not-allowed'
+              : 'bg-white/5 text-slate-300 cursor-not-allowed'
           }`}
         >
           <span>Continue</span>
-          <ArrowRight className="w-4 h-4" />
+          <PlaceholderIcon className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -348,18 +338,18 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
           </div>
 
           {dep.status === 'ready' ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-500/30">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-white bg-obsidian-950 px-2.5 py-1 rounded border border-white/10">
+              <PlaceholderIcon className="w-3.5 h-3.5" />
               {meta.readyLabel}
             </span>
           ) : dep.status === 'installing' ? (
             <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-300 bg-white/5 px-2.5 py-1 rounded border border-white/10">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+              <PlaceholderIcon className="w-3.5 h-3.5 animate-spin text-slate-200" />
               Downloading
             </span>
           ) : dep.status === 'queued' ? (
             <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-950/40 px-2.5 py-1 rounded border border-amber-500/30">
-              <Clock className="w-3.5 h-3.5" />
+              <PlaceholderIcon className="w-3.5 h-3.5" />
               In Queue
             </span>
           ) : dep.status === 'error' ? (
@@ -408,7 +398,7 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
           onClick={onInstall}
           className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
         >
-          <Download className="w-4 h-4" />
+          <PlaceholderIcon className="w-4 h-4" />
           <span>{buttonLabel}</span>
         </button>
       )}

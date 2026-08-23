@@ -1,19 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import {
-  Sparkles,
-  ExternalLink,
-  ShieldCheck,
-  Globe,
-  Zap,
-  CheckCircle2,
-  Loader2,
-  ArrowRight,
-  ArrowLeft,
-  RefreshCw,
-  Copy,
-  Check
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { PlayItIcon } from '../common/Icons';
 
 interface PlayitSetupScreenProps {
@@ -122,8 +109,8 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
 
       {/* Step Indicator Header */}
       <div className="text-center mb-6 pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
-          <Sparkles className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-200 text-xs font-bold uppercase tracking-wider mb-3">
+          <PlaceholderIcon className="w-3.5 h-3.5" />
           <span>Step 2 of 2: Global Multiplayer Setup</span>
         </div>
         <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
@@ -138,23 +125,23 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-6">
         {[
           {
-            icon: <Globe className="w-5 h-5" />,
+            icon: <PlaceholderIcon className="w-5 h-5" />,
             title: 'Universal Internet Play',
             desc: 'Works on any ISP, including restrictive CGNAT networks.'
           },
           {
-            icon: <ShieldCheck className="w-5 h-5" />,
+            icon: <PlaceholderIcon className="w-5 h-5" />,
             title: 'Private IP Shield',
             desc: 'Hides your home IP with built-in DDoS protection.'
           },
           {
-            icon: <Zap className="w-5 h-5" />,
+            icon: <PlaceholderIcon className="w-5 h-5" />,
             title: 'Zero Router Config',
             desc: 'No port forwarding, no router login, no static IP needed.'
           }
         ].map((item) => (
           <div key={item.title} className="bg-obsidian-900/60 border border-white/10 rounded-2xl p-4 flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-200 flex items-center justify-center shrink-0">
               {item.icon}
             </div>
             <div>
@@ -176,8 +163,8 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
             <div className="flex items-center gap-2.5">
               <h3 className="text-lg font-bold text-white">PlayIt.gg Account Link</h3>
               {isAgentLinked ? (
-                <span className="flex items-center gap-1 text-xs font-bold text-emerald-300 bg-emerald-950/70 px-2.5 py-0.5 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1 text-xs font-bold text-white bg-obsidian-950 px-2.5 py-0.5 rounded border border-white/10">
+                  <PlaceholderIcon className="w-3.5 h-3.5" />
                   Linked & Active
                 </span>
               ) : (
@@ -206,18 +193,18 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
         {/* Content Area */}
         {isTunnelReady ? (
           /* === SUCCESS STATE: Linked and Tunnel Exists === */
-          <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-6 text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-              <CheckCircle2 className="w-7 h-7" />
+          <div className="bg-obsidian-950 border border-white/10 rounded-xl p-6 text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-white/5 text-slate-200 flex items-center justify-center mx-auto border border-white/10">
+              <PlaceholderIcon className="w-7 h-7" />
             </div>
             <div>
               <h4 className="text-base font-bold text-white">Setup Complete!</h4>
               <p className="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
                 Your server is now successfully connected to the internet. You can start your server from the dashboard and share the address below with your friends.
               </p>
-              <div className="mt-3 px-4 py-2 bg-emerald-900/40 border border-emerald-500/30 rounded-lg inline-block">
+              <div className="mt-3 px-4 py-2 bg-emerald-900/40 border border-white/10 rounded-lg inline-block">
                 <p className="text-xs text-slate-400 mb-0.5">Your Public Address</p>
-                <code className="text-sm font-mono font-bold text-emerald-300">
+                <code className="text-sm font-mono font-bold text-white">
                   {tunnelStatus.serverAddress}
                 </code>
               </div>
@@ -234,7 +221,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
           /* === SUCCESS BUT NO TUNNEL: Linked but no tunnel added === */
           <div className="bg-amber-950/40 border border-amber-500/30 rounded-xl p-6 text-center space-y-4">
             <div className="w-14 h-14 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
-              <Sparkles className="w-7 h-7" />
+              <PlaceholderIcon className="w-7 h-7" />
             </div>
             <div>
               <h4 className="text-base font-bold text-white">Checking for Tunnel...</h4>
@@ -256,7 +243,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
               >
-                Open Dashboard <ExternalLink className="w-4 h-4" />
+                Open Dashboard <PlaceholderIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => {
@@ -266,7 +253,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-obsidian-800 hover:bg-obsidian-700 text-white font-bold rounded-xl text-sm transition-all border border-white/10 cursor-pointer"
               >
-                <RefreshCw className="w-4 h-4" /> Refresh
+                <PlaceholderIcon className="w-4 h-4" /> Refresh
               </button>
             </div>
             <p className="text-[11px] text-slate-400">
@@ -279,7 +266,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
           <div className="flex flex-col items-center gap-6 py-4">
             <div className="text-center max-w-sm">
               <p className="text-sm text-slate-300 leading-relaxed">
-                Click <strong className="text-white">Link PlayIt.gg Account</strong> below. Your browser will open automatically — just log in to PlayIt.gg and click the <strong className="text-emerald-400">Claim Agent</strong> button. That's it.
+                Click <strong className="text-white">Link PlayIt.gg Account</strong> below. Your browser will open automatically — just log in to PlayIt.gg and click the <strong className="text-slate-200">Claim Agent</strong> button. That's it.
               </p>
             </div>
             <div className="flex flex-col items-center gap-2 w-full max-w-xs">
@@ -288,7 +275,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 onClick={handleLinkAccount}
                 className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-obsidian-950 font-bold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
               >
-                <ExternalLink className="w-4 h-4" />
+                <PlaceholderIcon className="w-4 h-4" />
                 <span>Link PlayIt.gg Account</span>
               </button>
               <p className="text-[11px] text-slate-500 text-center">
@@ -300,7 +287,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
         ) : claimState === 'starting' ? (
           /* === STARTING: Spawning the agent === */
           <div className="flex flex-col items-center gap-4 py-8">
-            <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+            <PlaceholderIcon className="w-8 h-8 text-slate-200 animate-spin" />
             <div className="text-center">
               <p className="text-sm font-semibold text-white">Starting PlayIt.gg Agent...</p>
               <p className="text-xs text-slate-400 mt-1">Generating your secure claim link, please wait.</p>
@@ -318,14 +305,14 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 { n: '3', label: 'Waiting for Claim', done: false, active: true },
                 { n: '4', label: 'Done!', done: false }
               ].map((step) => (
-                <div key={step.n} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold
-                  ${step.done ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300' :
+                <div key={step.n} className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-full border text-[11px] font-bold
+                  ${step.done ? 'bg-obsidian-950 border-white/10 text-white' :
                     step.active ? 'bg-amber-950/50 border-amber-500/40 text-amber-300' :
                     'bg-white/5 border-white/10 text-slate-500'}`}>
                   {step.done ? (
-                    <CheckCircle2 className="w-3 h-3" />
+                    <PlaceholderIcon className="w-3 h-3" />
                   ) : step.active ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <PlaceholderIcon className="w-3 h-3 animate-spin" />
                   ) : (
                     <span className="w-3 h-3 rounded-full border border-current flex items-center justify-center text-[9px]">{step.n}</span>
                   )}
@@ -341,7 +328,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               </p>
               <p className="text-xs text-slate-400">
                 Log into your PlayIt.gg account if prompted, then click the green{' '}
-                <strong className="text-emerald-400">"Claim Agent"</strong>{' '}
+                <strong className="text-slate-200">"Claim Agent"</strong>{' '}
                 button on the page. Craftora will detect it automatically.
               </p>
             </div>
@@ -354,13 +341,13 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                   <button
                     type="button"
                     onClick={handleCopyClaimUrl}
-                    className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold cursor-pointer"
+                    className="text-slate-200 hover:text-white flex items-center gap-1 font-semibold cursor-pointer"
                   >
-                    {copiedUrl ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copiedUrl ? 'Copied' : 'Copy'}
+                    {copiedUrl ? <PlaceholderIcon className="w-3 h-3" /> : <PlaceholderIcon className="w-3 h-3" />}
+                    {copiedUrl ? 'Copied' : 'PlaceholderIcon'}
                   </button>
                 </div>
-                <code className="text-xs text-emerald-300 font-mono block break-all select-all">
+                <code className="text-xs text-white font-mono block break-all select-all">
                   {claimUrl}
                 </code>
               </div>
@@ -371,9 +358,9 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <button
                 type="button"
                 onClick={handleReopenBrowser}
-                className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                className="px-4 py-2 bg-white/5 hover:bg-white/5 text-white border border-white/10 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <PlaceholderIcon className="w-3.5 h-3.5" />
                 Re-open in Browser
               </button>
               <button
@@ -395,7 +382,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
           onClick={onBack}
           className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-xl flex items-center gap-2 transition cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <PlaceholderIcon className="w-4 h-4" />
           <span>Back to Dependencies</span>
         </button>
 
@@ -417,11 +404,11 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
             className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
               isTunnelReady
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 cursor-pointer'
-                : 'bg-emerald-500/20 text-emerald-500/50 cursor-not-allowed'
+                : 'bg-white/5 text-slate-300 cursor-not-allowed'
             }`}
           >
             <span>Complete Setup</span>
-            <Check className="w-4 h-4" />
+            <PlaceholderIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

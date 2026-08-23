@@ -1,31 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  X,
-  Server,
-  Download,
-  Smartphone,
-  Shield,
-  Layers,
-  Zap,
-  Lock,
-  Globe2,
-  Puzzle,
-  Swords,
-  CheckCircle2,
-  HardDrive,
-  Key,
-  Radio,
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
-  AlertCircle,
-  Compass,
-  Moon,
-  Flame,
-  ShieldAlert,
-  PackageCheck
-} from 'lucide-react';
+import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { PlayItIcon, JavaIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
 import { useNetwork } from '../../context/NetworkContext';
@@ -49,7 +23,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [creationStatus, setCreationStatus] = useState<{ step: string; percent: number; details: string } | null>(null);
 
   // 1. Basic Info
-  const [name, setName] = useState('My Minecraft Server');
+  const [name, setName] = useState('My Minecraft PlaceholderIcon');
   const [software, setSoftware] = useState<ServerSoftwareType>('paper');
   const [version, setVersion] = useState('26.2');
   const [availableVersions, setAvailableVersions] = useState<string[]>([
@@ -79,7 +53,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [gamemode, setGamemode] = useState('survival');
   const [pvp, setPvp] = useState(true);
   const [maxPlayers, setMaxPlayers] = useState(20);
-  const [motd, setMotd] = useState('A Craftora Minecraft Server');
+  const [motd, setMotd] = useState('A Craftora Minecraft PlaceholderIcon');
 
   // 5. Network Sharing (Cloud Relay, Direct UPnP, Only LAN)
   const [networkMode, setNetworkMode] = useState<NetworkMode>('cloud_relay');
@@ -104,7 +78,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       setCreationStatus(null);
 
       // Generate a fresh unique candidate name
-      const baseName = 'My Minecraft Server';
+      const baseName = 'My Minecraft PlaceholderIcon';
       let candidate = baseName;
       let count = 1;
       while (servers.some(s => s.name.trim().toLowerCase() === candidate.toLowerCase())) {
@@ -168,7 +142,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       const cleanId = name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
 
       setCreationStatus({
-        step: 'Downloading Server Core',
+        step: 'Downloading PlaceholderIcon Core',
         percent: 10,
         details: `Downloading ${software.toUpperCase()} ${version} engine jar...`
       });
@@ -194,7 +168,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       // 3. Configure properties
       if (window.electronAPI) {
         setCreationStatus({
-          step: 'Configuring Server Settings',
+          step: 'Configuring PlaceholderIcon Settings',
           percent: 55,
           details: 'Applying gameplay configuration and network ports...'
         });
@@ -258,7 +232,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
         setCreationStatus({
           step: 'Finalizing Setup',
           percent: 100,
-          details: 'Server created successfully!'
+          details: 'PlaceholderIcon created successfully!'
         });
 
         await refreshServers();
@@ -273,17 +247,17 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
     } catch (err) {
       setIsCreating(false);
       setCreationStatus(null);
-      await showAlert('Create Server Error', `Error creating server: ${err}`, 'warning');
+      await showAlert('Create PlaceholderIcon Error', `Error creating server: ${err}`, 'warning');
     }
   };
 
   const steps = [
-    { id: 'basic', label: '1. Engine', icon: Server },
-    { id: 'performance', label: '2. RAM & JVM', icon: Zap },
-    { id: 'crossplay', label: '3. Cross-Play', icon: Smartphone },
-    { id: 'cracked', label: '4. Gameplay', icon: Shield },
-    { id: 'network', label: '5. Network', icon: Globe2 },
-    { id: 'plugins', label: '6. Plugins', icon: Puzzle },
+    { id: 'basic', label: '1. Engine', icon: PlaceholderIcon },
+    { id: 'performance', label: '2. RAM & JVM', icon: PlaceholderIcon },
+    { id: 'crossplay', label: '3. Cross-Play', icon: PlaceholderIcon },
+    { id: 'cracked', label: '4. Gameplay', icon: PlaceholderIcon },
+    { id: 'network', label: '5. Network', icon: PlaceholderIcon },
+    { id: 'plugins', label: '6. Plugins', icon: PlaceholderIcon },
   ];
 
   return (
@@ -292,11 +266,11 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-              <Server className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+              <PlaceholderIcon className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Create New Minecraft Server</h2>
+              <h2 className="text-base font-bold text-white">Create New Minecraft PlaceholderIcon</h2>
               <p className="text-xs text-slate-400">Complete setup wizard with cross-play, RAM, & networking</p>
             </div>
           </div>
@@ -306,7 +280,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             disabled={isCreating || isDownloading}
             className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition disabled:opacity-30"
           >
-            <X className="w-5 h-5" />
+            <PlaceholderIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -321,9 +295,9 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 type="button"
                 disabled={isCreating || isDownloading}
                 onClick={() => setCurrentStep(step.id as WizardStep)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                    ? 'bg-white/5 text-white border border-white/10'
                     : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
                 }`}
               >
@@ -334,15 +308,15 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           })}
         </div>
 
-        {/* Dynamic Multi-Stage Creation & Download Progress Banner */}
+        {/* Dynamic Multi-Stage Creation & PlaceholderIcon Progress Banner */}
         {(isCreating || isDownloading || creationStatus) && (
-          <div className="bg-emerald-950/60 border-b border-emerald-500/30 p-4 space-y-2.5 animate-in fade-in duration-300">
-            <div className="flex justify-between items-center text-xs font-bold text-emerald-300">
+          <div className="bg-obsidian-950 border-b border-white/10 p-4 space-y-2.5 animate-in fade-in duration-300">
+            <div className="flex justify-between items-center text-xs font-bold text-white">
               <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                <span>{creationStatus?.step || (downloadProgress ? `Downloading ${downloadProgress.software.toUpperCase()} ${downloadProgress.version}` : 'Creating Server Instance...')}</span>
+                <PlaceholderIcon className="w-4 h-4 animate-spin text-slate-200" />
+                <span>{creationStatus?.step || (downloadProgress ? `Downloading ${downloadProgress.software.toUpperCase()} ${downloadProgress.version}` : 'Creating PlaceholderIcon Instance...')}</span>
               </span>
-              <span className="font-mono text-emerald-400">{creationStatus?.percent || downloadProgress?.percent || 0}%</span>
+              <span className="font-mono text-slate-200">{creationStatus?.percent || downloadProgress?.percent || 0}%</span>
             </div>
             <div className="w-full h-2 bg-obsidian-950 rounded-full overflow-hidden border border-white/5">
               <div
@@ -363,10 +337,10 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300">Server Name</label>
+                  <label className="text-xs font-semibold text-slate-300">PlaceholderIcon Name</label>
                   {isNameDuplicate && (
                     <span className="text-[10px] text-red-400 font-semibold flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
+                      <PlaceholderIcon className="w-3 h-3" />
                       Name already in use
                     </span>
                   )}
@@ -381,7 +355,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   className={`w-full px-4 py-2.5 bg-obsidian-950 border rounded-xl text-xs text-white focus:outline-none transition ${
                     isNameDuplicate
                       ? 'border-red-500/70 bg-red-950/20 text-red-100 focus:border-red-500'
-                      : 'border-white/10 focus:border-emerald-500'
+                      : 'border-white/10 focus:border-white/10'
                   }`}
                 />
                 {isNameDuplicate && (
@@ -392,7 +366,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Server Engine (Software)</label>
+                <label className="text-xs font-semibold text-slate-300">PlaceholderIcon Engine (Software)</label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { id: 'paper', label: 'PaperMC (Recommended)', desc: 'High performance + Plugins + GeyserMC' },
@@ -406,7 +380,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       onClick={() => setSoftware(item.id as ServerSoftwareType)}
                       className={`p-3 rounded-xl text-left border transition ${
                         software === item.id
-                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                          ? 'bg-white/5 border-white/10 text-white'
                           : 'bg-obsidian-900 border-white/5 text-slate-400 hover:border-white/15'
                       }`}
                     >
@@ -421,14 +395,14 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-slate-300">Minecraft Version</label>
                   {version.startsWith('26') && (
-                    <span className="text-[10px] text-emerald-400 font-mono">Requires Java 25 (auto-handled)</span>
+                    <span className="text-[10px] text-slate-200 font-mono">Requires Java 25 (auto-handled)</span>
                   )}
                 </div>
                 <select
                   value={version}
                   onChange={(e) => setVersion(e.target.value)}
                   disabled={loadingVersions}
-                  className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-white/10"
                 >
                   {availableVersions.map((v) => (
                     <option key={v} value={v}>
@@ -445,8 +419,8 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             <div className="space-y-5">
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-semibold text-slate-300">
-                  <span>Dedicated Server RAM:</span>
-                  <span className="text-emerald-400 font-mono font-bold text-sm">{ramGb} GB</span>
+                  <span>Dedicated PlaceholderIcon RAM:</span>
+                  <span className="text-slate-200 font-mono font-bold text-sm">{ramGb} GB</span>
                 </div>
                 <input
                   type="range"
@@ -496,7 +470,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 <select
                   value={selectedJava}
                   onChange={(e) => setSelectedJava(e.target.value)}
-                  className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-white/10"
                 >
                   {javaRuntimes.map((j) => (
                     <option key={j.path} value={j.path}>
@@ -513,7 +487,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-obsidian-950/60 rounded-xl border border-white/10">
                 <div className="flex items-center gap-3">
-                  <Smartphone className="w-5 h-5 text-emerald-400" />
+                  <PlaceholderIcon className="w-5 h-5 text-slate-200" />
                   <div>
                     <span className="text-xs font-bold text-white block">Enable GeyserMC + Floodgate</span>
                     <span className="text-[10px] text-slate-400">Bedrock (mobile, console, Windows 10/11) players can join</span>
@@ -572,7 +546,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <PackageCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white block">Keep Inventory on Death</span>
                         <span className="text-[10px] text-slate-400">Never lose items, tools, armor, or XP upon dying</span>
@@ -592,10 +566,10 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <Compass className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white block">Show Coordinates HUD</span>
-                        <span className="text-[10px] text-slate-400">Live on-screen X, Y, Z coordinates for Bedrock & Java players</span>
+                        <span className="text-[10px] text-slate-400">Live on-screen PlaceholderIcon, Y, Z coordinates for Bedrock & Java players</span>
                       </div>
                     </div>
                     <input
@@ -612,7 +586,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <Moon className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white block">Instant 1-Player Sleep</span>
                         <span className="text-[10px] text-slate-400">Only 1 player needs to sleep in bed to skip the night</span>
@@ -632,7 +606,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <ShieldAlert className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white block">Anti-Creeper / Mob Griefing</span>
                         <span className="text-[10px] text-slate-400">Prevent Creeper explosions and Endermen from breaking blocks</span>
@@ -652,7 +626,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10 cursor-pointer hover:border-white/20 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <Flame className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white block">Disable Fire Spread</span>
                         <span className="text-[10px] text-slate-400">Prevent accidental fires from burning down wooden builds</span>
@@ -676,7 +650,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
                 <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
                   <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                     <div>
                       <span className="text-xs font-bold text-white block">Cracked (Offline Mode) Support</span>
                       <span className="text-[10px] text-slate-400">Allows non-premium accounts (TLauncher, SKLauncher, Prism) + auto SkinsRestorer</span>
@@ -721,7 +695,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
                 <div className="flex items-center justify-between p-3.5 bg-obsidian-950/60 rounded-xl border border-white/10">
                   <div className="flex items-center gap-3">
-                    <Swords className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                     <div>
                       <span className="text-xs font-bold text-white block">PvP (Player vs Player)</span>
                       <span className="text-[10px] text-slate-400">Allow players to attack and damage each other</span>
@@ -736,7 +710,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Server MOTD</label>
+                  <label className="text-xs font-semibold text-slate-300">PlaceholderIcon MOTD</label>
                   <input
                     type="text"
                     value={motd}
@@ -752,7 +726,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {currentStep === 'network' && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">Choose Server Networking & Sharing Mode</label>
+                <label className="text-xs font-semibold text-slate-300">Choose PlaceholderIcon Networking & Sharing Mode</label>
                 <p className="text-[11px] text-slate-400">
                   Select how players will connect to this Minecraft server. You can change this anytime later.
                 </p>
@@ -764,7 +738,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   onClick={() => setNetworkMode('cloud_relay')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     networkMode === 'cloud_relay'
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-white/5 border-white/10 text-white'
                       : 'bg-obsidian-900 border-white/5 hover:border-white/15'
                   }`}
                 >
@@ -776,7 +750,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <strong className="text-xs font-bold text-white">PlayIt.gg Tunnel (Recommended)</strong>
-                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
                             Universal Internet Play
                           </span>
                         </div>
@@ -807,7 +781,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                     !upnpStatus.isSupported
                       ? 'bg-obsidian-950/60 border-red-500/20 opacity-60 cursor-not-allowed'
                       : networkMode === 'upnp'
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 cursor-pointer'
+                      ? 'bg-white/5 border-white/10 text-white cursor-pointer'
                       : 'bg-obsidian-900 border-white/5 hover:border-white/15 cursor-pointer'
                   }`}
                 >
@@ -819,16 +793,16 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                             ? 'bg-red-500/10 text-red-400'
                             : networkMode === 'upnp'
                             ? 'bg-emerald-500 text-obsidian-950'
-                            : 'bg-white/5 text-emerald-400'
+                            : 'bg-white/5 text-slate-200'
                         }`}
                       >
-                        {!upnpStatus.isSupported ? <Lock className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                        {!upnpStatus.isSupported ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <strong className="text-xs font-bold text-white">Direct UPnP Port Forward</strong>
                           {upnpStatus.isSupported ? (
-                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-obsidian-950 text-white border border-white/10">
                               0ms Added Ping
                             </span>
                           ) : (
@@ -865,14 +839,14 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   onClick={() => setNetworkMode('lan_only')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     networkMode === 'lan_only'
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-white/5 border-white/10 text-white'
                       : 'bg-obsidian-900 border-white/5 hover:border-white/15'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-lg ${networkMode === 'lan_only' ? 'bg-emerald-500 text-obsidian-950' : 'bg-white/5 text-slate-300'}`}>
-                        <Radio className="w-4 h-4" />
+                        <PlaceholderIcon className="w-4 h-4" />
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -943,7 +917,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       }}
                       className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between transition ${
                         isChecked
-                          ? 'bg-emerald-500/10 border-emerald-500/30'
+                          ? 'bg-white/5 border-white/10'
                           : 'bg-obsidian-900 border-white/5 hover:border-white/10'
                       }`}
                     >
@@ -979,7 +953,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 }}
                 className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white px-3 py-2 rounded-lg hover:bg-white/5 transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <PlaceholderIcon className="w-3.5 h-3.5" />
                 <span>Back</span>
               </button>
             )}
@@ -997,7 +971,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-semibold border border-white/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>Next Step</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <PlaceholderIcon className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button
@@ -1006,8 +980,8 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 disabled={isCreating || isDownloading || isNameDuplicate || !name.trim()}
                 className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                <span>{isCreating ? 'Setting Up Server...' : 'Create & Launch Server'}</span>
+                {isCreating ? <PlaceholderIcon className="w-4 h-4 animate-spin" /> : <PlaceholderIcon className="w-4 h-4" />}
+                <span>{isCreating ? 'Setting Up PlaceholderIcon...' : 'Create & Launch PlaceholderIcon'}</span>
               </button>
             )}
           </div>

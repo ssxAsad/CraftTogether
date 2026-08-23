@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, HelpCircle, X } from 'lucide-react';
+import { PlaceholderIcon } from '../components/common/PlaceholderIcon';
 
 export type DialogType = 'alert' | 'confirm' | 'prompt' | 'warning' | 'success';
 
@@ -100,15 +100,15 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const renderIcon = () => {
     switch (options.type) {
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-red-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-red-400" />;
       case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
       case 'prompt':
-        return <HelpCircle className="w-5 h-5 text-emerald-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
       case 'confirm':
-        return <AlertCircle className="w-5 h-5 text-emerald-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
       default:
-        return <AlertCircle className="w-5 h-5 text-emerald-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
     }
   };
 
@@ -124,7 +124,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               <div className={`p-2 rounded-lg shrink-0 border ${
                 options.type === 'warning'
                   ? 'bg-red-500/10 border-red-500/20'
-                  : 'bg-emerald-500/10 border-emerald-500/20'
+                  : 'bg-white/5 border-white/10'
               }`}>
                 {renderIcon()}
               </div>
@@ -138,7 +138,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 onClick={handleCancel}
                 className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
               >
-                <X className="w-4 h-4" />
+                <PlaceholderIcon className="w-4 h-4" />
               </button>
             </div>
 
@@ -154,7 +154,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   if (e.key === 'Enter') handleConfirm();
                   if (e.key === 'Escape') handleCancel();
                 }}
-                className="w-full px-3 py-2 bg-obsidian-900 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-obsidian-900 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
               />
             )}
 
