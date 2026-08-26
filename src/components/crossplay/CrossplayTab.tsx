@@ -51,17 +51,7 @@ export const CrossplayTab: React.FC = () => {
     setLoading(false);
   };
 
-  const handleUninstall = async () => {
-    if (!activeServer) return;
-    setLoading(true);
-    if (window.electronAPI) {
-      await window.electronAPI.removeGeyser(activeServer.id);
-      setIsInstalled(false);
-    } else {
-      setIsInstalled(false);
-    }
-    setLoading(false);
-  };
+
 
   const handleSaveConfig = async () => {
     if (!activeServer) return;
@@ -97,14 +87,10 @@ export const CrossplayTab: React.FC = () => {
         </div>
 
         {isInstalled ? (
-          <button
-            onClick={handleUninstall}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-2 leading-none bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-lg text-xs font-semibold transition"
-          >
+          <div className="flex items-center gap-1.5 px-3 py-2 leading-none bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-lg text-xs font-semibold">
             <PlaceholderIcon className="w-3.5 h-3.5" />
-            <span>Remove GeyserMC</span>
-          </button>
+            <span>Installed</span>
+          </div>
         ) : (
           <button
             onClick={handleInstall}

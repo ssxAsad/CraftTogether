@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { ProtectedIpDisplay } from '@/components/common/ProtectedIpDisplay';
 import { Copy, Check, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PlayItIcon } from '../common/Icons';
 import { useNetwork } from '../../context/NetworkContext';
@@ -318,7 +319,7 @@ export const NetworkTab: React.FC = () => {
               }}
               className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                 cloudTunnelStatus.isActive
-                  ? 'bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30'
+                  ? 'bg-[#C6011F] hover:bg-[#a00018] text-white border-transparent'
                   : 'bg-emerald-500 hover:bg-emerald-400 text-obsidian-950'
               }`}
             >
@@ -408,9 +409,10 @@ export const NetworkTab: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between bg-obsidian-850 p-3.5 rounded-lg border border-white/10">
-                <span className="font-mono text-base font-bold text-white select-all">
-                  {cloudTunnelStatus.serverAddress}
-                </span>
+                <ProtectedIpDisplay 
+                  ip={cloudTunnelStatus.serverAddress}
+                  className="font-mono text-base font-bold text-white select-all"
+                />
                 <button
                   onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud-address')}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-emerald-500 text-obsidian-950 font-bold text-xs hover:bg-emerald-400 transition cursor-pointer"
@@ -487,9 +489,10 @@ export const NetworkTab: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between bg-obsidian-850 p-3.5 rounded-lg border border-white/10">
-                <span className="font-mono text-base font-bold text-white select-all">
-                  {publicIp || upnpStatus.externalIp}:{activePort}
-                </span>
+                <ProtectedIpDisplay 
+                  ip={`${publicIp || upnpStatus.externalIp || 'Unknown'}:${activePort}`}
+                  className="font-mono text-base font-bold text-white select-all"
+                />
                 <button
                   onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activePort}`, 'upnp-ip')}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-emerald-500 text-obsidian-950 font-bold text-xs hover:bg-emerald-400 transition cursor-pointer"
@@ -538,11 +541,11 @@ export const NetworkTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Local Wi-Fi IP:</span>
-            <div className="font-mono text-slate-200 font-bold text-sm">{localIp}</div>
+            <ProtectedIpDisplay ip={localIp} className="font-mono text-slate-200 font-bold text-sm" />
           </div>
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Public Gateway IP:</span>
-            <div className="font-mono text-slate-200 font-bold text-sm">{publicIp || 'Detecting...'}</div>
+            <ProtectedIpDisplay ip={publicIp || 'Detecting...'} className="font-mono text-slate-200 font-bold text-sm" />
           </div>
           <div className="bg-obsidian-950/60 p-3.5 rounded-xl border border-white/5 space-y-1 text-xs">
             <span className="text-slate-400">Router UPnP Status:</span>
@@ -558,7 +561,7 @@ export const NetworkTab: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-between bg-obsidian-950 p-3 rounded-xl border border-white/5 text-xs">
-          <span className="font-mono text-slate-300">{localIp}:{activePort}</span>
+          <ProtectedIpDisplay ip={`${localIp}:${activePort}`} className="font-mono text-slate-300" />
           <button
             onClick={() => handleCopy(`${localIp}:${activePort}`, 'lan-ip')}
             className="text-xs text-slate-200 hover:underline flex items-center gap-1 font-semibold cursor-pointer"

@@ -222,7 +222,7 @@ export const PluginsTab: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(plugin.filename)}
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition"
+                    className="p-1.5 rounded-lg bg-[#C6011F] hover:bg-[#a00018] text-white transition"
                     title="Delete Plugin"
                   >
                     <Trash2 className="w-4 h-4" />

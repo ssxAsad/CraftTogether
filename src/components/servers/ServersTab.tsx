@@ -145,7 +145,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
             onClick={() => setShowDeleteModal(true)}
             disabled={status !== 'STOPPED'}
             title={status !== 'STOPPED' ? 'Stop server first to delete' : 'Delete Server'}
-            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg bg-transparent hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-600 text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg bg-[#C6011F] hover:bg-[#a00018] text-white text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete Server</span>
@@ -163,7 +163,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
+              <div className="w-10 h-10 rounded-lg bg-transparent text-[#C6011F] flex items-center justify-center shrink-0 border border-[#C6011F]">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -190,7 +190,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteConfirm}
-                className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#C6011F] hover:bg-[#a00018] text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{isDeleting ? 'Deleting...' : 'Delete Server'}</span>

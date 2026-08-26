@@ -133,7 +133,7 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleKick(player.username)}
                     title="Kick Player"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-white/5 hover:bg-[#C6011F] text-slate-400 hover:text-white transition disabled:opacity-40"
                   >
                     <PlaceholderIcon className="w-4 h-4" />
                   </button>
@@ -141,7 +141,7 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleBan(player.username)}
                     title="PlaceholderIcon Player"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-[#C6011F] hover:bg-[#a00018] text-white transition disabled:opacity-40"
                   >
                     <PlaceholderIcon className="w-4 h-4" />
                   </button>

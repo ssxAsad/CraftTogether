@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { ProtectedIpDisplay } from '@/components/common/ProtectedIpDisplay';
 import { Play, Square, RotateCw, X, Copy, Check } from 'lucide-react';
 import { PlayItIcon } from '../common/Icons';
 import { useServer } from '../../context/ServerContext';
@@ -182,7 +183,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <div className="flex items-center gap-2">
                 <button
                   onClick={stopServer}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-bold text-xs transition"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#C6011F] hover:bg-[#a00018] text-white font-bold text-xs transition border-transparent"
                 >
                   <Square className="w-4 h-4 fill-current" />
                   <span>Stop</span>
@@ -190,7 +191,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 <button
                   onClick={killServer}
                   title="Force Kill (Emergency)"
-                  className="p-2.5 rounded-lg bg-zinc-800 hover:bg-red-950/60 text-slate-400 hover:text-red-400 border border-white/10 transition"
+                  className="p-2.5 rounded-lg bg-zinc-800 hover:bg-[#C6011F] text-slate-400 hover:text-white border border-white/10 hover:border-transparent transition"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -353,9 +354,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             {activeServer?.networkMode === 'upnp' ? (
               upnpStatus.isActive ? (
                 <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
-                  <span className="font-mono text-xs text-white font-semibold select-all truncate">
-                    {publicIp || upnpStatus.externalIp}:{activeServer.port || 25565}
-                  </span>
+                  <ProtectedIpDisplay 
+                    ip={`${publicIp || upnpStatus.externalIp || 'Unknown'}:${activeServer.port || 25565}`}
+                    className="font-mono text-xs text-white font-semibold select-all truncate"
+                  />
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activeServer.port || 25565}`, 'upnp-ip')}
@@ -366,7 +368,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                     </button>
                     <button
                       onClick={() => stopUpnp()}
-                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
+                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-[#C6011F] hover:bg-[#a00018] text-white rounded transition cursor-pointer border-transparent"
                       title="Stop UPnP Port Mapping"
                     >
                       <span>Turn Off</span>
@@ -392,9 +394,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               )
             ) : cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress ? (
               <div className="flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
-                <span className="font-mono text-xs text-white font-semibold select-all truncate">
-                  {cloudTunnelStatus.serverAddress}
-                </span>
+                <ProtectedIpDisplay 
+                  ip={cloudTunnelStatus.serverAddress}
+                  className="font-mono text-xs text-white font-semibold select-all truncate"
+                />
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud')}
@@ -405,7 +408,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   </button>
                   <button
                     onClick={() => stopCloudTunnel()}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-[#C6011F] hover:bg-[#a00018] text-white rounded transition cursor-pointer border-transparent"
                     title="Stop Tunnel"
                   >
                     <span>Turn Off</span>
@@ -420,7 +423,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 </div>
                 <button
                   onClick={() => stopCloudTunnel()}
-                  className="px-2.5 py-1 text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 rounded transition cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold bg-[#C6011F] hover:bg-[#a00018] text-white rounded transition cursor-pointer border-transparent"
                 >
                   Cancel
                 </button>
@@ -497,9 +500,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
 
           <div className="flex items-center gap-3">
             <div className="flex-1 flex items-center justify-between bg-obsidian-950/80 p-3 rounded-lg border border-white/10">
-              <span className="font-mono text-xs text-white font-semibold select-all truncate">
-                {bedrockIp}
-              </span>
+              <ProtectedIpDisplay 
+                ip={bedrockIp}
+                className="font-mono text-xs text-white font-semibold select-all truncate"
+              />
               <button
                 onClick={() => handleCopy(bedrockIp, 'bedrock-ip')}
                 className="text-slate-400 hover:text-white shrink-0"
