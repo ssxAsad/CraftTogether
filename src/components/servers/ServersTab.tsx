@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PlaceholderIcon } from '../common/PlaceholderIcon';
-import { Trash2 } from 'lucide-react';
+import { Trash2, LayoutDashboard, Globe, Gamepad2, Users, Settings } from 'lucide-react';
 import { useServer } from '../../context/ServerContext';
+import { PluginIcon } from '../common/Icons';
 import { DashboardTab } from '../dashboard/DashboardTab';
 import { NetworkTab } from '../network/NetworkTab';
 import { CrossplayTab } from '../crossplay/CrossplayTab';
@@ -49,8 +50,8 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   if (isLoadingServers) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-3">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-transparent animate-spin" />
-        <p className="text-xs text-slate-400 font-medium">Detecting Minecraft servers...</p>
+        <div className="w-8 h-8 rounded-full border-2 border-border-default border-t-transparent animate-spin" />
+        <p className="text-xs text-content-secondary font-medium">Detecting Minecraft servers...</p>
       </div>
     );
   }
@@ -59,20 +60,20 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   if (servers.length === 0 || !activeServer) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-          <PlaceholderIcon className="w-8 h-8 text-slate-200 font-bold" />
+        <div className="w-16 h-16 rounded-2xl bg-surface-elevated border border-border-default flex items-center justify-center">
+          <PlaceholderIcon className="w-8 h-8 text-content-primary font-bold" />
         </div>
 
         <div className="space-y-2 max-w-md">
-          <h2 className="text-xl font-bold text-white">No Minecraft Servers Yet</h2>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-xl font-bold text-content-primary">No Minecraft Servers Yet</h2>
+          <p className="text-xs text-content-secondary leading-relaxed">
             Create your first Minecraft server with 1-click Paper/Purpur installation, GeyserMC Bedrock cross-play, PlayIt.gg Tunnel & UPnP sharing, and cracked support.
           </p>
         </div>
 
         <button
           onClick={onOpenCreateModal}
-          className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs rounded-lg flex items-center gap-2 transition"
+          className="px-6 py-2.5 bg-success hover:bg-success/80 text-surface-base font-bold text-xs rounded-lg flex items-center gap-2 transition"
         >
           <PlaceholderIcon className="w-4 h-4" />
           <span>Create a New Server</span>
@@ -82,12 +83,12 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   }
 
   const subNavItems = [
-    { id: 'overview', label: 'Overview', icon: PlaceholderIcon },
-    { id: 'network', label: 'Network', icon: PlaceholderIcon },
-    { id: 'crossplay', label: 'Cross-Play', icon: PlaceholderIcon },
-    { id: 'plugins', label: 'Plugins', icon: PlaceholderIcon },
-    { id: 'players', label: 'Players', icon: PlaceholderIcon },
-    { id: 'config', label: 'Settings', icon: PlaceholderIcon },
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'network', label: 'Network', icon: Globe },
+    { id: 'crossplay', label: 'Cross-Play', icon: Gamepad2 },
+    { id: 'plugins', label: 'Plugins', icon: PluginIcon },
+    { id: 'players', label: 'Players', icon: Users },
+    { id: 'config', label: 'Settings', icon: Settings },
   ];
 
   const renderSubTab = () => {
@@ -118,7 +119,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Simplified, Compact Sub-Tabs Navigation Header */}
-      <div className="bg-obsidian-950 border-b border-white/5 px-5 py-2 flex items-center justify-between gap-3 shrink-0">
+      <div className="bg-surface-base border-b border-border-subtle px-5 py-2 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {subNavItems.map((tab) => {
             const Icon = tab.icon;
@@ -127,12 +128,13 @@ export const ServersTab: React.FC<ServersTabProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as ServerSubTabType)}
-                className={`flex items-center justify-center px-4 py-2 leading-none rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center gap-1.5 px-4 py-2 leading-none rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-emerald-600 text-white font-bold shadow-sm border-transparent'
-                    : 'text-slate-400 hover:text-white hover:bg-white/10 border-transparent'
+                    ? 'bg-success text-surface-base font-bold shadow-sm border-transparent'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-hover border-transparent'
                 }`}
               >
+                <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
               </button>
             );
@@ -145,10 +147,9 @@ export const ServersTab: React.FC<ServersTabProps> = ({
             onClick={() => setShowDeleteModal(true)}
             disabled={status !== 'STOPPED'}
             title={status !== 'STOPPED' ? 'Stop server first to delete' : 'Delete Server'}
-            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg bg-[#C6011F] hover:bg-[#a00018] text-white text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg bg-red-700 hover:bg-red-800 text-surface-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete Server</span>
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -161,17 +162,17 @@ export const ServersTab: React.FC<ServersTabProps> = ({
       {/* Delete Server Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">
+          <div className="bg-surface-elevated w-full max-w-md rounded-xl border border-border-default shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-lg bg-transparent text-[#C6011F] flex items-center justify-center shrink-0 border border-[#C6011F]">
+              <div className="w-10 h-10 rounded-lg bg-transparent text-danger-fg flex items-center justify-center shrink-0 border border-danger-fg">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-white">Delete Server</h3>
-                <p className="text-xs text-slate-300">
-                  Are you sure you want to delete <strong className="text-white font-semibold">{activeServer.name}</strong>?
+                <h3 className="text-base font-bold text-content-primary">Delete Server</h3>
+                <p className="text-xs text-content-secondary">
+                  Are you sure you want to delete <strong className="text-content-primary font-semibold">{activeServer.name}</strong>?
                 </p>
-                <p className="text-[11px] text-slate-400 pt-1">
+                <p className="text-[11px] text-content-secondary pt-1">
                   All world saves, configurations, and plugins will be permanently removed from disk.
                 </p>
               </div>
@@ -182,7 +183,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold rounded-lg transition"
+                className="px-4 py-2 bg-neutral-bg hover:bg-surface-hover text-content-primary text-xs font-semibold rounded-lg transition"
               >
                 Cancel
               </button>
@@ -190,7 +191,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteConfirm}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#C6011F] hover:bg-[#a00018] text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 bg-danger hover:bg-danger/80 text-surface-base text-xs font-bold rounded-lg transition disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{isDeleting ? 'Deleting...' : 'Delete Server'}</span>

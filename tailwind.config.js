@@ -24,6 +24,46 @@ export default {
           700: '#2b4d38',
           950: '#102116',
         },
+        surface: {
+          base: '#ffffff',
+          elevated: '#f4f4f5',
+          card: '#e4e4e7',
+          hover: '#d4d4d8',
+        },
+        border: {
+          subtle: 'rgba(0, 0, 0, 0.05)',
+          default: 'rgba(0, 0, 0, 0.1)',
+        },
+        content: {
+          primary: '#18181b',
+          secondary: '#52525b',
+          muted: '#a1a1aa',
+        },
+        success: {
+          DEFAULT: '#588a6d',
+          fg: '#7bb091',
+          bg: 'rgba(123, 176, 145, 0.15)',
+        },
+        danger: {
+          DEFAULT: '#C6011F',
+          fg: '#ff6b6b',
+          bg: 'rgba(198, 1, 31, 0.15)',
+        },
+        warning: {
+          DEFAULT: '#B45309',
+          fg: '#B45309',
+          bg: 'rgba(180, 83, 9, 0.15)', 
+        },
+        info: {
+          DEFAULT: '#7088A5',
+          fg: '#7088A5',
+          bg: 'rgba(112, 136, 165, 0.15)',
+        },
+        neutral: {
+          DEFAULT: '#a1a1aa',
+          fg: '#a1a1aa',
+          bg: 'rgba(0, 0, 0, 0.05)',
+        }
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],

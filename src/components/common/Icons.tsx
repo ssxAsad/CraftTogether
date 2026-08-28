@@ -1,5 +1,8 @@
 import React from 'react';
 import playitImg from '../../assets/PlayIt.png';
+import pluginImg from '../../assets/web-plugin.png';
+import lanImg from '../../assets/wifi-router.png';
+import upnpImg from '../../assets/upnp.png';
 
 interface IconProps {
   className?: string;
@@ -9,15 +12,41 @@ interface IconProps {
 /**
  * PlayIt.gg official tunnel logo component (Crisp, authentic HD rendering)
  */
+const iconStyle: React.CSSProperties = {
+  imageRendering: '-webkit-optimize-contrast',
+  transform: 'translateZ(0)',
+  backfaceVisibility: 'hidden'
+};
+
 export const PlayItIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
   <img
     src={playitImg}
     alt="PlayIt.gg"
     className={`inline-block shrink-0 object-contain ${className}`}
-    style={{
-      imageRendering: '-webkit-optimize-contrast'
-    }}
+    style={iconStyle}
   />
+);
+
+export const PluginIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
+  <img
+    src={pluginImg}
+    alt="Plugins"
+    className={`inline-block shrink-0 object-contain ${className}`}
+    style={iconStyle}
+  />
+);
+
+export const LANIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
+  <img
+    src={lanImg}
+    alt="LAN"
+    className={`inline-block shrink-0 object-contain ${className}`}
+    style={iconStyle}
+  />
+);
+
+export const UPnPIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
+  <span className={`inline-block shrink-0 ${className}`} />
 );
 
 /**

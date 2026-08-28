@@ -95,37 +95,37 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
   }
 
   return (
-    <div className="flex h-screen w-screen bg-obsidian-950 items-center justify-center p-8 relative overflow-hidden">
+    <div className="flex h-screen w-screen bg-surface-base items-center justify-center p-8 relative overflow-hidden">
       <div className="max-w-2xl w-full z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-4 bg-obsidian-900 rounded-2xl mb-6 border border-white/10 shadow-xl">
+          <div className="inline-flex items-center justify-center p-4 bg-surface-elevated rounded-2xl mb-6 border border-border-default shadow-xl">
             <img src={logoImg} alt="Craftora" className="w-16 h-16 object-contain" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-            Welcome to <span className="text-slate-200">Craftora</span>
+          <h1 className="text-4xl font-bold text-content-primary mb-2 tracking-tight">
+            Welcome to <span className="text-content-primary">Craftora</span>
           </h1>
-          <p className="text-slate-400 text-sm">
+          <p className="text-content-secondary text-sm">
             Set up your dedicated workspace folder to get started.
           </p>
         </div>
 
-        <div className="bg-obsidian-900/60 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl">
+        <div className="bg-surface-elevated/80 backdrop-blur-2xl rounded-3xl p-8 border border-border-default shadow-2xl">
           <div className="mb-8">
-            <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
+            <label className="block text-sm font-medium text-content-primary mb-2 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <PlaceholderIcon className="w-4 h-4 text-slate-200" />
+                <PlaceholderIcon className="w-4 h-4 text-content-primary" />
                 Server Files Directory
               </span>
-              <span className="text-slate-400 text-xs font-semibold">Must be a strictly empty folder</span>
+              <span className="text-content-secondary text-xs font-semibold">Must be a strictly empty folder</span>
             </label>
             
             <div className="flex gap-3">
               <div className={`relative flex-1 rounded-xl overflow-hidden transition-all duration-300 border ${
                 validationResult?.error || (validationResult && !validationResult.isEmpty)
-                  ? 'border-red-500/50 bg-red-500/5 ring-1 ring-red-500/30' 
+                  ? 'border-danger-fg/50 bg-danger/5 ring-1 ring-danger-fg/30' 
                   : isDirectoryValid
-                    ? 'border-white/10 bg-emerald-500/5 ring-1 ring-emerald-500/30' 
-                    : 'border-white/10 bg-obsidian-950/50'
+                    ? 'border-border-default bg-success/5 ring-1 ring-success-fg/30' 
+                    : 'border-border-default bg-surface-base/50'
               }`}>
                 <input
                   type="text"
@@ -135,45 +135,46 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
                     validatePath(e.target.value);
                   }}
                   placeholder="Select an empty directory..."
-                  className="w-full bg-transparent px-4 py-4 text-slate-200 outline-none font-mono text-sm placeholder:text-slate-600"
+                  className="w-full bg-transparent px-4 py-4 text-content-primary outline-none font-mono text-sm placeholder:text-content-muted"
                   spellCheck={false}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isValidating && <div className="w-5 h-5 border-2 border-white/10 border-t-transparent rounded-full animate-spin" />}
-                  {!isValidating && isDirectoryValid && <PlaceholderIcon className="w-5 h-5 text-slate-300 animate-in zoom-in" />}
-                  {!isValidating && (validationResult?.error || (validationResult && !validationResult.isEmpty)) && <PlaceholderIcon className="w-5 h-5 text-red-500 animate-in zoom-in" />}
+                  {isValidating && <div className="w-5 h-5 border-2 border-border-default border-t-transparent rounded-full animate-spin" />}
+                  {!isValidating && isDirectoryValid && <PlaceholderIcon className="w-5 h-5 text-content-primary animate-in zoom-in" />}
+                  {!isValidating && (validationResult?.error || (validationResult && !validationResult.isEmpty)) && <PlaceholderIcon className="w-5 h-5 text-danger-fg animate-in zoom-in" />}
                 </div>
               </div>
               <button
                 onClick={handleBrowse}
-                className="px-6 py-4 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-slate-200 font-medium transition-colors border border-white/5 hover:border-white/10 flex items-center gap-2 active:scale-95 cursor-pointer"
+                className="px-6 py-4 rounded-xl bg-surface-card hover:bg-surface-hover text-content-primary font-medium transition-colors border border-border-subtle hover:border-border-default flex items-center gap-2 active:scale-95 cursor-pointer"
               >
-                <PlaceholderIcon className="w-5 h-5 text-slate-200" />
+                <PlaceholderIcon className="w-5 h-5 text-content-primary" />
                 Browse
               </button>
             </div>
-
-            {/* Validation Feedback */}
-            <div className={`mt-3 flex items-start gap-2 text-sm transition-all duration-300 ${
-              validationResult?.error ? 'text-red-400 opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0'
-            }`}>
-              <PlaceholderIcon className="w-4 h-4 mt-0.5 shrink-0" />
-              <p>{validationResult?.error}</p>
-            </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-white/5">
+          {validationResult?.error && (
+            <div className="mb-8 animate-in slide-in-from-top-2 fade-in duration-300">
+              <div className="bg-danger/10 border border-danger/20 rounded-xl p-4 text-danger-fg text-sm flex items-start gap-3">
+                <PlaceholderIcon className="w-5 h-5 text-danger-fg shrink-0 mt-0.5" />
+                <p className="leading-relaxed">{validationResult.error}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end">
             <button
               onClick={handleNextStep}
               disabled={!isDirectoryValid || isValidating}
-              className={`flex items-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all duration-300 ${
+              className={`px-8 py-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all duration-300 ${
                 isDirectoryValid && !isValidating
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] translate-y-0 cursor-pointer'
-                  : 'bg-obsidian-800 text-slate-500 cursor-not-allowed border border-white/5 opacity-60'
+                  ? 'bg-success hover:bg-success/80 text-surface-base shadow-lg shadow-success/20 translate-y-0 hover:-translate-y-0.5'
+                  : 'bg-surface-card text-content-muted cursor-not-allowed opacity-50'
               }`}
             >
-              Next Step
-              <PlaceholderIcon className="w-5 h-5" />
+              Continue Setup
+              <PlaceholderIcon className={`w-5 h-5 ${isDirectoryValid && !isValidating ? 'text-surface-base animate-pulse' : 'text-content-muted'}`} />
             </button>
           </div>
         </div>

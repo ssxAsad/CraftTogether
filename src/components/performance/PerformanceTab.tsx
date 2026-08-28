@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { useServer } from '../../context/ServerContext';
+import { GlassCard } from '../common/GlassCard';
 
 export const PerformanceTab: React.FC = () => {
   const { activeServer, javaRuntimes, refreshServers } = useServer();
@@ -48,12 +49,12 @@ export const PerformanceTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/5 text-slate-200 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-neutral-bg text-content-primary flex items-center justify-center">
             <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-white">Performance & JVM Optimizer</h1>
-            <p className="text-xs text-slate-400">
+            <h1 className="text-xl font-extrabold text-content-primary">Performance & JVM Optimizer</h1>
+            <p className="text-xs text-content-secondary">
               Aikar's G1GC Garbage Collection flags & dedicated memory allocation
             </p>
           </div>
@@ -61,7 +62,7 @@ export const PerformanceTab: React.FC = () => {
 
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
+          className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
         >
           {saved ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
           <span>{saved ? 'Applied Settings' : 'Apply JVM Settings'}</span>
@@ -69,16 +70,16 @@ export const PerformanceTab: React.FC = () => {
       </div>
 
       {/* RAM Allocation Slider Card */}
-      <div className="glass-card rounded-xl p-6 border border-white/10 space-y-5">
+      <GlassCard className="rounded-xl p-6 border-border-default space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <PlaceholderIcon className="w-5 h-5 text-slate-200" />
+            <PlaceholderIcon className="w-5 h-5 text-content-primary" />
             <div>
-              <h2 className="text-base font-bold text-white">Dedicated Server RAM (Memory)</h2>
-              <p className="text-xs text-slate-400">Allocates both -Xms (initial) and -Xmx (maximum) for zero-stutter garbage collection</p>
+              <h2 className="text-base font-bold text-content-primary">Dedicated Server RAM (Memory)</h2>
+              <p className="text-xs text-content-secondary">Allocates both -Xms (initial) and -Xmx (maximum) for zero-stutter garbage collection</p>
             </div>
           </div>
-          <span className="text-2xl font-black text-slate-200 font-mono">
+          <span className="text-2xl font-black text-content-primary font-mono">
             {ramGb} GB
           </span>
         </div>
@@ -90,42 +91,42 @@ export const PerformanceTab: React.FC = () => {
           step={1}
           value={ramGb}
           onChange={(e) => setRamGb(parseInt(e.target.value, 10))}
-          className="w-full accent-emerald-500 cursor-pointer h-2 bg-obsidian-900 rounded-lg"
+          className="w-full accent-emerald-500 cursor-pointer h-2 bg-surface-elevated rounded-lg"
         />
 
         {/* Quick RAM presets */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400">Quick Presets:</span>
+          <span className="text-xs text-content-secondary">Quick Presets:</span>
           {[2, 4, 6, 8, 12, 16].map((gb) => (
             <button
               key={gb}
               onClick={() => setRamGb(gb)}
               className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition ${
                 ramGb === gb
-                  ? 'bg-emerald-500 text-obsidian-950'
-                  : 'bg-zinc-800 hover:bg-zinc-700 text-slate-300 border border-white/5'
+                  ? 'bg-success text-surface-base'
+                  : 'bg-surface-card hover:bg-surface-hover text-content-primary border border-border-subtle'
               }`}
             >
               {gb} GB
             </button>
           ))}
         </div>
-      </div>
+      </GlassCard>
 
       {/* Java Runtime Selector */}
-      <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
+      <GlassCard className="rounded-2xl p-6 border-border-default space-y-4">
         <div className="flex items-center gap-2.5">
-          <PlaceholderIcon className="w-5 h-5 text-slate-200" />
+          <PlaceholderIcon className="w-5 h-5 text-content-primary" />
           <div>
-            <h2 className="text-base font-bold text-white">Detected Java Runtime (JRE / JDK)</h2>
-            <p className="text-xs text-slate-400">Java 21 is required for Minecraft 1.20.5+; Java 17 for 1.18 - 1.20.4</p>
+            <h2 className="text-base font-bold text-content-primary">Detected Java Runtime (JRE / JDK)</h2>
+            <p className="text-xs text-content-secondary">Java 21 is required for Minecraft 1.20.5+; Java 17 for 1.18 - 1.20.4</p>
           </div>
         </div>
 
         <select
           value={selectedJava}
           onChange={(e) => setSelectedJava(e.target.value)}
-          className="w-full px-4 py-2.5 bg-obsidian-950 border border-white/10 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-white/10"
+          className="w-full px-4 py-2.5 bg-surface-base border border-border-default rounded-xl text-xs font-mono text-content-primary focus:outline-none focus:border-border-default"
         >
           {javaRuntimes.length > 0 ? (
             javaRuntimes.map((j) => (
@@ -137,21 +138,21 @@ export const PerformanceTab: React.FC = () => {
             <option value="java">Default System Java (java on PATH)</option>
           )}
         </select>
-      </div>
+      </GlassCard>
 
       {/* Aikar's Flags Toggle & Preview */}
-      <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
+      <GlassCard className="rounded-2xl p-6 border-border-default space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <PlaceholderIcon className="w-5 h-5 text-slate-200" />
+            <PlaceholderIcon className="w-5 h-5 text-content-primary" />
             <div>
-              <h2 className="text-base font-bold text-white">Aikar's Optimized G1GC Flags</h2>
-              <p className="text-xs text-slate-400">Industry-standard flags used by top Minecraft networks to eliminate GC lag spikes</p>
+              <h2 className="text-base font-bold text-content-primary">Aikar's Optimized G1GC Flags</h2>
+              <p className="text-xs text-content-secondary">Industry-standard flags used by top Minecraft networks to eliminate GC lag spikes</p>
             </div>
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs text-slate-300 font-semibold">{useAikar ? 'Enabled' : 'Disabled'}</span>
+            <span className="text-xs text-content-primary font-semibold">{useAikar ? 'Enabled' : 'Disabled'}</span>
             <input
               type="checkbox"
               checked={useAikar}
@@ -161,15 +162,15 @@ export const PerformanceTab: React.FC = () => {
           </label>
         </div>
 
-        <div className="bg-obsidian-950 p-4 rounded-xl border border-white/5 space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+        <div className="bg-surface-base p-4 rounded-xl border border-border-subtle space-y-2">
+          <span className="text-[11px] font-bold text-content-secondary uppercase tracking-wider block">
             Generated JVM Launch Command:
           </span>
-          <p className="font-mono text-xs text-slate-200 break-all leading-relaxed select-all">
+          <p className="font-mono text-xs text-content-primary break-all leading-relaxed select-all">
             java {aikarFlagsPreview.join(' ')} -jar server.jar nogui
           </p>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 };

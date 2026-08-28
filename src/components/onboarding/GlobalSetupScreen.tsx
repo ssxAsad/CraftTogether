@@ -198,26 +198,26 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-y-auto max-h-screen">
       {/* Header */}
       <div className="text-center mb-6 pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-200 text-xs font-bold uppercase tracking-wider mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-bg border border-border-default text-content-primary text-xs font-bold uppercase tracking-wider mb-3">
           <PlaceholderIcon className="w-3.5 h-3.5" />
           <span>Step 1 of 2 — PlaceholderIcon Required Files</span>
         </div>
-        <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
+        <h2 className="text-3xl font-extrabold text-content-primary mb-2 tracking-tight">
           Get Your Server Ready
         </h2>
-        <p className="text-slate-400 text-sm max-w-2xl mx-auto">
+        <p className="text-content-secondary text-sm max-w-2xl mx-auto">
           PlaceholderIcon the 4 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
         </p>
       </div>
 
       {/* Status Bar */}
-      <div className="flex items-center justify-between bg-obsidian-900/60 p-4 rounded-2xl border border-white/10 mb-6 backdrop-blur-xl">
+      <div className="flex items-center justify-between bg-surface-elevated/80 p-4 rounded-2xl border border-border-default mb-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div>
-            <h4 className="text-sm font-bold text-white">
+            <h4 className="text-sm font-bold text-content-primary">
               {allReady ? 'Everything is ready!' : `${4 - readyCount} item${4 - readyCount === 1 ? '' : 's'} left to download`}
             </h4>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-content-secondary">
               {allReady
                 ? 'All components are downloaded and ready to use.'
                 : 'Click "PlaceholderIcon All" to get everything at once.'}
@@ -229,7 +229,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           <button
             onClick={checkAll}
             disabled={isChecking}
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition cursor-pointer border border-white/5"
+            className="p-2.5 rounded-xl bg-neutral-bg hover:bg-surface-hover text-content-primary transition cursor-pointer border border-border-subtle"
             title="Refresh"
           >
             <PlaceholderIcon className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
@@ -239,7 +239,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
             <button
               onClick={handleInstallAll}
               disabled={isInstallingAll || isChecking}
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-obsidian-950 font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
+              className="px-5 py-2.5 rounded-xl bg-success hover:bg-success/80 disabled:opacity-50 text-surface-base font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
             >
               {isInstallingAll ? (
                 <PlaceholderIcon className="w-4 h-4 animate-spin" />
@@ -267,7 +267,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         {/* PaperMC */}
         <DepCard
           id="papermc"
-          icon={<PlaceholderIcon className="w-8 h-8 text-slate-200" />}
+          icon={<PlaceholderIcon className="w-8 h-8 text-content-primary" />}
           dep={dependencies.find((d) => d.id === 'papermc')!}
           meta={DEP_META.papermc}
           onInstall={() => handleInstallSingle('papermc')}
@@ -277,7 +277,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         {/* Plugins */}
         <DepCard
           id="plugins"
-          icon={<PlaceholderIcon className="w-8 h-8 text-slate-200" />}
+          icon={<PlaceholderIcon className="w-8 h-8 text-content-primary" />}
           dep={dependencies.find((d) => d.id === 'plugins')!}
           meta={DEP_META.plugins}
           onInstall={() => handleInstallSingle('plugins')}
@@ -297,15 +297,15 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
       </div>
 
       {/* Footer CTA */}
-      <div className="flex items-center justify-end pt-2 border-t border-white/10 mt-auto">
+      <div className="flex items-center justify-end pt-2 border-t border-border-default mt-auto">
         <button
           type="button"
           disabled={!allReady}
           onClick={() => setWizardStep('playit')}
           className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
             allReady 
-              ? 'bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 cursor-pointer' 
-              : 'bg-white/5 text-slate-300 cursor-not-allowed'
+              ? 'bg-success hover:bg-success/80 text-surface-base cursor-pointer' 
+              : 'bg-neutral-bg text-content-secondary cursor-not-allowed'
           }`}
         >
           <span>Continue</span>
@@ -330,56 +330,56 @@ interface DepCardProps {
 
 const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, meta, onInstall, buttonLabel }) => {
   return (
-    <div className="bg-obsidian-900 border border-white/10 rounded-xl p-5 flex flex-col justify-between space-y-4">
+    <div className="bg-surface-elevated border border-border-default rounded-xl p-5 flex flex-col justify-between space-y-4">
       <div>
         <div className="flex items-start justify-between mb-3">
-          <div className={`w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center ${iconPadding} shadow-md shrink-0`}>
+          <div className={`w-14 h-14 rounded-2xl bg-surface-card border border-border-default flex items-center justify-center ${iconPadding} shadow-md shrink-0`}>
             {icon}
           </div>
 
           {dep.status === 'ready' ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-white bg-obsidian-950 px-2.5 py-1 rounded border border-white/10">
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-content-primary bg-surface-base px-2.5 py-1 rounded border border-border-default">
               <PlaceholderIcon className="w-3.5 h-3.5" />
               {meta.readyLabel}
             </span>
           ) : dep.status === 'installing' ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-300 bg-white/5 px-2.5 py-1 rounded border border-white/10">
-              <PlaceholderIcon className="w-3.5 h-3.5 animate-spin text-slate-200" />
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-content-primary bg-neutral-bg px-2.5 py-1 rounded border border-border-default">
+              <PlaceholderIcon className="w-3.5 h-3.5 animate-spin text-content-primary" />
               Downloading
             </span>
           ) : dep.status === 'queued' ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-950/40 px-2.5 py-1 rounded border border-amber-500/30">
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-warning-fg bg-warning/10 px-2.5 py-1 rounded border border-warning-fg/30">
               <PlaceholderIcon className="w-3.5 h-3.5" />
               In Queue
             </span>
           ) : dep.status === 'error' ? (
-            <span className="text-[11px] font-semibold text-red-300 bg-red-950/40 px-2.5 py-1 rounded border border-red-500/30">
+            <span className="text-[11px] font-semibold text-danger-fg bg-danger/10 px-2.5 py-1 rounded border border-danger-fg/30">
               Failed
             </span>
           ) : (
-            <span className="text-[11px] font-semibold text-slate-400 bg-zinc-800 px-2.5 py-1 rounded">
+            <span className="text-[11px] font-semibold text-content-secondary bg-neutral-bg px-2.5 py-1 rounded">
               Not Downloaded
             </span>
           )}
         </div>
 
-        <h3 className="text-base font-bold text-white">{meta.label}</h3>
-        <p className="text-xs text-slate-400 mt-1 leading-relaxed">{meta.desc}</p>
+        <h3 className="text-base font-bold text-content-primary">{meta.label}</h3>
+        <p className="text-xs text-content-secondary mt-1 leading-relaxed">{meta.desc}</p>
 
         {dep.details && dep.status !== 'ready' && dep.status !== 'missing' && dep.status !== 'queued' && (
-          <p className="text-[11px] text-slate-500 mt-1">{dep.details}</p>
+          <p className="text-[11px] text-content-muted mt-1">{dep.details}</p>
         )}
       </div>
 
       {dep.status === 'installing' && (
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[11px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-content-secondary">
             <span>{dep.details || 'Downloading...'}</span>
             <span>{dep.progress}%</span>
           </div>
-          <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-surface-base rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+              className="h-full bg-success rounded-full transition-all duration-300"
               style={{ width: `${dep.progress}%` }}
             />
           </div>
@@ -387,8 +387,8 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
       )}
 
       {dep.status === 'queued' && (
-        <div className="h-1.5 w-full bg-obsidian-950 rounded-full overflow-hidden">
-          <div className="h-full bg-amber-500/40 rounded-full w-full animate-pulse" />
+        <div className="h-1.5 w-full bg-surface-base rounded-full overflow-hidden">
+          <div className="h-full bg-warning/40 rounded-full w-full animate-pulse" />
         </div>
       )}
 
@@ -396,7 +396,7 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
       {(dep.status === 'missing' || dep.status === 'error') && (
         <button
           onClick={onInstall}
-          className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-2 rounded-lg bg-success hover:bg-success/80 text-surface-base text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
         >
           <PlaceholderIcon className="w-4 h-4" />
           <span>{buttonLabel}</span>

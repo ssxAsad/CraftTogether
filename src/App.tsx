@@ -41,14 +41,14 @@ export const App: React.FC = () => {
   // Loading setup check state
   if (isSetupComplete === null) {
     return (
-      <div className="flex h-screen w-screen bg-obsidian-950 items-center justify-center">
+      <div className="flex h-screen w-screen bg-surface-base items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-screen bg-obsidian-950 text-slate-100 overflow-hidden select-none font-sans">
+    <div className="flex h-screen w-screen bg-surface-base text-content-primary overflow-hidden select-none font-sans">
       {/* Main View: First Launch Splash or App Layout */}
       {!isSetupComplete ? (
         <div className="flex flex-col flex-1 h-full w-full">
@@ -68,7 +68,7 @@ export const App: React.FC = () => {
           <div className="flex-1 flex flex-col overflow-hidden">
             <TitleBar />
 
-            <main className="flex-1 bg-obsidian-950 overflow-hidden relative">
+            <main className="flex-1 bg-surface-base overflow-hidden relative border-l border-border-subtle">
               {activeTab === 'servers' ? (
                 <ServersTab
                   onOpenCreateModal={() => setIsCreateModalOpen(true)}

@@ -100,15 +100,15 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const renderIcon = () => {
     switch (options.type) {
       case 'warning':
-        return <PlaceholderIcon className="w-5 h-5 text-red-400" />;
+        return <PlaceholderIcon className="w-5 h-5 text-danger-fg" />;
       case 'success':
-        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
+        return <PlaceholderIcon className="w-5 h-5 text-success-fg" />;
       case 'prompt':
-        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
+        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
       case 'confirm':
-        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
+        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
       default:
-        return <PlaceholderIcon className="w-5 h-5 text-slate-200" />;
+        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
     }
   };
 
@@ -119,24 +119,24 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       {/* Craftora Themed Modal Dialog */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans">
-          <div className="glass-panel w-full max-w-md rounded-xl border border-white/10 shadow-2xl p-6 space-y-5">
+          <div className="bg-surface-elevated w-full max-w-md rounded-xl border border-border-subtle shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
               <div className={`p-2 rounded-lg shrink-0 border ${
                 options.type === 'warning'
-                  ? 'bg-red-500/10 border-red-500/20'
-                  : 'bg-white/5 border-white/10'
+                  ? 'bg-danger/10 border-danger/20'
+                  : 'bg-neutral-bg border-border-default'
               }`}>
                 {renderIcon()}
               </div>
 
               <div className="space-y-1 flex-1">
-                <h3 className="text-sm font-bold text-white">{options.title}</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">{options.message}</p>
+                <h3 className="text-sm font-bold text-content-primary">{options.title}</h3>
+                <p className="text-xs text-content-secondary leading-relaxed">{options.message}</p>
               </div>
 
               <button
                 onClick={handleCancel}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
+                className="text-content-secondary hover:text-content-primary p-1 rounded-lg hover:bg-surface-hover transition"
               >
                 <PlaceholderIcon className="w-4 h-4" />
               </button>
@@ -154,7 +154,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   if (e.key === 'Enter') handleConfirm();
                   if (e.key === 'Escape') handleCancel();
                 }}
-                className="w-full px-3 py-2 bg-obsidian-900 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
+                className="w-full px-3 py-2 bg-surface-base border border-border-default rounded-lg text-xs text-content-primary focus:outline-none focus:border-border-default"
               />
             )}
 
@@ -164,7 +164,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-lg text-xs font-semibold border border-white/10 transition"
+                  className="px-4 py-2 bg-surface-card hover:bg-surface-hover text-content-primary rounded-lg text-xs font-semibold border border-border-default transition"
                 >
                   {options.cancelText || 'Cancel'}
                 </button>
@@ -173,7 +173,11 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 font-bold text-xs rounded-lg transition"
+                className={`px-4 py-2 font-bold text-xs rounded-lg transition ${
+                  options.type === 'warning' 
+                    ? 'bg-danger hover:bg-danger/80 text-surface-base' 
+                    : 'bg-success hover:bg-success/80 text-surface-base'
+                }`}
               >
                 {options.confirmText || 'OK'}
               </button>

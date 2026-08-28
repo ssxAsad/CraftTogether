@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import { Save } from 'lucide-react';
+import { GlassCard } from '@/components/common/GlassCard';
+import { Badge } from '@/components/common/Badge';
 import { useServer } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 import { GeyserConfig } from '../../types';
@@ -75,27 +78,27 @@ export const CrossplayTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
+          <div className="w-9 h-9 rounded-lg bg-surface-elevated text-content-primary flex items-center justify-center border border-border-default">
             <PlaceholderIcon className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">GeyserMC Cross-Play Engine</h1>
-            <p className="text-xs text-slate-400">
-              Seamlessly allows Bedrock (Android, iOS, Windows, Consoles) and Java players on one server
+            <h1 className="text-xl font-bold text-content-primary">GeyserMC</h1>
+            <p className="text-xs text-content-secondary">
+              Enable clients from Minecraft Bedrock Edition to join your Minecraft Java server.
             </p>
           </div>
         </div>
 
         {isInstalled ? (
-          <div className="flex items-center gap-1.5 px-3 py-2 leading-none bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-lg text-xs font-semibold">
+          <Badge variant="success">
             <PlaceholderIcon className="w-3.5 h-3.5" />
             <span>Installed</span>
-          </div>
+          </Badge>
         ) : (
           <button
             onClick={handleInstall}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
+            className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
           >
             <PlaceholderIcon className="w-4 h-4" />
             <span>{loading ? 'Installing...' : '1-Click Install Geyser + Floodgate'}</span>
@@ -104,20 +107,20 @@ export const CrossplayTab: React.FC = () => {
       </div>
 
       {/* Status Card */}
-      <div className="glass-card rounded-xl p-6 border border-white/10">
+      <GlassCard className="rounded-xl p-6 border-border-default">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
-                  isInstalled ? 'bg-emerald-400' : 'bg-zinc-600'
+                  isInstalled ? 'bg-success-fg' : 'bg-content-muted'
                 }`}
               />
-              <h2 className="text-sm font-bold text-white">
+              <h2 className="text-sm font-bold text-content-primary">
                 {isInstalled ? 'GeyserMC & Floodgate are Active' : 'GeyserMC Not Installed'}
               </h2>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-content-secondary">
               {isInstalled
                 ? 'Bedrock players can join using standard Minecraft Bedrock edition on Port 19132.'
                 : 'Click the 1-Click Install button above to automatically download GeyserMC & Floodgate into your plugins folder.'}
@@ -125,52 +128,52 @@ export const CrossplayTab: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-surface-elevated text-content-primary border border-border-default">
               Floodgate 2.0
             </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-surface-card text-content-secondary border border-border-subtle">
               UDP 19132
             </span>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Configuration Form */}
       {isInstalled && (
-        <div className="glass-card rounded-xl p-6 border border-white/10 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/5 pb-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <PlaceholderIcon className="w-4 h-4 text-slate-200" />
+        <GlassCard className="rounded-xl p-6 border-border-default space-y-6">
+          <div className="flex items-center justify-between border-b border-border-subtle pb-4">
+            <h3 className="text-sm font-bold text-content-primary flex items-center gap-2">
+              <PlaceholderIcon className="w-4 h-4 text-content-primary" />
               <span>Bedrock Server Settings (config.yml)</span>
             </h3>
             <button
               onClick={handleSaveConfig}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 rounded-lg font-bold text-xs transition"
+              className="flex items-center gap-1.5 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
             >
-              <PlaceholderIcon className="w-3.5 h-3.5" />
-              <span>PlaceholderIcon Geyser Config</span>
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Geyser Config</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Bedrock Port */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Bedrock UDP Port</label>
+              <label className="text-xs font-semibold text-content-primary">Bedrock UDP Port</label>
               <input
                 type="number"
                 value={geyserConfig.bedrockPort}
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, bedrockPort: parseInt(e.target.value, 10) || 19132 })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-white/10"
+                className="w-full px-3 py-2 bg-surface-base border border-border-default rounded-lg text-xs font-mono text-content-primary focus:outline-none focus:border-border-default"
               />
-              <span className="text-[11px] text-slate-400">Default Bedrock port is 19132.</span>
+              <span className="text-[11px] text-content-secondary">Default Bedrock port is 19132.</span>
             </div>
 
             {/* Auth Type */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <PlaceholderIcon className="w-3.5 h-3.5 text-slate-200" />
+              <label className="text-xs font-semibold text-content-primary flex items-center gap-1.5">
+                <PlaceholderIcon className="w-3.5 h-3.5 text-content-primary" />
                 <span>Authentication Mode</span>
               </label>
               <select
@@ -178,72 +181,42 @@ export const CrossplayTab: React.FC = () => {
                 onChange={(e) =>
                   setGeyserConfig({ ...geyserConfig, authType: e.target.value as any })
                 }
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
+                className="w-full px-3 py-2 bg-surface-base border border-border-default rounded-lg text-xs text-content-primary focus:outline-none focus:border-border-default"
               >
                 <option value="floodgate">Floodgate (Recommended - No Java MC account needed for Bedrock)</option>
                 <option value="online">Online Mode (Requires Mojang/Microsoft Java account)</option>
                 <option value="offline">Offline / Cracked</option>
               </select>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-content-secondary">
                 Floodgate allows phone and console players to join with just their Xbox Gamertag.
               </span>
             </div>
 
             {/* Bedrock MOTD Line 1 */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Bedrock MOTD Line 1</label>
+              <label className="text-xs font-semibold text-content-primary">Bedrock MOTD Line 1</label>
               <input
                 type="text"
                 value={geyserConfig.motd1}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd1: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
+                className="w-full px-3 py-2 bg-surface-base border border-border-default rounded-lg text-xs text-content-primary focus:outline-none focus:border-border-default"
               />
             </div>
 
             {/* Bedrock MOTD Line 2 */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Bedrock MOTD Line 2</label>
+              <label className="text-xs font-semibold text-content-primary">Bedrock MOTD Line 2</label>
               <input
                 type="text"
                 value={geyserConfig.motd2}
                 onChange={(e) => setGeyserConfig({ ...geyserConfig, motd2: e.target.value })}
-                className="w-full px-3 py-2 bg-obsidian-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-white/10"
+                className="w-full px-3 py-2 bg-surface-base border border-border-default rounded-lg text-xs text-content-primary focus:outline-none focus:border-border-default"
               />
             </div>
           </div>
-        </div>
+        </GlassCard>
       )}
 
-      {/* How to Join Guide for Bedrock Players */}
-      <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <PlaceholderIcon className="w-4 h-4 text-slate-200" />
-          <span>How Bedrock Friends Join Your Server</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-slate-200 block font-semibold">📱 Phones & Tablets (Android / iOS)</strong>
-            <p className="text-slate-400 leading-relaxed">
-              Open Minecraft Bedrock → Play → Servers tab → Scroll to bottom → <strong>Add Server</strong>. Enter your IP and Port <strong>19132</strong>.
-            </p>
-          </div>
-
-          <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-slate-200 block font-semibold">💻 Windows 10/11 Bedrock</strong>
-            <p className="text-slate-400 leading-relaxed">
-              Open Minecraft for Windows → Play → Servers → Add Server. Type your server IP and port <strong>19132</strong>.
-            </p>
-          </div>
-
-          <div className="bg-obsidian-950/60 p-4 rounded-xl border border-white/5 space-y-2">
-            <strong className="text-slate-200 block font-semibold">🎮 Consoles (Xbox / PS / Switch)</strong>
-            <p className="text-slate-400 leading-relaxed">
-              Use the free <strong>BedrockTogether</strong> mobile app or custom DNS on console to redirect to your server IP seamlessly.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
