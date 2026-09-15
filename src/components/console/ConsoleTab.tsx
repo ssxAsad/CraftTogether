@@ -6,7 +6,7 @@ import { Terminal as TerminalIcon, Send } from 'lucide-react';
 import { useServerState, useServerActions } from '../../context/ServerContext';
 
 export const ConsoleTab: React.FC = () => {
-  const { logs, status } = useServerState();
+  const { status } = useServerState();
   const { sendCommand } = useServerActions();
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermInstance = useRef<XTerm | null>(null);
@@ -58,9 +58,36 @@ export const ConsoleTab: React.FC = () => {
     xtermInstance.current = term;
     fitAddonInstance.current = fitAddon;
 
-    if (logs.length === 0 && status !== 'ONLINE' && status !== 'STARTING') {
-      term.writeln('\x1b[1;32mWaiting for server startup...\x1b[0m');
-    }
+    const initializeTerminal = async () => {
+      let initialLogs: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> = [];
+      if (window.electronAPI) {
+        initialLogs = await window.electronAPI.getServerLogs();
+      }
+
+      if (initialLogs.length === 0 && status !== 'ONLINE' && status !== 'STARTING') {
+        term.writeln('\x1b[1;32mWaiting for server startup...\x1b[0m');
+      } else {
+        const linesToWrite: string[] = [];
+        for (const log of initialLogs) {
+          if (log.type === 'stderr') {
+            linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
+          } else if (log.type === 'system') {
+            linesToWrite.push(`\x1b[1;32m${log.line}\x1b[0m`);
+          } else if (log.line.includes('WARN')) {
+            linesToWrite.push(`\x1b[33m${log.line}\x1b[0m`);
+          } else if (log.line.includes('ERROR')) {
+            linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
+          } else {
+            linesToWrite.push(log.line);
+          }
+        }
+        if (linesToWrite.length > 0) {
+          term.writeln(linesToWrite.join('\r\n'));
+        }
+      }
+    };
+    
+    initializeTerminal();
 
     const handleResize = () => fitAddon.fit();
     window.addEventListener('resize', handleResize);
@@ -73,49 +100,40 @@ export const ConsoleTab: React.FC = () => {
     };
   }, []);
 
-  // Write new logs into xterm
-  const lastWrittenIdx = useRef(0);
+  // Listen for live logs via IPC
   useEffect(() => {
-    if (!xtermInstance.current) return;
-    const term = xtermInstance.current;
+    if (!window.electronAPI) return;
 
-    if (logs.length > 0 && lastWrittenIdx.current === 0) {
-      term.reset();
-    }
-
-    const linesToWrite: string[] = [];
-    for (let i = lastWrittenIdx.current; i < logs.length; i++) {
-      const log = logs[i];
-      if (log.type === 'stderr') {
-        linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
-      } else if (log.type === 'system') {
-        linesToWrite.push(`\x1b[1;32m${log.line}\x1b[0m`);
-      } else if (log.line.includes('WARN')) {
-        linesToWrite.push(`\x1b[33m${log.line}\x1b[0m`);
-      } else if (log.line.includes('ERROR')) {
-        linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
-      } else {
-        linesToWrite.push(log.line);
+    const unsub = window.electronAPI.onServerLog((logData) => {
+      if (!xtermInstance.current) return;
+      const term = xtermInstance.current;
+      
+      const incomingLogs = Array.isArray(logData) ? logData : [logData];
+      const linesToWrite: string[] = [];
+      
+      for (const log of incomingLogs) {
+        if (log.type === 'stderr') {
+          linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
+        } else if (log.type === 'system') {
+          linesToWrite.push(`\x1b[1;32m${log.line}\x1b[0m`);
+        } else if (log.line.includes('WARN')) {
+          linesToWrite.push(`\x1b[33m${log.line}\x1b[0m`);
+        } else if (log.line.includes('ERROR')) {
+          linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
+        } else {
+          linesToWrite.push(log.line);
+        }
       }
-    }
-    if (linesToWrite.length > 0) {
-      term.writeln(linesToWrite.join('\r\n'));
-    }
-    lastWrittenIdx.current = logs.length;
-  }, [logs]);
-
-  // Sync offline status when logs are reset or cleared
-  useEffect(() => {
-    if (!xtermInstance.current) return;
-    const term = xtermInstance.current;
-    if (logs.length === 0 && lastWrittenIdx.current > 0) {
-      lastWrittenIdx.current = 0;
-      term.reset();
-      if (status !== 'ONLINE' && status !== 'STARTING') {
-        term.writeln('\x1b[1;32mWaiting for server startup...\x1b[0m');
+      
+      if (linesToWrite.length > 0) {
+        term.writeln(linesToWrite.join('\r\n'));
       }
-    }
-  }, [logs.length, status]);
+    });
+
+    return () => {
+      unsub();
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

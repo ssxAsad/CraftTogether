@@ -20,7 +20,9 @@ export interface IElectronAPI {
   getServerPlayers: () => Promise<any[]>;
 
   // Subscriptions
-  onServerLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system' }) => void) => () => void;
+  getServerLogs: () => Promise<Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>>;
+  clearServerLogs: () => Promise<void>;
+  onServerLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system' } | Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>) => void) => () => void;
   onServerStatusChanged: (callback: (status: string) => void) => () => void;
   onServerMetricsUpdated: (callback: (metrics: any) => void) => () => void;
   onServerPlayersUpdated: (callback: (players: any[]) => void) => () => void;
@@ -119,6 +121,8 @@ const electronAPI: IElectronAPI = {
   getServerPlayers: () => ipcRenderer.invoke('server:get-players'),
 
   // Subscriptions
+  getServerLogs: () => ipcRenderer.invoke('server:get-logs'),
+  clearServerLogs: () => ipcRenderer.invoke('server:clear-logs'),
   onServerLog: (callback) => {
     const handler = (_: any, data: any) => callback(data);
     ipcRenderer.on('server:log', handler);

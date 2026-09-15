@@ -59,6 +59,15 @@ export function registerServerIpc(mainWindow: BrowserWindow): void {
     return ServerManagerService.getPlayers();
   });
 
+  ipcMain.handle('server:get-logs', () => {
+    return ServerManagerService.getLogHistory();
+  });
+
+  ipcMain.handle('server:clear-logs', () => {
+    ServerManagerService.clearLogs();
+    return true;
+  });
+
   // Java discovery & installation
   ipcMain.handle('java:detect-all', async () => {
     return await JavaDetectorService.detectJavaRuntimes();

@@ -8,7 +8,6 @@ interface ServerState {
   status: ServerStatus;
   metrics: ServerMetrics;
   players: PlayerInfo[];
-  logs: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>;
   javaRuntimes: JavaRuntime[];
   isDownloading: boolean;
   downloadProgress: { percent: number; software: string; version: string } | null;
@@ -52,7 +51,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     uptimeSeconds: 0
   });
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
-  const [logs, setLogs] = useState<Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>>([]);
   const [javaRuntimes, setJavaRuntimes] = useState<JavaRuntime[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<{ percent: number; software: string; version: string } | null>(null);
@@ -147,14 +145,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     refreshServers();
 
     if (window.electronAPI) {
-      const unsubLog = window.electronAPI.onServerLog((logData: any) => {
-        if (Array.isArray(logData)) {
-          setLogs((prev) => [...prev.slice(Math.max(0, prev.length - (800 - logData.length))), ...logData]);
-        } else if (logData) {
-          setLogs((prev) => [...prev.slice(-799), logData]);
-        }
-      });
-
       const unsubStatus = window.electronAPI.onServerStatusChanged((newStatus: ServerStatus) => {
         setStatus(newStatus);
       });
@@ -173,7 +163,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
       return () => {
-        unsubLog();
         unsubStatus();
         unsubMetrics();
         unsubPlayers();
@@ -190,7 +179,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setStatus('STARTING');
       setTimeout(() => {
         setStatus('ONLINE');
-        setLogs(prev => [...prev, { line: '[Craftora Mock] Server is ONLINE and accepting connections! ✨', type: 'system' }]);
       }, 1500);
       return true;
     }
@@ -219,7 +207,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (window.electronAPI) {
       return await window.electronAPI.sendCommand(cmd);
     } else {
-      setLogs(prev => [...prev, { line: `> ${cmd}`, type: 'system' }]);
       return true;
     }
   }, []);
@@ -348,11 +335,15 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (status !== 'STOPPED' && activeServer?.id !== server.id) return;
     setActiveServer(server);
     localStorage.setItem('craftora_active_server_id', server.id);
-    setLogs([]);
+    if (window.electronAPI) {
+      window.electronAPI.clearServerLogs();
+    }
   }, [status, activeServer]);
 
-  const clearLogs = useCallback(() => {
-    setLogs([]);
+  const clearLogs = useCallback(async () => {
+    if (window.electronAPI) {
+      await window.electronAPI.clearServerLogs();
+    }
   }, []);
 
 
@@ -364,8 +355,8 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const state = React.useMemo<ServerState>(() => ({
     servers, activeServer, isLoadingServers, status, metrics, players, 
-    logs, javaRuntimes, isDownloading, downloadProgress
-  }), [servers, activeServer, isLoadingServers, status, metrics, players, logs, javaRuntimes, isDownloading, downloadProgress]);
+    javaRuntimes, isDownloading, downloadProgress
+  }), [servers, activeServer, isLoadingServers, status, metrics, players, javaRuntimes, isDownloading, downloadProgress]);
 
   return (
     <ServerActionsContext.Provider value={actions}>

@@ -72,6 +72,7 @@ export class ServerManagerService {
 
   private static logBatch: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> = [];
   private static logFlushTimer: NodeJS.Timeout | null = null;
+  private static logHistory: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> = [];
 
   static setCallbacks(callbacks: {
     onLog?: (logs: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>) => void;
@@ -468,13 +469,19 @@ export class ServerManagerService {
   }
 
   private static emitLog(line: string, type: 'stdout' | 'stderr' | 'system'): void {
-    this.logBatch.push({ line, type });
-    if (this.logBatch.length >= 25) {
+    const logEntry = { line, type };
+    this.logHistory.push(logEntry);
+    if (this.logHistory.length > 800) {
+      this.logHistory.shift();
+    }
+
+    this.logBatch.push(logEntry);
+    if (this.logBatch.length >= 100) {
       this.flushLogs();
     } else if (!this.logFlushTimer) {
       this.logFlushTimer = setTimeout(() => {
         this.flushLogs();
-      }, 50);
+      }, 100);
     }
   }
 
@@ -511,5 +518,13 @@ export class ServerManagerService {
 
   static getActiveConfig(): ServerInstanceConfig | null {
     return this.activeConfig;
+  }
+
+  static getLogHistory(): Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> {
+    return [...this.logHistory];
+  }
+
+  static clearLogs(): void {
+    this.logHistory = [];
   }
 }
