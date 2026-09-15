@@ -648,7 +648,32 @@ export class PlayitService {
 
       const handleOutput = async (data: Buffer) => {
         const text = data.toString('utf-8');
-        logger.info(`[PlayitAgent] ${text.trim()}`);
+        
+        const lines = text.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          
+          const isSpam = 
+            trimmed.includes('tunnel running') || 
+            trimmed.includes('udp session details received') ||
+            trimmed.includes('udp channel requires auth') ||
+            trimmed.includes('send KeepAlive') ||
+            trimmed.includes('playit_agent_core::') ||
+            trimmed.includes('playit_cli::ui: playit') ||
+            trimmed.includes('clear old:') ||
+            trimmed.includes('pipe ended due to EOF') ||
+            trimmed.includes('authenticate control') ||
+            trimmed.includes('session expired') ||
+            trimmed.includes('tunnel_addr') ||
+            trimmed.includes('pong=Pong') ||
+            trimmed.includes('agent registered') ||
+            trimmed.includes('New TCP Client details=');
+
+          if (!isSpam) {
+            logger.info(`[PlayitAgent] ${trimmed}`);
+          }
+        }
 
         if (text.includes('Invalid secret')) {
           logger.warn('PlayIt Agent detected an invalid secret! Auto-resetting and returning to claim flow...');

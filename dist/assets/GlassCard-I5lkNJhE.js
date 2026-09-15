@@ -1,0 +1,1 @@
+import{j as o}from"./index-B2l1euAo.js";const d=({children:r,className:s="",...e})=>o.jsx("div",{className:`bg-surface-card border border-border-subtle rounded-lg ${s}`,...e,children:r});export{d as G};

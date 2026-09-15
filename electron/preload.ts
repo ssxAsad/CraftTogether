@@ -66,9 +66,16 @@ export interface IElectronAPI {
   getPluginCatalog: () => Promise<any[]>;
   getInstalledPlugins: (serverId: string) => Promise<any[]>;
   installPlugin: (params: { serverId: string; pluginId: string }) => Promise<string>;
+  installSpigetPlugin: (params: { serverId: string; spigetId: string; pluginName: string }) => Promise<string>;
   togglePlugin: (params: { serverId: string; filename: string }) => Promise<boolean>;
   deletePlugin: (params: { serverId: string; filename: string }) => Promise<boolean>;
   ensureSkinsRestorer: (serverId: string) => Promise<boolean>;
+
+  // Mods
+  getInstalledMods: (serverId: string) => Promise<any[]>;
+  uploadModPackage: (params: { serverId: string; zipFilePath: string }) => Promise<number>;
+  toggleMod: (params: { serverId: string; filename: string }) => Promise<boolean>;
+  deleteMod: (params: { serverId: string; filename: string }) => Promise<boolean>;
 
   // Config & Properties
   readProperties: (serverId: string) => Promise<any>;
@@ -188,9 +195,16 @@ const electronAPI: IElectronAPI = {
   getPluginCatalog: () => ipcRenderer.invoke('plugins:get-catalog'),
   getInstalledPlugins: (serverId) => ipcRenderer.invoke('plugins:get-installed', serverId),
   installPlugin: (params) => ipcRenderer.invoke('plugins:install', params),
+  installSpigetPlugin: (params) => ipcRenderer.invoke('plugins:install-spiget', params),
   togglePlugin: (params) => ipcRenderer.invoke('plugins:toggle', params),
   deletePlugin: (params) => ipcRenderer.invoke('plugins:delete', params),
   ensureSkinsRestorer: (serverId) => ipcRenderer.invoke('plugins:ensure-skins-restorer', serverId),
+
+  // Mods
+  getInstalledMods: (serverId) => ipcRenderer.invoke('mods:get-installed', serverId),
+  uploadModPackage: (params) => ipcRenderer.invoke('mods:upload-package', params),
+  toggleMod: (params) => ipcRenderer.invoke('mods:toggle', params),
+  deleteMod: (params) => ipcRenderer.invoke('mods:delete', params),
 
   // Config & Properties
   readProperties: (serverId) => ipcRenderer.invoke('config:read-properties', serverId),

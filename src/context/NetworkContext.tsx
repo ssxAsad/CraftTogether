@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UpnpStatus, CloudTunnelStatus, NetworkMode } from '../types';
-import { useServer } from './ServerContext';
+import { useServerState, useServerActions } from './ServerContext';
 
-interface NetworkContextType {
+interface NetworkState {
   upnpStatus: UpnpStatus;
   cloudTunnelStatus: CloudTunnelStatus;
   isLanBroadcasting: boolean;
@@ -10,7 +10,9 @@ interface NetworkContextType {
   publicIp: string | null;
   isLoadingNetwork: boolean;
 
-  // Actions
+}
+
+interface NetworkActions {
   checkUpnpSupport: (forceRefresh?: boolean) => Promise<UpnpStatus>;
   startUpnp: (port?: number) => Promise<UpnpStatus>;
   stopUpnp: () => Promise<UpnpStatus>;
@@ -21,10 +23,11 @@ interface NetworkContextType {
   refreshDiagnostics: (forceUpnpProbe?: boolean) => Promise<void>;
 }
 
-const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
+const NetworkStateContext = createContext<NetworkState | undefined>(undefined);
+const NetworkActionsContext = createContext<NetworkActions | undefined>(undefined);
 
 export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { activeServer, status } = useServer();
+  const { activeServer, status } = useServerState();
   const [upnpStatus, setUpnpStatus] = useState<UpnpStatus>({
     isSupported: false,
     isActive: false,
@@ -366,34 +369,34 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [status, activeServer]);
 
+
+  const actions = React.useMemo<NetworkActions>(() => ({
+    checkUpnpSupport, startUpnp, stopUpnp, startCloudTunnel, stopCloudTunnel, 
+    toggleLan, applyNetworkMode, refreshDiagnostics
+  }), [checkUpnpSupport, startUpnp, stopUpnp, startCloudTunnel, stopCloudTunnel, toggleLan, applyNetworkMode, refreshDiagnostics]);
+
+  const state = React.useMemo<NetworkState>(() => ({
+    upnpStatus, cloudTunnelStatus, isLanBroadcasting, localIp, publicIp, isLoadingNetwork
+  }), [upnpStatus, cloudTunnelStatus, isLanBroadcasting, localIp, publicIp, isLoadingNetwork]);
+
   return (
-    <NetworkContext.Provider
-      value={{
-        upnpStatus,
-        cloudTunnelStatus,
-        isLanBroadcasting,
-        localIp,
-        publicIp,
-        isLoadingNetwork,
-        checkUpnpSupport,
-        startUpnp,
-        stopUpnp,
-        startCloudTunnel,
-        stopCloudTunnel,
-        toggleLan,
-        applyNetworkMode,
-        refreshDiagnostics
-      }}
-    >
-      {children}
-    </NetworkContext.Provider>
+    <NetworkActionsContext.Provider value={actions}>
+      <NetworkStateContext.Provider value={state}>
+        {children}
+      </NetworkStateContext.Provider>
+    </NetworkActionsContext.Provider>
   );
 };
 
-export const useNetwork = () => {
-  const context = useContext(NetworkContext);
-  if (!context) {
-    throw new Error('useNetwork must be used within a NetworkProvider');
-  }
+
+export const useNetworkState = () => {
+  const context = useContext(NetworkStateContext);
+  if (!context) throw new Error('useNetworkState must be used within a NetworkProvider');
+  return context;
+};
+
+export const useNetworkActions = () => {
+  const context = useContext(NetworkActionsContext);
+  if (!context) throw new Error('useNetworkActions must be used within a NetworkProvider');
   return context;
 };

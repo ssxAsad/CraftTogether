@@ -4,10 +4,10 @@
   "description": "Craftora - Modern, High-Performance Windows Minecraft Server Manager & Host",
   "main": "dist-electron/main.js",
   "scripts": {
-    "start": "npm run build && electron .",
+    "start": "vite",
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
+    "preview": "npm run build && electron .",
     "package": "npm run build && electron-builder",
     "make": "npm run package"
   },
@@ -28,6 +28,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-web-links": "^0.11.0",
     "@xterm/xterm": "^5.5.0",
+    "adm-zip": "^0.6.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
@@ -38,6 +39,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.13.4",
     "@types/pidusage": "^2.0.5",

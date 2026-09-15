@@ -48,6 +48,11 @@ export function registerPluginsIpc(): void {
     return await PluginManagerService.installPlugin(serverDir, pluginId);
   });
 
+  ipcMain.handle('plugins:install-spiget', async (_, { serverId, spigetId, pluginName }) => {
+    const serverDir = AppPaths.getServerPath(serverId);
+    return await PluginManagerService.installSpigetPlugin(serverDir, spigetId, pluginName);
+  });
+
   ipcMain.handle('plugins:toggle', (_, { serverId, filename }) => {
     const serverDir = AppPaths.getServerPath(serverId);
     return PluginManagerService.togglePlugin(serverDir, filename);

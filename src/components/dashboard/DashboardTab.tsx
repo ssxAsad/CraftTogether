@@ -5,8 +5,8 @@ import { GlassCard } from '@/components/common/GlassCard';
 import { Badge } from '@/components/common/Badge';
 import { Play, Square, RotateCw, X, Copy, Check } from 'lucide-react';
 import { PlayItIcon } from '../common/Icons';
-import { useServer } from '../../context/ServerContext';
-import { useNetwork } from '../../context/NetworkContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
+import { useNetworkState, useNetworkActions } from '../../context/NetworkContext';
 import confetti from 'canvas-confetti';
 
 interface DashboardTabProps {
@@ -14,18 +14,10 @@ interface DashboardTabProps {
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => {
-  const { activeServer, status, metrics, startServer, stopServer, killServer } = useServer();
-  const {
-    cloudTunnelStatus,
-    upnpStatus,
-    localIp,
-    publicIp,
-    startCloudTunnel,
-    stopCloudTunnel,
-    startUpnp,
-    stopUpnp,
-    isLoadingNetwork
-  } = useNetwork();
+  const { activeServer, status, metrics, players } = useServerState();
+  const { startServer, stopServer, killServer } = useServerActions();
+  const { cloudTunnelStatus, upnpStatus, localIp, publicIp, isLoadingNetwork } = useNetworkState();
+  const { startCloudTunnel, stopCloudTunnel, startUpnp, stopUpnp } = useNetworkActions();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [bedrockPort, setBedrockPort] = useState<number>(19132);
   const [cloneRemotePort, setCloneRemotePort] = useState<boolean>(true);
@@ -124,13 +116,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <Badge variant="warning">
                 {activeServer?.serverSoftware.toUpperCase()} {activeServer?.version}
               </Badge>
-              <Badge variant={activeServer?.networkMode === 'lan_only' ? 'warning' : 'info'}>
-                {activeServer?.networkMode === 'lan_only'
-                  ? 'Only LAN'
-                  : activeServer?.networkMode === 'upnp'
-                  ? 'Direct UPnP'
-                  : 'PlayIt.gg'}
-              </Badge>
+
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs text-content-secondary">
@@ -151,7 +137,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             {status === 'STOPPED' || status === 'CRASHED' ? (
               <button
                 onClick={handleStart}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-success hover:bg-success/80 text-surface-base font-bold text-xs shadow-sm transition active:translate-y-0"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-success hover:bg-success/80 text-white font-bold text-xs shadow-sm transition active:translate-y-0"
               >
                 <Play className="w-4 h-4 fill-current" />
                 <span>Start Server</span>
@@ -168,7 +154,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               <div className="flex items-center gap-2">
                 <button
                   onClick={stopServer}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-danger hover:bg-danger/80 text-content-primary font-bold text-xs transition border-transparent"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-danger hover:bg-danger/80 text-white font-bold text-xs transition border-transparent"
                 >
                   <Square className="w-4 h-4 fill-current" />
                   <span>Stop</span>
@@ -176,7 +162,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 <button
                   onClick={killServer}
                   title="Force Kill (Emergency)"
-                  className="p-2.5 rounded-lg bg-surface-hover hover:bg-danger text-content-secondary hover:text-content-primary border border-border-default hover:border-transparent transition"
+                  className="p-2.5 rounded-lg bg-surface-hover hover:bg-danger text-content-secondary hover:text-white border border-border-default hover:border-transparent transition"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -250,10 +236,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             <span className="font-semibold uppercase tracking-wider">Players</span>
           </div>
           <div className="text-2xl font-black text-content-primary font-mono flex items-center justify-between">
-            <span>{metrics.onlinePlayers} <span className="text-xs text-content-secondary font-sans font-normal">/ {metrics.maxPlayers}</span></span>
+            <span>{players.length} <span className="text-xs text-content-secondary font-sans font-normal">/ {metrics.maxPlayers}</span></span>
             <button
               onClick={() => onNavigateTab('players')}
-              className="px-3 py-1 bg-success hover:bg-success/80 text-surface-base font-bold rounded-lg text-xs transition border-transparent font-sans"
+              className="px-3 py-1 bg-success hover:bg-success/80 text-white font-bold rounded-lg text-xs transition border-transparent font-sans"
             >
               View
             </button>
@@ -261,7 +247,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="w-full h-1.5 bg-surface-card rounded-full overflow-hidden">
             <div
               className="h-full bg-success transition-all duration-500"
-              style={{ width: `${(metrics.onlinePlayers / metrics.maxPlayers) * 100}%` }}
+              style={{ width: `${(players.length / metrics.maxPlayers) * 100}%` }}
             />
           </div>
         </GlassCard>
@@ -310,27 +296,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   <p className="text-xs text-content-secondary">Share with friends over the internet</p>
                 </div>
               </div>
-              <Badge
-                variant={
-                  (activeServer?.networkMode === 'upnp' ? upnpStatus.isActive : (cloudTunnelStatus.isActive && cloudTunnelStatus.status === 'ONLINE'))
-                    ? 'success'
-                    : cloudTunnelStatus.status === 'WAITING_CLAIM'
-                    ? 'warning'
-                    : cloudTunnelStatus.status === 'STARTING'
-                    ? 'info'
-                    : 'neutral'
-                }
-              >
-                {activeServer?.networkMode === 'upnp'
-                  ? (upnpStatus.isActive ? 'Active' : 'Offline')
-                  : cloudTunnelStatus.status === 'ONLINE'
-                  ? 'Active'
-                  : cloudTunnelStatus.status === 'WAITING_CLAIM'
-                  ? 'Claim Needed'
-                  : cloudTunnelStatus.status === 'STARTING'
-                  ? 'Connecting...'
-                  : 'Offline'}
-              </Badge>
             </div>
 
             {activeServer?.networkMode === 'upnp' ? (
@@ -343,57 +308,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activeServer.port || 25565}`, 'upnp-ip')}
-                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-neutral-bg text-content-primary hover:bg-surface-hover rounded transition cursor-pointer"
+                      className="flex items-center justify-center w-7 h-7 bg-neutral-bg text-content-primary hover:bg-surface-hover rounded transition cursor-pointer"
                     >
                       {copiedKey === 'upnp-ip' ? <Check className="w-3.5 h-3.5 text-content-primary" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedKey === 'upnp-ip' ? 'Copied' : 'Copy IP'}</span>
-                    </button>
-                    <button
-                      onClick={() => stopUpnp()}
-                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-danger hover:bg-danger/80 text-content-primary rounded transition cursor-pointer border-transparent"
-                      title="Stop UPnP Port Mapping"
-                    >
-                      <span>Turn Off</span>
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="text-xs text-content-secondary bg-surface-base/40 p-3 rounded-lg border border-border-subtle flex items-center justify-between">
                   <span>UPnP port forwarding is offline.</span>
-                  <button
-                    onClick={() => startUpnp(activeServer?.port || 25565)}
-                    disabled={isLoadingNetwork}
-                    className="flex items-center gap-1.5 px-3 py-2 leading-none bg-success hover:bg-success/80 text-surface-base font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
-                  >
-                    {isLoadingNetwork ? (
-                      <PlaceholderIcon className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <PlaceholderIcon className="w-3.5 h-3.5" />
-                    )}
-                    <span>Turn On</span>
-                  </button>
                 </div>
               )
             ) : cloudTunnelStatus.isActive && cloudTunnelStatus.serverAddress ? (
               <div className="flex items-center justify-between bg-surface-base/80 p-3 rounded-lg border border-border-default">
                 <ProtectedIpDisplay 
-                  ip={cloudTunnelStatus.serverAddress}
+                  ip={cloudTunnelStatus.serverAddress.split(':')[0]}
                   className="font-mono text-xs text-content-primary font-semibold select-all truncate"
                 />
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud')}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-neutral-bg text-content-primary hover:bg-surface-hover rounded transition cursor-pointer"
+                    onClick={() => handleCopy(cloudTunnelStatus.serverAddress!.split(':')[0], 'cloud')}
+                    className="flex items-center justify-center w-7 h-7 bg-neutral-bg text-content-primary hover:bg-surface-hover rounded transition cursor-pointer"
                   >
                     {copiedKey === 'cloud' ? <Check className="w-3.5 h-3.5 text-content-primary" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'cloud' ? 'Copied' : 'Copy IP'}</span>
-                  </button>
-                  <button
-                    onClick={() => stopCloudTunnel()}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-danger hover:bg-danger/80 text-content-primary rounded transition cursor-pointer border-transparent"
-                    title="Stop Tunnel"
-                  >
-                    <span>Turn Off</span>
                   </button>
                 </div>
               </div>
@@ -405,7 +342,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                 </div>
                 <button
                   onClick={() => stopCloudTunnel()}
-                  className="px-2.5 py-1 text-xs font-semibold bg-danger hover:bg-danger/80 text-content-primary rounded transition cursor-pointer border-transparent"
+                  className="px-2.5 py-1 text-xs font-semibold bg-danger hover:bg-danger/80 text-white rounded transition cursor-pointer border-transparent"
                 >
                   Cancel
                 </button>
@@ -424,7 +361,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                       window.open(cloudTunnelStatus.claimUrl!, '_blank');
                     }
                   }}
-                  className="px-3 py-1 bg-success hover:bg-success/80 text-surface-base font-bold rounded text-[11px] cursor-pointer"
+                  className="px-3 py-1 bg-success hover:bg-success/80 text-white font-bold rounded text-[11px] cursor-pointer"
                 >
                   Claim Address →
                 </button>
@@ -444,7 +381,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                       window.open('https://playit.gg/account/tunnels', '_blank');
                     }
                   }}
-                  className="mt-1 px-3 py-2 leading-none bg-warning hover:bg-warning/80 text-surface-base font-bold rounded-lg self-start transition-all shadow-sm shadow-warning-fg/10 cursor-pointer"
+                  className="mt-1 px-3 py-2 leading-none bg-warning hover:bg-warning/80 text-white font-bold rounded-lg self-start transition-all shadow-sm shadow-warning-fg/10 cursor-pointer"
                 >
                   Create Tunnel →
                 </button>
@@ -452,18 +389,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             ) : (
               <div className="text-xs text-content-secondary bg-surface-base/40 p-3 rounded-lg border border-border-subtle flex items-center justify-between">
                 <span>Playit.gg tunnel is offline.</span>
-                <button
-                  onClick={() => startCloudTunnel(activeServer?.port || 25565)}
-                  disabled={isLoadingNetwork}
-                  className="flex items-center gap-1.5 px-3 py-2 leading-none bg-success hover:bg-success/80 text-surface-base font-bold rounded-lg text-xs transition cursor-pointer shadow-sm disabled:opacity-50"
-                >
-                  {isLoadingNetwork ? (
-                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Play className="w-3.5 h-3.5" />
-                  )}
-                  <span>Turn On</span>
-                </button>
               </div>
             )}
           </GlassCard>

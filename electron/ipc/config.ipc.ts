@@ -99,20 +99,27 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
     return AppPaths.getServersDir();
   });
 
-  ipcMain.handle('servers:list', () => {
+  ipcMain.handle('servers:list', async () => {
     const sDir = AppPaths.getServersDir();
-    if (!fs.existsSync(sDir)) return [];
+    try {
+      await fs.promises.access(sDir);
+    } catch {
+      return [];
+    }
     
-    const entries = fs.readdirSync(sDir, { withFileTypes: true });
-    return entries.filter(e => e.isDirectory()).map(e => {
+    const entries = await fs.promises.readdir(sDir, { withFileTypes: true });
+    
+    const serverPromises = entries.filter(e => e.isDirectory()).map(async (e) => {
       const serverPath = path.join(sDir, e.name);
-      const props = ConfigParserService.readProperties(serverPath);
+      const props = await ConfigParserService.readPropertiesAsync(serverPath);
       let meta: any = {};
       const metaPath = path.join(serverPath, 'craftora.json');
-      if (fs.existsSync(metaPath)) {
-        try {
-          meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-        } catch (err) {
+      
+      try {
+        const metaContent = await fs.promises.readFile(metaPath, 'utf8');
+        meta = JSON.parse(metaContent);
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') {
           console.warn('Failed to parse server metadata for', e.name, err);
         }
       }
@@ -137,6 +144,8 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
         disableFireSpread: meta.disableFireSpread !== undefined ? meta.disableFireSpread : false
       };
     });
+
+    return await Promise.all(serverPromises);
   });
 
   ipcMain.handle('servers:save-config', (_, { serverId, config }: { serverId: string; config: any }) => {

@@ -10,7 +10,7 @@
     "dist-electron"
   ],
   "win": {
-    "icon": "src/assets/DC.ico",
+    "icon": "src/assets/craftora.ico",
     "target": [
       {
         "target": "nsis",
@@ -28,7 +28,7 @@
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
     "deleteAppDataOnUninstall": false,
-    "installerIcon": "src/assets/DC.ico",
-    "uninstallerIcon": "src/assets/DC.ico"
+    "installerIcon": "src/assets/craftora.ico",
+    "uninstallerIcon": "src/assets/craftora.ico"
   }
 }

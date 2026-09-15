@@ -9,7 +9,7 @@ export interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: 'bg-success text-surface-base border-transparent',
+  success: 'bg-success text-white border-transparent',
   danger: 'bg-danger-bg text-danger-fg border-danger-fg/20',
   warning: 'bg-warning-bg text-warning-fg border-warning-fg/20',
   info: 'bg-info-bg text-info-fg border-info-fg/20',

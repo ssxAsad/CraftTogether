@@ -1,9 +1,8 @@
 import React from 'react';
 import { Plus, Terminal, Server } from 'lucide-react';
-import { PlaceholderIcon } from '../common/PlaceholderIcon';
-import { useServer } from '../../context/ServerContext';
-import { NetworkMode, ServerInstanceConfig } from '../../types';
-import logoImg from '../../assets/DC.png';
+import { useServerState, useServerActions } from '../../context/ServerContext';
+import { ServerInstanceConfig } from '../../types';
+import logoImg from '../../assets/craftora.png';
 
 export type MainTabType = 'servers' | 'console';
 
@@ -18,19 +17,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   onOpenCreateModal
 }) => {
-  const { activeServer, status, servers, selectServer, isLoadingServers } = useServer();
-
-  const getNetworkBadge = (mode?: NetworkMode) => {
-    switch (mode) {
-      case 'lan_only':
-        return { label: 'LAN', color: 'text-content-muted bg-surface-base border-border-default' };
-      case 'upnp':
-        return { label: 'UPnP', color: 'text-content-primary bg-neutral-bg border-border-default' };
-      case 'cloud_relay':
-      default:
-        return { label: 'PlayIt.gg', color: 'text-content-primary bg-neutral-bg border-border-default' };
-    }
-  };
+  const { activeServer, status, servers, isLoadingServers } = useServerState();
+  const { selectServer } = useServerActions();
 
   const handleServerClick = (server: ServerInstanceConfig) => {
     selectServer(server);
@@ -45,7 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <img
             src={logoImg}
             alt="Craftora"
-            className="w-9 h-9 object-contain shrink-0 titlebar-no-drag"
+            className="w-9 h-9 object-contain shrink-0 titlebar-no-drag drop-shadow-sm"
+            style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
           <span className="font-extrabold text-xl text-content-primary tracking-tight titlebar-no-drag select-none">
             Craftora
@@ -85,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="w-full text-left p-3 rounded-xl border border-dashed border-border-default hover:border-border-default bg-surface-base/40 hover:bg-surface-hover cursor-pointer transition text-xs group"
               >
                 <div className="text-content-secondary group-hover:text-content-primary font-semibold flex items-center gap-1.5">
-                  <PlaceholderIcon className="w-3.5 h-3.5 text-content-primary" />
+                  <Server className="w-3.5 h-3.5 text-content-primary" />
                   <span>No servers created</span>
                 </div>
                 <span className="text-[10px] text-content-muted block mt-0.5">Click to create your first server</span>
@@ -94,44 +83,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
               servers.map((s) => {
                 const isSelected = activeTab === 'servers' && activeServer?.id === s.id;
                 const isRunning = activeServer?.id === s.id && (status === 'ONLINE' || status === 'STARTING');
-                const badge = getNetworkBadge(s.networkMode);
-
                 return (
                   <button
                     key={s.id}
                     onClick={() => handleServerClick(s)}
                     className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-all group relative border ${
                       isSelected
-                        ? 'bg-success/90 text-surface-base shadow-sm border-transparent'
+                        ? 'bg-success text-white shadow-sm border-transparent'
                         : 'text-content-secondary hover:text-content-primary hover:bg-surface-hover border-transparent'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {/* Server Status Dot */}
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            isRunning && status === 'ONLINE'
-                              ? 'bg-success'
-                              : isRunning && status === 'STARTING'
-                              ? 'bg-white'
-                              : isSelected
-                              ? 'bg-white'
-                              : 'bg-neutral-bg'
-                          }`}
-                        />
-                        <span className="truncate font-semibold text-white">
-                          {s.name}
-                        </span>
-                      </div>
-
-                      {/* Network Mode Badge */}
-                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${isSelected ? 'bg-white/20 text-white border-transparent' : badge.color}`}>
-                        {badge.label}
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Server Status Dot */}
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          isRunning && status === 'ONLINE'
+                            ? 'bg-success'
+                            : isRunning && status === 'STARTING'
+                            ? 'bg-amber-500 animate-pulse'
+                            : isSelected
+                            ? 'bg-white'
+                            : 'bg-content-muted/50'
+                        }`}
+                      />
+                      <span className={`truncate font-semibold ${isSelected ? 'text-white' : 'text-content-primary'}`}>
+                        {s.name}
                       </span>
                     </div>
 
-                    <div className={`flex items-center text-[10px] mt-1 pl-4 ${isSelected ? 'text-surface-base/70' : 'text-content-muted'}`}>
+                    <div className={`flex items-center text-[10px] mt-1 pl-4 ${isSelected ? 'text-white/90' : 'text-content-secondary'}`}>
                       <span className="uppercase font-mono">
                         {s.serverSoftware} {s.version}
                       </span>
@@ -158,22 +138,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => onSelectTab('console')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'console'
-                ? 'bg-success/90 text-surface-base border-transparent'
+                ? 'bg-success text-white border-transparent shadow-sm'
                 : 'text-content-secondary hover:text-content-primary hover:bg-surface-hover'
             }`}
           >
             <div className="flex items-center gap-2.5">
               <Terminal
                 className={`w-4 h-4 transition ${
-                  activeTab === 'console' ? 'text-surface-base' : 'text-content-secondary'
+                  activeTab === 'console' ? 'text-white' : 'text-content-secondary'
                 }`}
               />
-              <span>Console</span>
+              <span className={activeTab === 'console' ? 'text-white' : ''}>Console</span>
             </div>
 
             {status === 'ONLINE' && (
-              <span className="flex items-center gap-1 text-[10px] text-content-primary font-mono font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              <span className={`flex items-center gap-1 text-[10px] font-mono font-bold ${activeTab === 'console' ? 'text-white' : 'text-content-primary'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'console' ? 'bg-white' : 'bg-success'} animate-pulse`} />
                 Live
               </span>
             )}

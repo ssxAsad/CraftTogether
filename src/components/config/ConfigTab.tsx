@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
-import { JavaIcon } from '../common/Icons';
-import { useServer } from '../../context/ServerContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 import { ServerProperties } from '../../types';
 import { GlassCard } from '../common/GlassCard';
 
 export const ConfigTab: React.FC = () => {
-  const { activeServer, javaRuntimes, updateServerConfig, refreshServers, status, sendCommand } = useServer();
+  const { activeServer, javaRuntimes, status } = useServerState();
+  const { updateServerConfig, refreshServers, sendCommand, loadJavaRuntimes } = useServerActions();
   const [activeSection, setActiveSection] = useState<'game' | 'performance'>('game');
 
   const [properties, setProperties] = useState<ServerProperties>({
@@ -33,12 +32,18 @@ export const ConfigTab: React.FC = () => {
   // Gameplay Gamerules State
   const [keepInventory, setKeepInventory] = useState(activeServer?.keepInventory !== false);
   const [showCoordinates, setShowCoordinates] = useState(activeServer?.showCoordinates !== false);
-  const [onePlayerSleep, setOnePlayerSleep] = useState(activeServer?.onePlayerSleep !== false);
   const [disableMobGriefing, setDisableMobGriefing] = useState(activeServer?.disableMobGriefing === true);
   const [disableFireSpread, setDisableFireSpread] = useState(activeServer?.disableFireSpread === true);
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    // Load Java Runtimes explicitly when opening the Config Tab
+    if (javaRuntimes.length === 0) {
+      loadJavaRuntimes();
+    }
+  }, [javaRuntimes.length, loadJavaRuntimes]);
 
   useEffect(() => {
     const loadProps = async () => {
@@ -48,7 +53,6 @@ export const ConfigTab: React.FC = () => {
       setSelectedJava(activeServer.javaPath || javaRuntimes[0]?.path || 'java');
       setKeepInventory(activeServer.keepInventory !== false);
       setShowCoordinates(activeServer.showCoordinates !== false);
-      setOnePlayerSleep(activeServer.onePlayerSleep !== false);
       setDisableMobGriefing(activeServer.disableMobGriefing === true);
       setDisableFireSpread(activeServer.disableFireSpread === true);
 
@@ -89,7 +93,6 @@ export const ConfigTab: React.FC = () => {
         javaPath: selectedJava,
         keepInventory,
         showCoordinates,
-        onePlayerSleep,
         disableMobGriefing,
         disableFireSpread
       });
@@ -98,7 +101,6 @@ export const ConfigTab: React.FC = () => {
       if (status === 'ONLINE') {
         await sendCommand(`gamerule keepInventory ${keepInventory ? 'true' : 'false'}`);
         await sendCommand(`gamerule showCoordinates ${showCoordinates ? 'true' : 'false'}`);
-        await sendCommand(`gamerule playersSleepingPercentage ${onePlayerSleep ? 1 : 100}`);
         await sendCommand(`gamerule mobGriefing ${disableMobGriefing ? 'false' : 'true'}`);
         await sendCommand(`gamerule doFireTick ${disableFireSpread ? 'false' : 'true'}`);
       }
@@ -118,9 +120,6 @@ export const ConfigTab: React.FC = () => {
       {/* Header with Section Pill Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-neutral-bg text-content-primary flex items-center justify-center border border-border-default">
-            <PlaceholderIcon className="w-5 h-5" />
-          </div>
           <div>
             <h1 className="text-xl font-bold text-content-primary">Server Settings & Configuration</h1>
             <p className="text-xs text-content-secondary">
@@ -136,22 +135,20 @@ export const ConfigTab: React.FC = () => {
               onClick={() => setActiveSection('game')}
               className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                 activeSection === 'game'
-                  ? 'bg-surface-base text-content-primary border border-border-default shadow-sm font-bold'
+                  ? 'bg-success text-white shadow-sm font-bold border-transparent'
                   : 'text-content-secondary hover:text-content-primary border border-transparent'
               }`}
             >
-              <PlaceholderIcon className="w-3.5 h-3.5" />
               <span>Gameplay & World</span>
             </button>
             <button
               onClick={() => setActiveSection('performance')}
               className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                 activeSection === 'performance'
-                  ? 'bg-surface-base text-content-primary border border-border-default shadow-sm font-bold'
+                  ? 'bg-success text-white shadow-sm font-bold border-transparent'
                   : 'text-content-secondary hover:text-content-primary border border-transparent'
               }`}
             >
-              <PlaceholderIcon className="w-3.5 h-3.5" />
               <span>RAM & Performance</span>
             </button>
           </div>
@@ -159,10 +156,9 @@ export const ConfigTab: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
+            className="flex items-center px-4 py-2 bg-success hover:bg-success/80 text-white rounded-lg font-bold text-xs transition"
           >
-            {saveSuccess ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
-            <span>{saveSuccess ? 'Saved!' : 'PlaceholderIcon Changes'}</span>
+            <span>{saveSuccess ? 'Saved!' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
@@ -174,20 +170,13 @@ export const ConfigTab: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-content-primary">Cracked (Offline Mode) Support</h2>
+                  <h2 className="text-sm font-bold text-content-primary">Authentication Mode</h2>
                   <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
-                      isCracked
-                        ? 'bg-surface-base text-content-primary border-border-default'
-                        : 'bg-surface-card text-content-muted border-border-subtle'
-                    }`}
+                    className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-warning-bg text-warning-fg border-warning-fg/20"
                   >
                     {isCracked ? 'Cracked Allowed' : 'Premium Only'}
                   </span>
                 </div>
-                <p className="text-xs text-content-secondary">
-                  When enabled (`online-mode=false`), players with custom launchers (e.g. TLauncher, SKLauncher, Prism) can join.
-                </p>
               </div>
 
               <div className="flex items-center gap-1.5 bg-surface-elevated p-1 rounded-lg border border-border-default">
@@ -196,7 +185,7 @@ export const ConfigTab: React.FC = () => {
                   onClick={() => handleToggleCracked(false)}
                   className={`px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                     !isCracked
-                      ? 'bg-surface-card text-content-primary border border-border-default'
+                      ? 'bg-success text-white font-bold'
                       : 'text-content-secondary hover:text-content-primary'
                   }`}
                 >
@@ -207,7 +196,7 @@ export const ConfigTab: React.FC = () => {
                   onClick={() => handleToggleCracked(true)}
                   className={`px-3 py-2 leading-none rounded-md text-xs font-semibold transition ${
                     isCracked
-                      ? 'bg-success text-surface-base font-bold'
+                      ? 'bg-success text-white font-bold'
                       : 'text-content-secondary hover:text-content-primary'
                   }`}
                 >
@@ -216,14 +205,7 @@ export const ConfigTab: React.FC = () => {
               </div>
             </div>
 
-            {isCracked && (
-              <div className="bg-surface-elevated border border-border-default p-3.5 rounded-lg flex items-start gap-3 text-xs text-content-primary">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0 mt-0.5" />
-                <div>
-                  <strong>Skin Restoration Active:</strong> Craftora auto-injects SkinsRestorer so cracked players keep their skins and can use <code>/skin &lt;name&gt;</code> in-game!
-                </div>
-              </div>
-            )}
+
           </GlassCard>
 
       {/* Main Settings Grid */}
@@ -231,94 +213,72 @@ export const ConfigTab: React.FC = () => {
         {/* Popular Gameplay Enhancements (Gamerules) Card */}
         <GlassCard className="rounded-2xl p-6 border-border-default space-y-4 md:col-span-2">
           <h3 className="text-sm font-bold text-content-primary flex items-center gap-2 border-b border-border-subtle pb-3">
-            <PlaceholderIcon className="w-4 h-4 text-content-primary" />
-            <span>Popular Gameplay Enhancements (Live GameRules)</span>
+            <span>Game Rules</span>
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Keep Inventory */}
             <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-subtle">
               <div className="flex items-center gap-2.5">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-content-primary block">Keep Inventory</span>
                   <span className="text-[10px] text-content-secondary">Keep items & XP upon dying</span>
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={keepInventory}
-                onChange={(e) => setKeepInventory(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 cursor-pointer"
-              />
+              <button
+                onClick={() => setKeepInventory(!keepInventory)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${keepInventory ? 'bg-success' : 'bg-content-muted'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${keepInventory ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+              </button>
             </div>
 
             {/* Show Coordinates */}
             <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-subtle">
               <div className="flex items-center gap-2.5">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-content-primary block">Show Coordinates HUD</span>
                   <span className="text-[10px] text-content-secondary">Live X, Y, Z on screen for Bedrock & Java</span>
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={showCoordinates}
-                onChange={(e) => setShowCoordinates(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 cursor-pointer"
-              />
-            </div>
-
-            {/* Instant 1-Player Sleep */}
-            <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-subtle">
-              <div className="flex items-center gap-2.5">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0" />
-                <div>
-                  <span className="text-xs font-semibold text-content-primary block">Instant 1-Player Sleep</span>
-                  <span className="text-[10px] text-content-secondary">1 player in bed skips the night</span>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={onePlayerSleep}
-                onChange={(e) => setOnePlayerSleep(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 cursor-pointer"
-              />
+              <button
+                onClick={() => setShowCoordinates(!showCoordinates)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${showCoordinates ? 'bg-success' : 'bg-content-muted'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${showCoordinates ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+              </button>
             </div>
 
             {/* Disable Mob Griefing */}
             <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-subtle">
               <div className="flex items-center gap-2.5">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-content-primary block">Anti-Creeper / Mob Griefing</span>
                   <span className="text-[10px] text-content-secondary">Prevent Creeper/Enderman block damage</span>
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={disableMobGriefing}
-                onChange={(e) => setDisableMobGriefing(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 cursor-pointer"
-              />
+              <button
+                onClick={() => setDisableMobGriefing(!disableMobGriefing)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${disableMobGriefing ? 'bg-success' : 'bg-content-muted'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${disableMobGriefing ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+              </button>
             </div>
 
             {/* Disable Fire Spread */}
             <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-subtle">
               <div className="flex items-center gap-2.5">
-                <PlaceholderIcon className="w-4 h-4 text-content-primary shrink-0" />
                 <div>
                   <span className="text-xs font-semibold text-content-primary block">Disable Fire Spread</span>
                   <span className="text-[10px] text-content-secondary">Prevent fire from spreading to wood</span>
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={disableFireSpread}
-                onChange={(e) => setDisableFireSpread(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 cursor-pointer"
-              />
+              <button
+                onClick={() => setDisableFireSpread(!disableFireSpread)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${disableFireSpread ? 'bg-success' : 'bg-content-muted'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${disableFireSpread ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+              </button>
             </div>
           </div>
         </GlassCard>
@@ -326,7 +286,6 @@ export const ConfigTab: React.FC = () => {
         {/* Core Gameplay Card */}
         <GlassCard className="rounded-2xl p-6 border-border-default space-y-5">
           <h3 className="text-sm font-bold text-content-primary flex items-center gap-2 border-b border-border-subtle pb-3">
-            <PlaceholderIcon className="w-4 h-4 text-content-primary" />
             <span>Gameplay & Rules</span>
           </h3>
 
@@ -366,12 +325,12 @@ export const ConfigTab: React.FC = () => {
               <span className="text-xs font-semibold text-content-primary block">PvP (Player vs Player)</span>
               <span className="text-[11px] text-content-secondary">Allow players to damage each other</span>
             </div>
-            <input
-              type="checkbox"
-              checked={properties.pvp !== false}
-              onChange={(e) => setProperties({ ...properties, pvp: e.target.checked })}
-              className="w-4 h-4 accent-emerald-500 cursor-pointer"
-            />
+            <button
+              onClick={() => setProperties({ ...properties, pvp: properties.pvp === false ? true : false })}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${properties.pvp !== false ? 'bg-success' : 'bg-content-muted'}`}
+            >
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${properties.pvp !== false ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+            </button>
           </div>
 
           {/* Allow Flight */}
@@ -380,19 +339,18 @@ export const ConfigTab: React.FC = () => {
               <span className="text-xs font-semibold text-content-primary block">Allow Flight</span>
               <span className="text-[11px] text-content-secondary">Prevent kick for flying in survival / elytra</span>
             </div>
-            <input
-              type="checkbox"
-              checked={properties['allow-flight'] !== false}
-              onChange={(e) => setProperties({ ...properties, 'allow-flight': e.target.checked })}
-              className="w-4 h-4 accent-emerald-500 cursor-pointer"
-            />
+            <button
+              onClick={() => setProperties({ ...properties, 'allow-flight': properties['allow-flight'] === false ? true : false })}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${properties['allow-flight'] !== false ? 'bg-success' : 'bg-content-muted'}`}
+            >
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${properties['allow-flight'] !== false ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+            </button>
           </div>
         </GlassCard>
 
         {/* World & Performance Tuning */}
         <GlassCard className="rounded-2xl p-6 border-border-default space-y-5">
           <h3 className="text-sm font-bold text-content-primary flex items-center gap-2 border-b border-border-subtle pb-3">
-            <PlaceholderIcon className="w-4 h-4 text-content-primary" />
             <span>World & Limits</span>
           </h3>
 
@@ -454,19 +412,19 @@ export const ConfigTab: React.FC = () => {
               <span className="text-xs font-semibold text-content-primary block">Whitelist Enforced</span>
               <span className="text-[11px] text-content-secondary">Only approved players can join</span>
             </div>
-            <input
-              type="checkbox"
-              checked={properties['white-list'] === true}
-              onChange={(e) => setProperties({ ...properties, 'white-list': e.target.checked })}
-              className="w-4 h-4 accent-emerald-500 cursor-pointer"
-            />
+            <button
+              onClick={() => setProperties({ ...properties, 'white-list': properties['white-list'] === true ? false : true })}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${properties['white-list'] === true ? 'bg-success' : 'bg-content-muted'}`}
+            >
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${properties['white-list'] === true ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+            </button>
           </div>
         </GlassCard>
       </div>
 
         {/* MOTD (Message of the Day) */}
         <GlassCard className="rounded-2xl p-6 border-border-default space-y-4">
-          <h3 className="text-sm font-bold text-content-primary">Server MOTD (Message of the Day)</h3>
+          <h3 className="text-sm font-bold text-content-primary">Server Description</h3>
           <input
             type="text"
             value={properties.motd || ''}
@@ -474,10 +432,6 @@ export const ConfigTab: React.FC = () => {
             placeholder="A Minecraft Server"
             className="w-full px-4 py-3 bg-surface-base border border-border-default rounded-xl text-sm font-mono text-content-primary focus:outline-none focus:border-border-default"
           />
-          <div className="bg-surface-base/90 p-3 rounded-lg border border-border-subtle text-xs">
-            <span className="text-content-secondary block mb-1">In-Game Server List Preview:</span>
-            <span className="font-mono text-content-primary font-bold">{properties.motd || 'A Minecraft Server'}</span>
-          </div>
         </GlassCard>
         </>
       ) : (
@@ -487,9 +441,6 @@ export const ConfigTab: React.FC = () => {
           <GlassCard className="rounded-2xl p-6 border-border-default space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-neutral-bg text-content-primary flex items-center justify-center">
-                  <PlaceholderIcon className="w-4 h-4" />
-                </div>
                 <div>
                   <h3 className="text-sm font-bold text-content-primary">Allocated Memory (RAM)</h3>
                   <p className="text-xs text-content-secondary">Controls heap size (-Xms and -Xmx)</p>
@@ -524,9 +475,8 @@ export const ConfigTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <PlaceholderIcon className="w-4 h-4 text-content-primary" />
                   <h3 className="text-sm font-bold text-content-primary">Aikar's G1GC Garbage Collection Flags</h3>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-surface-base text-content-primary border border-border-default">
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-warning-bg text-warning-fg border-warning-fg/20">
                     Recommended
                   </span>
                 </div>
@@ -535,21 +485,18 @@ export const ConfigTab: React.FC = () => {
                 </p>
               </div>
 
-              <input
-                type="checkbox"
-                checked={useAikar}
-                onChange={(e) => setUseAikar(e.target.checked)}
-                className="w-5 h-5 accent-emerald-500 cursor-pointer"
-              />
+              <button
+                onClick={() => setUseAikar(!useAikar)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${useAikar ? 'bg-success' : 'bg-content-muted'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${useAikar ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+              </button>
             </div>
           </GlassCard>
 
           {/* Java Runtime Selector */}
           <GlassCard className="rounded-2xl p-6 border-border-default space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-neutral-bg text-content-primary flex items-center justify-center border border-border-default p-1.5">
-                <JavaIcon className="w-5 h-5" />
-              </div>
               <div>
                 <h3 className="text-sm font-bold text-content-primary">Java Runtime Binary</h3>
                 <p className="text-xs text-content-secondary">Select JVM installation used to launch server</p>

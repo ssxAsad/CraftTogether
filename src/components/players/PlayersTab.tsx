@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Users, Search, Clock, ShieldAlert, UserMinus, UserX, UserPlus } from 'lucide-react';
+import { Users, Search, Clock, ShieldAlert, UserMinus, UserX, UserPlus, User } from 'lucide-react';
 import { GlassCard } from '@/components/common/GlassCard';
-import { useServer } from '../../context/ServerContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 
 export const PlayersTab: React.FC = () => {
-  const { players, sendCommand, status, metrics } = useServer();
+  const { players, status, metrics } = useServerState();
+  const { sendCommand } = useServerActions();
   const { showPrompt } = useDialog();
   const [searchTerm, setSearchTerm] = useState('');
   const [whitelistInput, setWhitelistInput] = useState('');
@@ -101,14 +102,9 @@ export const PlayersTab: React.FC = () => {
                 className="rounded-xl p-4 border-border-default flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-3">
-                  <img
-                    src={`https://minotar.net/avatar/${player.username}/48.png`}
-                    alt={player.username}
-                    className="w-10 h-10 rounded-lg shadow-md border border-border-default bg-surface-base"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://minotar.net/avatar/Steve/48.png';
-                    }}
-                  />
+                  <div className="w-10 h-10 rounded-lg shadow-md border border-border-default bg-surface-base flex items-center justify-center text-content-secondary">
+                    <User className="w-5 h-5" />
+                  </div>
                   <div>
                     <span className="font-bold text-sm text-content-primary block">
                       {player.username}
@@ -134,7 +130,7 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleKick(player.username)}
                     title="Kick Player"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-neutral-bg hover:bg-danger text-content-secondary hover:text-surface-base transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-neutral-bg hover:bg-danger text-content-secondary hover:text-white transition disabled:opacity-40"
                   >
                     <UserMinus className="w-4 h-4" />
                   </button>
@@ -142,7 +138,7 @@ export const PlayersTab: React.FC = () => {
                     onClick={() => handleBan(player.username)}
                     title="Ban Player"
                     disabled={status !== 'ONLINE'}
-                    className="p-2 rounded-lg bg-danger hover:bg-danger/80 text-surface-base transition disabled:opacity-40"
+                    className="p-2 rounded-lg bg-danger hover:bg-danger/80 text-white transition disabled:opacity-40"
                   >
                     <UserX className="w-4 h-4" />
                   </button>
@@ -181,7 +177,7 @@ export const PlayersTab: React.FC = () => {
           <button
             type="submit"
             disabled={status !== 'ONLINE' || !whitelistInput.trim()}
-            className="px-5 py-2.5 bg-success hover:bg-success/80 disabled:opacity-40 text-surface-base font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+            className="px-5 py-2.5 bg-success hover:bg-success/80 disabled:opacity-40 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
           >
             <UserPlus className="w-4 h-4" />
             <span>Add to Whitelist</span>

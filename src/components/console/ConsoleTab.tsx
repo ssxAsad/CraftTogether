@@ -2,25 +2,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
-import { useServer } from '../../context/ServerContext';
+import { Terminal as TerminalIcon, Send } from 'lucide-react';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 
 export const ConsoleTab: React.FC = () => {
-  const { logs, sendCommand, clearLogs, status } = useServer();
+  const { logs, status } = useServerState();
+  const { sendCommand } = useServerActions();
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermInstance = useRef<XTerm | null>(null);
   const fitAddonInstance = useRef<FitAddon | null>(null);
   const [inputCommand, setInputCommand] = useState('');
-  const [copied, setCopied] = useState(false);
 
   // Initialize xterm
   useEffect(() => {
     if (!terminalRef.current) return;
+    terminalRef.current.innerHTML = '';
 
     const term = new XTerm({
       theme: {
         background: '#06090e',
-        foreground: '#e2e8f0',
+        foreground: '#18181b',
         cursor: '#10b981',
         cursorAccent: '#06090e',
         selectionBackground: 'rgba(16, 185, 129, 0.3)',
@@ -57,8 +58,9 @@ export const ConsoleTab: React.FC = () => {
     xtermInstance.current = term;
     fitAddonInstance.current = fitAddon;
 
-    term.writeln('\x1b[1;32m=== Craftora Interactive Minecraft Server Console ===\x1b[0m');
-    term.writeln('\x1b[90mReady for server output and commands...\x1b[0m\r\n');
+    if (logs.length === 0 && status !== 'ONLINE' && status !== 'STARTING') {
+      term.writeln('\x1b[1;32mWaiting for server startup...\x1b[0m');
+    }
 
     const handleResize = () => fitAddon.fit();
     window.addEventListener('resize', handleResize);
@@ -66,6 +68,8 @@ export const ConsoleTab: React.FC = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       term.dispose();
+      xtermInstance.current = null;
+      fitAddonInstance.current = null;
     };
   }, []);
 
@@ -75,13 +79,17 @@ export const ConsoleTab: React.FC = () => {
     if (!xtermInstance.current) return;
     const term = xtermInstance.current;
 
+    if (logs.length > 0 && lastWrittenIdx.current === 0) {
+      term.reset();
+    }
+
     const linesToWrite: string[] = [];
     for (let i = lastWrittenIdx.current; i < logs.length; i++) {
       const log = logs[i];
       if (log.type === 'stderr') {
         linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
       } else if (log.type === 'system') {
-        linesToWrite.push(`\x1b[1;36m${log.line}\x1b[0m`);
+        linesToWrite.push(`\x1b[1;32m${log.line}\x1b[0m`);
       } else if (log.line.includes('WARN')) {
         linesToWrite.push(`\x1b[33m${log.line}\x1b[0m`);
       } else if (log.line.includes('ERROR')) {
@@ -96,21 +104,18 @@ export const ConsoleTab: React.FC = () => {
     lastWrittenIdx.current = logs.length;
   }, [logs]);
 
-  const handleClear = () => {
-    clearLogs();
-    lastWrittenIdx.current = 0;
-    if (xtermInstance.current) {
-      xtermInstance.current.clear();
-      xtermInstance.current.writeln('\x1b[90mConsole cleared.\x1b[0m\r\n');
+  // Sync offline status when logs are reset or cleared
+  useEffect(() => {
+    if (!xtermInstance.current) return;
+    const term = xtermInstance.current;
+    if (logs.length === 0 && lastWrittenIdx.current > 0) {
+      lastWrittenIdx.current = 0;
+      term.reset();
+      if (status !== 'ONLINE' && status !== 'STARTING') {
+        term.writeln('\x1b[1;32mWaiting for server startup...\x1b[0m');
+      }
     }
-  };
-
-  const handleCopyAll = () => {
-    const text = logs.map(l => l.line).join('\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  }, [logs.length, status]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,49 +134,39 @@ export const ConsoleTab: React.FC = () => {
     { label: 'save-all', cmd: 'save-all' }
   ];
 
+  const isOnline = status === 'ONLINE';
+
   return (
     <div className="p-6 flex flex-col h-[calc(100vh-2.5rem)] space-y-4 max-w-7xl mx-auto">
       {/* Header & Tooling */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-neutral-bg text-content-primary flex items-center justify-center">
-            <PlaceholderIcon className="w-4 h-4" />
+            <TerminalIcon className="w-4 h-4" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-content-primary">Live Server Terminal</h1>
-            <p className="text-xs text-content-secondary">Interactive standard input/output stream</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCopyAll}
-            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg text-xs font-semibold bg-neutral-bg hover:bg-surface-hover text-content-primary transition"
-          >
-            {copied ? <PlaceholderIcon className="w-3.5 h-3.5 text-content-primary" /> : <PlaceholderIcon className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied' : 'PlaceholderIcon Logs'}</span>
-          </button>
-          <button
-            onClick={handleClear}
-            className="flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg text-xs font-semibold bg-neutral-bg hover:bg-surface-hover text-content-primary hover:text-danger-fg transition"
-          >
-            <PlaceholderIcon className="w-3.5 h-3.5" />
-            <span>Clear</span>
-          </button>
+          <h1 className="text-lg font-bold text-content-primary">Terminal</h1>
         </div>
       </div>
 
       {/* Quick Command Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <span className="text-[11px] font-bold uppercase text-content-secondary flex items-center gap-1">
-          <PlaceholderIcon className="w-3 h-3 text-content-primary" /> Shortcuts:
+        <span
+          className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${
+            isOnline ? 'text-content-secondary' : 'text-content-muted'
+          }`}
+        >
+          Shortcuts:
         </span>
         {quickCommands.map((q) => (
           <button
             key={q.cmd}
             onClick={() => sendCommand(q.cmd)}
-            disabled={status !== 'ONLINE'}
-            className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-surface-card hover:bg-surface-hover hover:text-content-primary text-content-secondary border border-border-default hover:border-border-default transition disabled:opacity-40"
+            disabled={!isOnline}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-all ${
+              isOnline
+                ? 'bg-surface-card hover:bg-surface-hover text-content-primary border border-border-default hover:border-border-default cursor-pointer active:scale-95 shadow-sm'
+                : 'bg-surface-card/40 text-content-muted border border-border-subtle opacity-40 cursor-not-allowed'
+            }`}
           >
             /{q.label}
           </button>
@@ -193,9 +188,9 @@ export const ConsoleTab: React.FC = () => {
             type="text"
             value={inputCommand}
             onChange={(e) => setInputCommand(e.target.value)}
-            disabled={status !== 'ONLINE'}
+            disabled={!isOnline}
             placeholder={
-              status === 'ONLINE'
+              isOnline
                 ? "Type a Minecraft server command (e.g. op Player, weather clear, stop)..."
                 : "Server is not running. Start server to execute commands."
             }
@@ -204,11 +199,11 @@ export const ConsoleTab: React.FC = () => {
         </div>
         <button
           type="submit"
-          disabled={status !== 'ONLINE' || !inputCommand.trim()}
-          className="px-5 py-2.5 bg-success hover:bg-success/80 disabled:opacity-40 text-surface-base font-bold text-xs rounded-lg flex items-center gap-2 transition"
+          disabled={!isOnline || !inputCommand.trim()}
+          className="px-5 py-2.5 bg-success hover:bg-success/80 disabled:opacity-40 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition cursor-pointer disabled:cursor-not-allowed"
         >
-          <PlaceholderIcon className="w-3.5 h-3.5" />
-          <span>PlaceholderIcon</span>
+          <Send className="w-3.5 h-3.5" />
+          <span>Send</span>
         </button>
       </form>
     </div>

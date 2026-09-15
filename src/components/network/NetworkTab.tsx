@@ -4,30 +4,17 @@ import { ProtectedIpDisplay } from '@/components/common/ProtectedIpDisplay';
 import { GlassCard } from '@/components/common/GlassCard';
 import { Badge } from '@/components/common/Badge';
 import { Copy, Check, CheckCircle2, AlertCircle } from 'lucide-react';
-import { PlayItIcon, LANIcon, UPnPIcon } from '../common/Icons';
-import { useNetwork } from '../../context/NetworkContext';
-import { useServer } from '../../context/ServerContext';
+import { PlayItIcon } from '../common/Icons';
+import { useNetworkState, useNetworkActions } from '../../context/NetworkContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 import { NetworkMode } from '../../types';
 
 export const NetworkTab: React.FC = () => {
-  const {
-    upnpStatus,
-    cloudTunnelStatus,
-    isLanBroadcasting,
-    localIp,
-    publicIp,
-    isLoadingNetwork,
-    checkUpnpSupport,
-    startUpnp,
-    stopUpnp,
-    startCloudTunnel,
-    stopCloudTunnel,
-    toggleLan,
-    applyNetworkMode,
-    refreshDiagnostics
-  } = useNetwork();
+  const { upnpStatus, cloudTunnelStatus, isLanBroadcasting, localIp, publicIp, isLoadingNetwork } = useNetworkState();
+  const { checkUpnpSupport, startUpnp, stopUpnp, startCloudTunnel, stopCloudTunnel, toggleLan, applyNetworkMode, refreshDiagnostics } = useNetworkActions();
 
-  const { activeServer, updateServerConfig, status } = useServer();
+  const { activeServer, status } = useServerState();
+  const { updateServerConfig } = useServerActions();
 
   const currentMode: NetworkMode = activeServer?.networkMode || 'cloud_relay';
 

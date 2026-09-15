@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ServerStatus, ServerMetrics, PlayerInfo, ServerInstanceConfig, JavaRuntime } from '../types';
 
-interface ServerContextType {
+interface ServerState {
   servers: ServerInstanceConfig[];
   activeServer: ServerInstanceConfig | null;
   isLoadingServers: boolean;
@@ -13,7 +13,9 @@ interface ServerContextType {
   isDownloading: boolean;
   downloadProgress: { percent: number; software: string; version: string } | null;
   
-  // Actions
+}
+
+interface ServerActions {
   startServer: () => Promise<boolean>;
   stopServer: () => Promise<boolean>;
   killServer: () => Promise<boolean>;
@@ -24,9 +26,11 @@ interface ServerContextType {
   selectServer: (server: ServerInstanceConfig) => void;
   clearLogs: () => void;
   refreshServers: () => Promise<void>;
+  loadJavaRuntimes: () => Promise<void>;
 }
 
-const ServerContext = createContext<ServerContextType | undefined>(undefined);
+const ServerStateContext = createContext<ServerState | undefined>(undefined);
+const ServerActionsContext = createContext<ServerActions | undefined>(undefined);
 
 declare global {
   interface Window {
@@ -57,14 +61,6 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const refreshServers = useCallback(async () => {
     if (window.electronAPI) {
       try {
-        // 1. Trigger non-blocking Java detection in parallel background
-        window.electronAPI.detectJava().then((javas: JavaRuntime[]) => {
-          if (Array.isArray(javas) && javas.length > 0) {
-            setJavaRuntimes(javas);
-          }
-        }).catch((err: any) => {
-          console.warn('Background Java detection warning:', err);
-        });
 
         // 2. Fetch server instances from local storage directory immediately (<2ms)
         const list = await window.electronAPI.listServers();
@@ -134,6 +130,19 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
+  const loadJavaRuntimes = useCallback(async () => {
+    if (window.electronAPI) {
+      try {
+        const javas = await window.electronAPI.detectJava();
+        if (Array.isArray(javas) && javas.length > 0) {
+          setJavaRuntimes(javas);
+        }
+      } catch (err: any) {
+        console.warn('On-demand Java detection warning:', err);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     refreshServers();
 
@@ -173,7 +182,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [refreshServers]);
 
-  const startServer = async (): Promise<boolean> => {
+  const startServer = useCallback(async (): Promise<boolean> => {
     if (!activeServer) return false;
     if (window.electronAPI) {
       return await window.electronAPI.startServer(activeServer);
@@ -185,9 +194,9 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }, 1500);
       return true;
     }
-  };
+  }, [activeServer]);
 
-  const stopServer = async (): Promise<boolean> => {
+  const stopServer = useCallback(async (): Promise<boolean> => {
     if (window.electronAPI) {
       return await window.electronAPI.stopServer();
     } else {
@@ -195,27 +204,27 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(() => setStatus('STOPPED'), 1000);
       return true;
     }
-  };
+  }, []);
 
-  const killServer = async (): Promise<boolean> => {
+  const killServer = useCallback(async (): Promise<boolean> => {
     if (window.electronAPI) {
       return await window.electronAPI.killServer();
     } else {
       setStatus('STOPPED');
       return true;
     }
-  };
+  }, []);
 
-  const sendCommand = async (cmd: string): Promise<boolean> => {
+  const sendCommand = useCallback(async (cmd: string): Promise<boolean> => {
     if (window.electronAPI) {
       return await window.electronAPI.sendCommand(cmd);
     } else {
       setLogs(prev => [...prev, { line: `> ${cmd}`, type: 'system' }]);
       return true;
     }
-  };
+  }, []);
 
-  const createServer = async (config: Omit<ServerInstanceConfig, 'id' | 'serverDir'>): Promise<void> => {
+  const createServer = useCallback(async (config: Omit<ServerInstanceConfig, 'id' | 'serverDir'>): Promise<void> => {
     const cleanId = config.name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     setIsDownloading(true);
 
@@ -289,9 +298,9 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsDownloading(false);
       }, 1500);
     }
-  };
+  }, [refreshServers]);
 
-  const updateServerConfig = async (serverId: string, partial: Partial<ServerInstanceConfig>): Promise<void> => {
+  const updateServerConfig = useCallback(async (serverId: string, partial: Partial<ServerInstanceConfig>): Promise<void> => {
     if (window.electronAPI) {
       await window.electronAPI.saveServerConfig({
         serverId,
@@ -308,9 +317,9 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     setActiveServer(prev => prev && prev.id === serverId ? { ...prev, ...partial } : prev);
-  };
+  }, []);
 
-  const deleteServer = async (serverId: string): Promise<boolean> => {
+  const deleteServer = useCallback(async (serverId: string): Promise<boolean> => {
     if (status !== 'STOPPED' && activeServer?.id === serverId) {
       await stopServer();
     }
@@ -333,53 +342,49 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     await refreshServers();
     return true;
-  };
+  }, [status, activeServer, servers, refreshServers]);
 
-  const selectServer = (server: ServerInstanceConfig) => {
+  const selectServer = useCallback((server: ServerInstanceConfig) => {
     if (status !== 'STOPPED' && activeServer?.id !== server.id) return;
     setActiveServer(server);
     localStorage.setItem('craftora_active_server_id', server.id);
     setLogs([]);
-  };
+  }, [status, activeServer]);
 
-  const clearLogs = () => {
+  const clearLogs = useCallback(() => {
     setLogs([]);
-  };
+  }, []);
+
+
+  const actions = React.useMemo<ServerActions>(() => ({
+    startServer, stopServer, killServer, sendCommand, createServer, 
+    updateServerConfig, deleteServer, selectServer, clearLogs, refreshServers,
+    loadJavaRuntimes
+  }), [activeServer, status, servers, isDownloading, refreshServers, loadJavaRuntimes]);
+
+  const state = React.useMemo<ServerState>(() => ({
+    servers, activeServer, isLoadingServers, status, metrics, players, 
+    logs, javaRuntimes, isDownloading, downloadProgress
+  }), [servers, activeServer, isLoadingServers, status, metrics, players, logs, javaRuntimes, isDownloading, downloadProgress]);
 
   return (
-    <ServerContext.Provider
-      value={{
-        servers,
-        activeServer,
-        isLoadingServers,
-        status,
-        metrics,
-        players,
-        logs,
-        javaRuntimes,
-        isDownloading,
-        downloadProgress,
-        startServer,
-        stopServer,
-        killServer,
-        sendCommand,
-        createServer,
-        updateServerConfig,
-        deleteServer,
-        selectServer,
-        clearLogs,
-        refreshServers
-      }}
-    >
-      {children}
-    </ServerContext.Provider>
+    <ServerActionsContext.Provider value={actions}>
+      <ServerStateContext.Provider value={state}>
+        {children}
+      </ServerStateContext.Provider>
+    </ServerActionsContext.Provider>
   );
 };
 
-export const useServer = () => {
-  const context = useContext(ServerContext);
-  if (!context) {
-    throw new Error('useServer must be used within a ServerProvider');
-  }
+
+export const useServerState = () => {
+  const context = useContext(ServerStateContext);
+  if (!context) throw new Error('useServerState must be used within a ServerProvider');
+  return context;
+};
+
+export const useServerActions = () => {
+  const context = useContext(ServerActionsContext);
+  if (!context) throw new Error('useServerActions must be used within a ServerProvider');
   return context;
 };

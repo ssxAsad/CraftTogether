@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
-import { Save } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { GlassCard } from '@/components/common/GlassCard';
 import { Badge } from '@/components/common/Badge';
-import { useServer } from '../../context/ServerContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
-import { GeyserConfig } from '../../types';
+import { GeyserConfig, isModdedServerSoftware } from '../../types';
 
 export const CrossplayTab: React.FC = () => {
-  const { activeServer } = useServer();
+  const { activeServer } = useServerState();
   const { showAlert } = useDialog();
   const [isInstalled, setIsInstalled] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -73,82 +72,63 @@ export const CrossplayTab: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const isModded = isModdedServerSoftware(activeServer?.serverSoftware);
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto overflow-y-auto h-[calc(100vh-2.5rem)]">
+      {/* Amber Warning for Modded Servers */}
+      {isModded && (
+        <div className="p-4 rounded-xl bg-warning-bg border border-warning-fg/30 text-warning-fg space-y-1.5 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-warning-fg shrink-0" />
+            <span className="text-xs font-bold">
+              Bedrock Cross-Play Incompatible with Java Mods
+            </span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-warning-fg/90">
+            This server runs on {activeServer?.serverSoftware === 'fabric' ? 'Fabric' : activeServer?.serverSoftware}. Minecraft Bedrock Edition cannot interpret or synchronize Java edition mods, custom entities, or modded items. GeyserMC cross-play is disabled for this server to prevent client crashes.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-surface-elevated text-content-primary flex items-center justify-center border border-border-default">
-            <PlaceholderIcon className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-content-primary">GeyserMC</h1>
-            <p className="text-xs text-content-secondary">
-              Enable clients from Minecraft Bedrock Edition to join your Minecraft Java server.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-content-primary">GeyserMC</h1>
+          <p className="text-xs text-content-secondary">
+            Enable clients from Minecraft Bedrock Edition to join your Minecraft Java server.
+          </p>
         </div>
 
         {isInstalled ? (
           <Badge variant="success">
-            <PlaceholderIcon className="w-3.5 h-3.5" />
             <span>Installed</span>
           </Badge>
         ) : (
           <button
             onClick={handleInstall}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
+            disabled={loading || isModded}
+            className={`flex items-center gap-2 px-4 py-2 bg-success text-white rounded-lg font-bold text-xs transition ${
+              isModded ? 'opacity-40 cursor-not-allowed' : 'hover:bg-success/80 cursor-pointer'
+            }`}
           >
-            <PlaceholderIcon className="w-4 h-4" />
-            <span>{loading ? 'Installing...' : '1-Click Install Geyser + Floodgate'}</span>
+            <span>
+              {isModded ? 'Unavailable on Modded' : loading ? 'Installing...' : '1-Click Install Geyser + Floodgate'}
+            </span>
           </button>
         )}
       </div>
-
-      {/* Status Card */}
-      <GlassCard className="rounded-xl p-6 border-border-default">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2.5 h-2.5 rounded-full ${
-                  isInstalled ? 'bg-success-fg' : 'bg-content-muted'
-                }`}
-              />
-              <h2 className="text-sm font-bold text-content-primary">
-                {isInstalled ? 'GeyserMC & Floodgate are Active' : 'GeyserMC Not Installed'}
-              </h2>
-            </div>
-            <p className="text-xs text-content-secondary">
-              {isInstalled
-                ? 'Bedrock players can join using standard Minecraft Bedrock edition on Port 19132.'
-                : 'Click the 1-Click Install button above to automatically download GeyserMC & Floodgate into your plugins folder.'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-surface-elevated text-content-primary border border-border-default">
-              Floodgate 2.0
-            </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-surface-card text-content-secondary border border-border-subtle">
-              UDP 19132
-            </span>
-          </div>
-        </div>
-      </GlassCard>
 
       {/* Configuration Form */}
       {isInstalled && (
         <GlassCard className="rounded-xl p-6 border-border-default space-y-6">
           <div className="flex items-center justify-between border-b border-border-subtle pb-4">
             <h3 className="text-sm font-bold text-content-primary flex items-center gap-2">
-              <PlaceholderIcon className="w-4 h-4 text-content-primary" />
               <span>Bedrock Server Settings (config.yml)</span>
             </h3>
             <button
               onClick={handleSaveConfig}
-              className="flex items-center gap-1.5 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
+              className="flex items-center gap-1.5 px-4 py-2 bg-success hover:bg-success/80 text-white rounded-lg font-bold text-xs transition"
             >
               <Save className="w-3.5 h-3.5" />
               <span>Save Geyser Config</span>
@@ -158,7 +138,7 @@ export const CrossplayTab: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Bedrock Port */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-content-primary">Bedrock UDP Port</label>
+              <label className="text-xs font-semibold text-content-primary">Bedrock Port</label>
               <input
                 type="number"
                 value={geyserConfig.bedrockPort}
@@ -173,7 +153,6 @@ export const CrossplayTab: React.FC = () => {
             {/* Auth Type */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-content-primary flex items-center gap-1.5">
-                <PlaceholderIcon className="w-3.5 h-3.5 text-content-primary" />
                 <span>Authentication Mode</span>
               </label>
               <select

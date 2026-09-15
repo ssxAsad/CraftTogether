@@ -156,9 +156,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
       <div className="bg-surface-elevated border border-border-default rounded-2xl p-6 mb-6 shadow-2xl">
         {/* Card Header */}
         <div className="flex items-center gap-4 mb-6 border-b border-border-default pb-5">
-          <div className="w-14 h-14 rounded-2xl bg-surface-card border border-border-default flex items-center justify-center p-2 shadow-md shrink-0">
-            <PlayItIcon className="w-11 h-11 rounded-xl" />
-          </div>
+          <PlayItIcon className="w-14 h-14" />
           <div className="flex-1">
             <div className="flex items-center gap-2.5">
               <h3 className="text-lg font-bold text-content-primary">PlayIt.gg Account Link</h3>
@@ -241,7 +239,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                     window.open('https://playit.gg/account/tunnels', '_blank');
                   }
                 }}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-warning hover:bg-warning/80 text-surface-base font-bold rounded-xl text-sm transition-all shadow-lg shadow-warning/20 cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-warning hover:bg-warning/80 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-warning/20 cursor-pointer"
               >
                 Open Dashboard <PlaceholderIcon className="w-4 h-4" />
               </button>
@@ -273,7 +271,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <button
                 type="button"
                 onClick={handleLinkAccount}
-                className="w-full py-3 bg-success hover:bg-success/80 active:scale-95 text-surface-base font-bold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-success/20 cursor-pointer"
+                className="w-full py-3 bg-success hover:bg-success/80 active:scale-95 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-success/20 cursor-pointer"
               >
                 <PlaceholderIcon className="w-4 h-4" />
                 <span>Link PlayIt.gg Account</span>
@@ -403,7 +401,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
             disabled={!isTunnelReady}
             className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
               isTunnelReady
-                ? 'bg-success hover:bg-success/80 text-surface-base cursor-pointer'
+                ? 'bg-success hover:bg-success/80 text-white cursor-pointer'
                 : 'bg-neutral-bg text-content-secondary cursor-not-allowed'
             }`}
           >

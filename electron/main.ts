@@ -6,6 +6,7 @@ import { registerServerIpc } from './ipc/server.ipc';
 import { registerNetworkIpc } from './ipc/network.ipc';
 import { registerPluginsIpc } from './ipc/plugins.ipc';
 import { registerConfigIpc } from './ipc/config.ipc';
+import { registerModsIpc } from './ipc/mods.ipc';
 import { ServerManagerService } from './services/server-manager.service';
 import { PlayitService } from './services/playit.service';
 import { UpnpService } from './services/upnp.service';
@@ -24,14 +25,18 @@ app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('disable-software-rasterizer');
 
+// Disable disk cache to prevent cache_util_win.cc Access Denied (0x5) errors
+app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+
 let mainWindow: BrowserWindow | null = null;
 
 async function createWindow() {
   AppPaths.init();
 
   const iconPath = process.platform === 'win32'
-    ? path.join(__dirname, '../src/assets/DC.ico')
-    : path.join(__dirname, '../src/assets/DC.png');
+    ? path.join(__dirname, '../src/assets/craftora.ico')
+    : path.join(__dirname, '../src/assets/craftora.png');
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -74,6 +79,7 @@ async function createWindow() {
   registerServerIpc(mainWindow);
   registerNetworkIpc(mainWindow);
   registerPluginsIpc();
+  registerModsIpc();
   registerConfigIpc(mainWindow);
 
   // Smooth window reveal

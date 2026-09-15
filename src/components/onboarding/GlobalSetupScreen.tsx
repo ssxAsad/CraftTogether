@@ -239,7 +239,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
             <button
               onClick={handleInstallAll}
               disabled={isInstallingAll || isChecking}
-              className="px-5 py-2.5 rounded-xl bg-success hover:bg-success/80 disabled:opacity-50 text-surface-base font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
+              className="px-5 py-2.5 rounded-xl bg-success hover:bg-success/80 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
             >
               {isInstallingAll ? (
                 <PlaceholderIcon className="w-4 h-4 animate-spin" />
@@ -304,7 +304,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           onClick={() => setWizardStep('playit')}
           className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
             allReady 
-              ? 'bg-success hover:bg-success/80 text-surface-base cursor-pointer' 
+              ? 'bg-success hover:bg-success/80 text-white cursor-pointer' 
               : 'bg-neutral-bg text-content-secondary cursor-not-allowed'
           }`}
         >
@@ -333,9 +333,7 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
     <div className="bg-surface-elevated border border-border-default rounded-xl p-5 flex flex-col justify-between space-y-4">
       <div>
         <div className="flex items-start justify-between mb-3">
-          <div className={`w-14 h-14 rounded-2xl bg-surface-card border border-border-default flex items-center justify-center ${iconPadding} shadow-md shrink-0`}>
-            {icon}
-          </div>
+          {icon}
 
           {dep.status === 'ready' ? (
             <span className="flex items-center gap-1 text-[11px] font-semibold text-content-primary bg-surface-base px-2.5 py-1 rounded border border-border-default">
@@ -396,7 +394,7 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
       {(dep.status === 'missing' || dep.status === 'error') && (
         <button
           onClick={onInstall}
-          className="w-full py-2 rounded-lg bg-success hover:bg-success/80 text-surface-base text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-2 rounded-lg bg-success hover:bg-success/80 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
         >
           <PlaceholderIcon className="w-4 h-4" />
           <span>{buttonLabel}</span>

@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { TitleBar } from './components/layout/TitleBar';
 import { Sidebar, MainTabType } from './components/layout/Sidebar';
 import { ServersTab } from './components/servers/ServersTab';
-import { ConsoleTab } from './components/console/ConsoleTab';
 import { CreateServerModal } from './components/modals/CreateServerModal';
+const ConsoleTab = React.lazy(() => import('./components/console/ConsoleTab').then(m => ({ default: m.ConsoleTab })));
 import { FirstLaunchScreen } from './components/onboarding/FirstLaunchScreen';
-import { useServer } from './context/ServerContext';
+import { useServerState, useServerActions } from './context/ServerContext';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<MainTabType>('servers');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
-  const { refreshServers } = useServer();
+  const { refreshServers } = useServerActions();
 
   useEffect(() => {
     const checkSetup = async () => {
@@ -75,7 +75,9 @@ export const App: React.FC = () => {
                   onNavigateToConsole={() => setActiveTab('console')}
                 />
               ) : (
-                <ConsoleTab />
+                <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-8 h-8 rounded-full border-2 border-border-default border-t-transparent animate-spin" /></div>}>
+                  <ConsoleTab />
+                </React.Suspense>
               )}
             </main>
           </div>

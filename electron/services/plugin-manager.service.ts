@@ -65,14 +65,6 @@ export class PluginManagerService {
       icon: 'History'
     },
     {
-      id: 'luckperms',
-      name: 'LuckPerms',
-      description: 'Industry-standard permissions management system with web editor.',
-      category: 'Administration',
-      downloadUrl: 'https://download.luckperms.net/1559/bukkit/loader/LuckPerms-Bukkit-5.4.145.jar',
-      icon: 'Shield'
-    },
-    {
       id: 'essentialsx',
       name: 'EssentialsX',
       description: 'Provides over 100 essential commands, economy, spawn, teleports, and kits.',
@@ -257,6 +249,37 @@ export class PluginManagerService {
         return destFile;
       }
       logger.error(`Failed to download plugin ${popular.name}`, err);
+      throw err;
+    }
+  }
+
+  /**
+   * Installs a plugin directly from Spiget API using its resource ID.
+   */
+  static async installSpigetPlugin(
+    serverDir: string,
+    spigetId: string,
+    pluginName: string,
+    onProgress?: (percent: number) => void
+  ): Promise<string> {
+    const pluginsDir = path.join(serverDir, 'plugins');
+    if (!fs.existsSync(pluginsDir)) {
+      fs.mkdirSync(pluginsDir, { recursive: true });
+    }
+
+    // Clean up filename
+    const safeName = pluginName.replace(/[^a-zA-Z0-9_\-\ ]/g, '').trim().replace(/\ /g, '_');
+    const destFile = path.join(pluginsDir, `${safeName}.jar`);
+
+    const downloadUrl = `https://api.spiget.org/v2/resources/${spigetId}/download`;
+
+    logger.info(`Installing Spiget plugin ${pluginName} (ID: ${spigetId}) from ${downloadUrl} to ${destFile}...`);
+    try {
+      await JarDownloaderService.downloadFile(downloadUrl, destFile, onProgress);
+      logger.info(`Spiget Plugin ${pluginName} installed successfully!`);
+      return destFile;
+    } catch (err: any) {
+      logger.error(`Failed to download Spiget plugin ${pluginName}`, err);
       throw err;
     }
   }

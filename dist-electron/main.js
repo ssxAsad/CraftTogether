@@ -1,1 +1,4 @@
-"use strict";require("electron");require("path");require("./main-C76hV8Nu.js");
+"use strict";
+require("electron");
+require("path");
+require("./main-BQ6U6FZK.js");

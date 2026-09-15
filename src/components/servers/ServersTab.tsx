@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlaceholderIcon } from '../common/PlaceholderIcon';
-import { Trash2, LayoutDashboard, Globe, Gamepad2, Users, Settings } from 'lucide-react';
-import { useServer } from '../../context/ServerContext';
-import { PluginIcon } from '../common/Icons';
-import { DashboardTab } from '../dashboard/DashboardTab';
-import { NetworkTab } from '../network/NetworkTab';
-import { CrossplayTab } from '../crossplay/CrossplayTab';
-import { ConfigTab } from '../config/ConfigTab';
-import { PlayersTab } from '../players/PlayersTab';
-import { PluginsTab } from '../plugins/PluginsTab';
+import { Trash2, LayoutDashboard, Globe, Gamepad2, Users, Settings, Puzzle, Package } from 'lucide-react';
+import { useServerState, useServerActions } from '../../context/ServerContext';
+import { isModdedServerSoftware } from '../../types';
 
+const DashboardTab = React.lazy(() => import('../dashboard/DashboardTab').then(m => ({ default: m.DashboardTab })));
+const NetworkTab = React.lazy(() => import('../network/NetworkTab').then(m => ({ default: m.NetworkTab })));
+const ConfigTab = React.lazy(() => import('../config/ConfigTab').then(m => ({ default: m.ConfigTab })));
+const PlayersTab = React.lazy(() => import('../players/PlayersTab').then(m => ({ default: m.PlayersTab })));
+const PluginsTab = React.lazy(() => import('../plugins/PluginsTab').then(m => ({ default: m.PluginsTab })));
+const ModsTab = React.lazy(() => import('../mods/ModsTab').then(m => ({ default: m.ModsTab })));
 
 export type ServerSubTabType =
   | 'overview'
   | 'network'
-  | 'crossplay'
   | 'plugins'
+  | 'mods'
   | 'players'
   | 'config';
 
-interface ServersTabProps {
+export interface ServersTabProps {
   onOpenCreateModal: () => void;
   onNavigateToConsole: () => void;
 }
@@ -28,10 +28,21 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   onOpenCreateModal,
   onNavigateToConsole
 }) => {
-  const { servers, activeServer, isLoadingServers, status, deleteServer, startServer } = useServer();
+  const { servers, activeServer, isLoadingServers, status } = useServerState();
+  const { deleteServer, startServer } = useServerActions();
   const [activeSubTab, setActiveSubTab] = useState<ServerSubTabType>('overview');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isModded = activeServer ? isModdedServerSoftware(activeServer.serverSoftware) : false;
+
+  useEffect(() => {
+    if (isModded && activeSubTab === 'plugins') {
+      setActiveSubTab('mods');
+    } else if (!isModded && activeSubTab === 'mods') {
+      setActiveSubTab('plugins');
+    }
+  }, [isModded, activeSubTab]);
 
   const handleDeleteConfirm = async () => {
     if (!activeServer) return;
@@ -73,7 +84,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
 
         <button
           onClick={onOpenCreateModal}
-          className="px-6 py-2.5 bg-success hover:bg-success/80 text-surface-base font-bold text-xs rounded-lg flex items-center gap-2 transition"
+          className="px-6 py-2.5 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition"
         >
           <PlaceholderIcon className="w-4 h-4" />
           <span>Create a New Server</span>
@@ -85,35 +96,54 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   const subNavItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'network', label: 'Network', icon: Globe },
-    { id: 'crossplay', label: 'Cross-Play', icon: Gamepad2 },
-    { id: 'plugins', label: 'Plugins', icon: PluginIcon },
+    isModded 
+      ? { id: 'mods', label: 'Mods', icon: Package }
+      : { id: 'plugins', label: 'Plugins', icon: Puzzle },
     { id: 'players', label: 'Players', icon: Users },
     { id: 'config', label: 'Settings', icon: Settings },
   ];
 
   const renderSubTab = () => {
+    let content;
     switch (activeSubTab) {
       case 'overview':
-        return <DashboardTab onNavigateTab={(tab) => {
+        content = <DashboardTab onNavigateTab={(tab) => {
           if (tab === 'console') onNavigateToConsole();
           else setActiveSubTab(tab as ServerSubTabType);
         }} />;
+        break;
       case 'network':
-        return <NetworkTab />;
-      case 'crossplay':
-        return <CrossplayTab />;
+        content = <NetworkTab />;
+        break;
       case 'plugins':
-        return <PluginsTab />;
+        content = isModded ? <ModsTab /> : <PluginsTab />;
+        break;
+      case 'mods':
+        content = <ModsTab />;
+        break;
       case 'players':
-        return <PlayersTab />;
+        content = <PlayersTab />;
+        break;
       case 'config':
-        return <ConfigTab />;
+        content = <ConfigTab />;
+        break;
       default:
-        return <DashboardTab onNavigateTab={(tab) => {
+        content = <DashboardTab onNavigateTab={(tab) => {
           if (tab === 'console') onNavigateToConsole();
           else setActiveSubTab(tab as ServerSubTabType);
         }} />;
+        break;
     }
+    return (
+      <React.Suspense fallback={
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-3">
+          <div className="w-8 h-8 rounded-full border-2 border-border-default border-t-transparent animate-spin" />
+          <p className="text-xs text-content-secondary font-medium">Loading component...</p>
+        </div>
+      }>
+        {content}
+      </React.Suspense>
+    );
   };
 
   return (
@@ -130,7 +160,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 onClick={() => setActiveSubTab(tab.id as ServerSubTabType)}
                 className={`flex items-center justify-center gap-1.5 px-4 py-2 leading-none rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-success text-surface-base font-bold shadow-sm border-transparent'
+                    ? 'bg-success text-white font-bold shadow-sm border-transparent'
                     : 'text-content-secondary hover:text-content-primary hover:bg-surface-hover border-transparent'
                 }`}
               >
@@ -147,7 +177,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
             onClick={() => setShowDeleteModal(true)}
             disabled={status !== 'STOPPED'}
             title={status !== 'STOPPED' ? 'Stop server first to delete' : 'Delete Server'}
-            className="p-2 rounded-lg bg-red-700 hover:bg-red-800 text-surface-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg bg-red-700 hover:bg-red-800 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -191,7 +221,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteConfirm}
-                className="flex items-center gap-1.5 px-4 py-2 bg-danger hover:bg-danger/80 text-surface-base text-xs font-bold rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 bg-danger hover:bg-danger/80 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{isDeleting ? 'Deleting...' : 'Delete Server'}</span>

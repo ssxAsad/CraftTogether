@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { PlaceholderIcon } from '../components/common/PlaceholderIcon';
+import { AlertTriangle, CheckCircle2, HelpCircle, Info, Trash2 } from 'lucide-react';
 
 export type DialogType = 'alert' | 'confirm' | 'prompt' | 'warning' | 'success';
 
@@ -98,17 +98,20 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const renderIcon = () => {
+    if (options.title.toLowerCase().includes('delete')) {
+      return <Trash2 className="w-5 h-5 text-danger-fg" />;
+    }
     switch (options.type) {
       case 'warning':
-        return <PlaceholderIcon className="w-5 h-5 text-danger-fg" />;
+        return <AlertTriangle className="w-5 h-5 text-danger-fg" />;
       case 'success':
-        return <PlaceholderIcon className="w-5 h-5 text-success-fg" />;
+        return <CheckCircle2 className="w-5 h-5 text-success-fg" />;
       case 'prompt':
-        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
+        return <HelpCircle className="w-5 h-5 text-content-primary" />;
       case 'confirm':
-        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
+        return <HelpCircle className="w-5 h-5 text-content-primary" />;
       default:
-        return <PlaceholderIcon className="w-5 h-5 text-content-primary" />;
+        return <Info className="w-5 h-5 text-content-primary" />;
     }
   };
 
@@ -133,13 +136,6 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 <h3 className="text-sm font-bold text-content-primary">{options.title}</h3>
                 <p className="text-xs text-content-secondary leading-relaxed">{options.message}</p>
               </div>
-
-              <button
-                onClick={handleCancel}
-                className="text-content-secondary hover:text-content-primary p-1 rounded-lg hover:bg-surface-hover transition"
-              >
-                <PlaceholderIcon className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Prompt input if type === 'prompt' */}
@@ -175,8 +171,8 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 onClick={handleConfirm}
                 className={`px-4 py-2 font-bold text-xs rounded-lg transition ${
                   options.type === 'warning' 
-                    ? 'bg-danger hover:bg-danger/80 text-surface-base' 
-                    : 'bg-success hover:bg-success/80 text-surface-base'
+                    ? 'bg-danger hover:bg-danger/80 text-white' 
+                    : 'bg-success hover:bg-success/80 text-white'
                 }`}
               >
                 {options.confirmText || 'OK'}

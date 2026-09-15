@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { GlassCard } from '@/components/common/GlassCard';
-import { Badge } from '@/components/common/Badge';
-import { CheckCircle2, Trash2, Download } from 'lucide-react';
-import { PluginIcon } from '../common/Icons';
-import { useServer } from '../../context/ServerContext';
+import { CheckCircle2, Trash2, Download, Puzzle, Search, Loader2 } from 'lucide-react';
+
+import { useServerState } from '../../context/ServerContext';
 import { useDialog } from '../../context/DialogContext';
 import { PluginInfo, PopularPlugin } from '../../types';
 
+interface SpigetPlugin {
+  id: string;
+  name: string;
+  tag: string;
+  downloads: number;
+}
+
 export const PluginsTab: React.FC = () => {
-  const { activeServer } = useServer();
+  const { activeServer } = useServerState();
   const { showAlert, showConfirm } = useDialog();
   const [catalog, setCatalog] = useState<PopularPlugin[]>([]);
   const [installed, setInstalled] = useState<PluginInfo[]>([]);
   const [installingId, setInstallingId] = useState<string | null>(null);
+
+  // Spiget Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SpigetPlugin[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const loadData = async () => {
     if (!activeServer) return;
@@ -25,47 +36,35 @@ export const PluginsTab: React.FC = () => {
       setInstalled(inst);
     } else {
       // Mock for browser
-      setCatalog([
-        {
-          id: 'skinsrestorer',
-          name: 'SkinsRestorer',
-          description: 'Restores player skins for cracked (offline-mode) servers & allows /skin commands.',
-          category: 'Cracked / Cosmetic',
-          downloadUrl: '',
-          icon: 'PlaceholderIcon',
-          recommendedForCracked: true
-        },
-        {
-          id: 'viaversion',
-          name: 'ViaVersion',
-          description: 'Allows newer Minecraft client versions to connect to your server.',
-          category: 'Compatibility',
-          downloadUrl: '',
-          icon: 'PlaceholderIcon'
-        },
-        {
-          id: 'luckperms',
-          name: 'LuckPerms',
-          description: 'Industry standard permissions and group management system.',
-          category: 'Admin',
-          downloadUrl: '',
-          icon: 'PlaceholderIcon'
-        },
-        {
-          id: 'essentialsx',
-          name: 'EssentialsX',
-          description: '100+ essential commands, kits, teleports, and player management.',
-          category: 'Core Gameplay',
-          downloadUrl: '',
-          icon: 'PlaceholderIcon'
-        }
-      ]);
+      setCatalog([]);
     }
   };
 
   useEffect(() => {
     loadData();
   }, [activeServer]);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setHasSearched(true);
+    try {
+      const res = await fetch(`https://api.spiget.org/v2/search/resources/${encodeURIComponent(searchQuery)}?field=name&size=12`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (err) {
+      console.error('Failed to search Spiget API', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const handleInstall = async (pluginId: string) => {
     if (!activeServer) return;
@@ -77,6 +76,25 @@ export const PluginsTab: React.FC = () => {
           pluginId
         });
         await loadData();
+      } catch (err) {
+        await showAlert('Plugin Install Error', `Failed to install plugin: ${err}`, 'warning');
+      }
+    }
+    setInstallingId(null);
+  };
+
+  const handleInstallSpiget = async (plugin: SpigetPlugin) => {
+    if (!activeServer) return;
+    setInstallingId(plugin.id);
+    if (window.electronAPI && window.electronAPI.installSpigetPlugin) {
+      try {
+        await window.electronAPI.installSpigetPlugin({
+          serverId: activeServer.id,
+          spigetId: plugin.id,
+          pluginName: plugin.name
+        });
+        await loadData();
+        await showAlert('Success', `Installed plugin ${plugin.name} successfully.`, 'success');
       } catch (err) {
         await showAlert('Plugin Install Error', `Failed to install plugin: ${err}`, 'warning');
       }
@@ -114,24 +132,20 @@ export const PluginsTab: React.FC = () => {
   };
 
   const renderIcon = (iconName: string) => {
-    return <PluginIcon className="w-5 h-5 text-content-primary" />;
+    return <Puzzle className="w-8 h-8 text-content-primary" />;
   };
 
   const isPluginInstalled = (name: string) => {
-    return installed.some(p => p.name.toLowerCase().includes(name.toLowerCase()));
+    const cleanName = name.replace(/[^a-zA-Z0-9_\-\ ]/g, '').trim().replace(/\ /g, '_');
+    return installed.some(p => p.name.toLowerCase().includes(cleanName.toLowerCase()) || p.name.toLowerCase().includes(name.toLowerCase()));
   };
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto overflow-y-auto h-[calc(100vh-2.5rem)]">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-surface-elevated text-content-primary flex items-center justify-center border border-border-default">
-            <PluginIcon className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-content-primary">Plugin Manager</h1>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-content-primary">Plugin Manager</h1>
         </div>
 
         <span className="text-xs font-semibold px-3 py-2 leading-none bg-surface-elevated text-content-primary rounded-lg border border-border-default">
@@ -139,14 +153,88 @@ export const PluginsTab: React.FC = () => {
         </span>
       </div>
 
+      {/* Spiget Search Area */}
+      <GlassCard className="rounded-2xl p-6 border-border-default space-y-4">
+        <h3 className="text-sm font-bold text-content-primary flex items-center gap-2">
+          <Search className="w-4 h-4" />
+          Search Paper/Bukkit Plugins
+        </h3>
+        
+        <form onSubmit={handleSearch} className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-content-secondary" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for plugins (e.g. WorldEdit, HolographicDisplays)..."
+              className="w-full bg-neutral-bg border border-border-default rounded-lg py-2.5 pl-10 pr-4 text-sm text-content-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSearching || !searchQuery.trim()}
+            className="px-6 py-2.5 bg-success hover:bg-success/80 text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            <span>Search</span>
+          </button>
+        </form>
+
+        {/* Search Results */}
+        {hasSearched && (
+          <div className="pt-4 mt-4 border-t border-border-subtle">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-content-secondary mb-3">Search Results</h4>
+            {searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {searchResults.map((plugin) => {
+                  const alreadyInstalled = isPluginInstalled(plugin.name);
+                  const isBusy = installingId === plugin.id;
+
+                  return (
+                    <div key={plugin.id} className="bg-surface-elevated rounded-xl p-4 border border-border-default flex flex-col justify-between space-y-3">
+                      <div>
+                        <h5 className="font-bold text-sm text-content-primary line-clamp-1" title={plugin.name}>{plugin.name}</h5>
+                        <p className="text-xs text-content-secondary line-clamp-2 mt-1" title={plugin.tag}>{plugin.tag || 'No description provided.'}</p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border-subtle">
+                        <span className="text-[10px] text-content-secondary">{plugin.downloads} downloads</span>
+                        {alreadyInstalled ? (
+                          <span className="text-xs font-semibold text-success flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Installed
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleInstallSpiget(plugin)}
+                            disabled={isBusy}
+                            className="px-3 py-1.5 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            {isBusy ? 'Installing...' : 'Install'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-xs text-content-secondary">
+                {isSearching ? 'Searching...' : 'No plugins found matching your query.'}
+              </div>
+            )}
+          </div>
+        )}
+      </GlassCard>
+
       {/* Popular 1-Click Plugins Catalog */}
       <div className="space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-content-secondary flex items-center gap-1.5">
-          <PluginIcon className="w-3.5 h-3.5 text-content-primary" />
-          <span>Recommended Plugins</span>
+          <span>Recommended Essentials</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {catalog.map((plugin) => {
             const alreadyInstalled = isPluginInstalled(plugin.name);
             const isBusy = installingId === plugin.id;
@@ -158,9 +246,7 @@ export const PluginsTab: React.FC = () => {
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-lg bg-neutral-bg border border-border-subtle">
-                      {renderIcon(plugin.icon)}
-                    </div>
+                    {renderIcon(plugin.icon)}
                     <span className="text-[10px] uppercase font-bold text-content-secondary bg-surface-card px-2 py-0.5 rounded border border-border-subtle">
                       {plugin.category}
                     </span>
@@ -180,7 +266,7 @@ export const PluginsTab: React.FC = () => {
                     <button
                       onClick={() => handleInstall(plugin.id)}
                       disabled={isBusy}
-                      className="w-full py-2 bg-success hover:bg-success/80 text-surface-base font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
+                      className="w-full py-2 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>{isBusy ? 'Downloading...' : 'Install'}</span>
@@ -222,7 +308,7 @@ export const PluginsTab: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(plugin.filename)}
-                    className="p-1.5 rounded-lg bg-danger hover:bg-danger/80 text-surface-base transition"
+                    className="p-1.5 rounded-lg bg-danger hover:bg-danger/80 text-white transition"
                     title="Delete Plugin"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -233,7 +319,7 @@ export const PluginsTab: React.FC = () => {
           </div>
         ) : (
           <div className="text-center py-6 text-xs text-content-secondary">
-            No plugins installed yet. Click "1-Click Install" on any popular plugin above to add it!
+            No plugins installed yet. Search for one above or click "Install" on a recommended plugin!
           </div>
         )}
       </GlassCard>

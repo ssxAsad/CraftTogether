@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
-import logoImg from '../../assets/DC.png';
+import logoImg from '../../assets/craftora.png';
 
 import { GlobalSetupScreen } from './GlobalSetupScreen';
 
@@ -99,7 +99,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
       <div className="max-w-2xl w-full z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center p-4 bg-surface-elevated rounded-2xl mb-6 border border-border-default shadow-xl">
-            <img src={logoImg} alt="Craftora" className="w-16 h-16 object-contain" />
+            <img src={logoImg} alt="Craftora" className="w-16 h-16 object-contain drop-shadow-md" style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any} />
           </div>
           <h1 className="text-4xl font-bold text-content-primary mb-2 tracking-tight">
             Welcome to <span className="text-content-primary">Craftora</span>
@@ -169,12 +169,12 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({ onComplete
               disabled={!isDirectoryValid || isValidating}
               className={`px-8 py-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all duration-300 ${
                 isDirectoryValid && !isValidating
-                  ? 'bg-success hover:bg-success/80 text-surface-base shadow-lg shadow-success/20 translate-y-0 hover:-translate-y-0.5'
+                  ? 'bg-success hover:bg-success/80 text-white shadow-lg shadow-success/20 translate-y-0 hover:-translate-y-0.5'
                   : 'bg-surface-card text-content-muted cursor-not-allowed opacity-50'
               }`}
             >
               Continue Setup
-              <PlaceholderIcon className={`w-5 h-5 ${isDirectoryValid && !isValidating ? 'text-surface-base animate-pulse' : 'text-content-muted'}`} />
+              <PlaceholderIcon className={`w-5 h-5 ${isDirectoryValid && !isValidating ? 'text-white animate-pulse' : 'text-content-muted'}`} />
             </button>
           </div>
         </div>

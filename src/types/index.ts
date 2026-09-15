@@ -2,6 +2,12 @@ export type ServerStatus = 'STOPPED' | 'STARTING' | 'ONLINE' | 'STOPPING' | 'CRA
 
 export type ServerSoftwareType = 'paper' | 'purpur' | 'vanilla' | 'fabric';
 
+export const isModdedServerSoftware = (software?: string): boolean => {
+  if (!software) return false;
+  const modded = ['fabric', 'forge', 'neoforge', 'quilt'];
+  return modded.includes(software.toLowerCase().trim());
+};
+
 export type NetworkMode = 'cloud_relay' | 'upnp' | 'lan_only';
 
 export interface ServerMetrics {

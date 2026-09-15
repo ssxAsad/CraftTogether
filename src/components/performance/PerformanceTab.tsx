@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
-import { useServer } from '../../context/ServerContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
 import { GlassCard } from '../common/GlassCard';
 
 export const PerformanceTab: React.FC = () => {
-  const { activeServer, javaRuntimes, refreshServers } = useServer();
+  const { activeServer, javaRuntimes } = useServerState();
+  const { refreshServers } = useServerActions();
   const [ramGb, setRamGb] = useState(activeServer?.allocatedRamGb || 4);
   const [useAikar, setUseAikar] = useState(activeServer?.useAikarFlags !== false);
   const [selectedJava, setSelectedJava] = useState(activeServer?.javaPath || javaRuntimes[0]?.path || 'java');
@@ -62,7 +63,7 @@ export const PerformanceTab: React.FC = () => {
 
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-surface-base rounded-lg font-bold text-xs transition"
+          className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-success/80 text-white rounded-lg font-bold text-xs transition"
         >
           {saved ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
           <span>{saved ? 'Applied Settings' : 'Apply JVM Settings'}</span>
@@ -103,7 +104,7 @@ export const PerformanceTab: React.FC = () => {
               onClick={() => setRamGb(gb)}
               className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition ${
                 ramGb === gb
-                  ? 'bg-success text-surface-base'
+                  ? 'bg-success text-white'
                   : 'bg-surface-card hover:bg-surface-hover text-content-primary border border-border-subtle'
               }`}
             >

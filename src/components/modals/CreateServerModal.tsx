@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, AlertTriangle, Info } from "lucide-react";
 import { PlayItIcon, JavaIcon } from '../common/Icons';
-import { useServer } from '../../context/ServerContext';
-import { useNetwork } from '../../context/NetworkContext';
+import { useServerState, useServerActions } from '../../context/ServerContext';
+import { useNetworkState, useNetworkActions } from '../../context/NetworkContext';
 import { useDialog } from '../../context/DialogContext';
-import { ServerSoftwareType, NetworkMode } from '../../types';
+import { ServerSoftwareType, NetworkMode, isModdedServerSoftware } from '../../types';
 
 interface CreateServerModalProps {
   isOpen: boolean;
@@ -14,8 +14,9 @@ interface CreateServerModalProps {
 type WizardStep = 'basic' | 'performance' | 'crossplay' | 'cracked' | 'network' | 'plugins';
 
 export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, onClose }) => {
-  const { servers, createServer, isDownloading, downloadProgress, javaRuntimes, refreshServers } = useServer();
-  const { upnpStatus } = useNetwork();
+  const { servers, isDownloading, downloadProgress, javaRuntimes } = useServerState();
+  const { createServer, refreshServers, loadJavaRuntimes } = useServerActions();
+  const { upnpStatus } = useNetworkState();
   const { showAlert } = useDialog();
 
   const [currentStep, setCurrentStep] = useState<WizardStep>('basic');
@@ -23,7 +24,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [creationStatus, setCreationStatus] = useState<{ step: string; percent: number; details: string } | null>(null);
 
   // 1. Basic Info
-  const [name, setName] = useState('My Minecraft PlaceholderIcon');
+  const [name, setName] = useState('My Minecraft Server');
   const [software, setSoftware] = useState<ServerSoftwareType>('paper');
   const [version, setVersion] = useState('26.2');
   const [availableVersions, setAvailableVersions] = useState<string[]>([
@@ -53,7 +54,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [gamemode, setGamemode] = useState('survival');
   const [pvp, setPvp] = useState(true);
   const [maxPlayers, setMaxPlayers] = useState(20);
-  const [motd, setMotd] = useState('A Craftora Minecraft PlaceholderIcon');
+  const [motd, setMotd] = useState('A Craftora Minecraft Server');
 
   // 5. Network Sharing (Cloud Relay, Direct UPnP, Only LAN)
   const [networkMode, setNetworkMode] = useState<NetworkMode>('cloud_relay');
@@ -61,24 +62,32 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   // 6. Pre-installed Plugins
   const [selectedPlugins, setSelectedPlugins] = useState<string[]>(['skinsrestorer', 'viaversion']);
 
-  // Check for duplicate server name or directory
+  const isModded = useMemo(() => isModdedServerSoftware(software), [software]);
+
+  // Check for duplicate server name or directory (ignore while actively creating)
   const isNameDuplicate = useMemo(() => {
-    if (!name.trim()) return false;
+    if (!name.trim() || isCreating) return false;
     const cleanId = name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     return servers.some(
       s => s.name.trim().toLowerCase() === name.trim().toLowerCase() || s.id.toLowerCase() === cleanId
     );
-  }, [name, servers]);
+  }, [name, servers, isCreating]);
 
-  // Clean reset every time the modal is opened
+  const prevIsOpenRef = useRef(false);
+
+  // Clean reset ONLY when the modal transitions from closed to open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
+      prevIsOpenRef.current = true;
       setCurrentStep('basic');
       setIsCreating(false);
       setCreationStatus(null);
+      
+      // Load Java Runtimes explicitly when creating a server
+      loadJavaRuntimes();
 
       // Generate a fresh unique candidate name
-      const baseName = 'My Minecraft PlaceholderIcon';
+      const baseName = 'My Minecraft Server';
       let candidate = baseName;
       let count = 1;
       while (servers.some(s => s.name.trim().toLowerCase() === candidate.toLowerCase())) {
@@ -98,8 +107,17 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       setDisableFireSpread(false);
       setNetworkMode('cloud_relay');
       setSelectedPlugins(['skinsrestorer', 'viaversion']);
+    } else if (!isOpen) {
+      prevIsOpenRef.current = false;
     }
-  }, [isOpen, servers]);
+  }, [isOpen, servers, loadJavaRuntimes]);
+
+  // Automatically disable crossplay if a modded server is chosen
+  useEffect(() => {
+    if (isModded) {
+      setEnableCrossplay(false);
+    }
+  }, [isModded]);
 
   useEffect(() => {
     if (!upnpStatus.isSupported && networkMode === 'upnp') {
@@ -142,7 +160,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       const cleanId = name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
 
       setCreationStatus({
-        step: 'Downloading PlaceholderIcon Core',
+        step: 'Downloading Server Core',
         percent: 10,
         details: `Downloading ${software.toUpperCase()} ${version} engine jar...`
       });
@@ -168,7 +186,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
       // 3. Configure properties
       if (window.electronAPI) {
         setCreationStatus({
-          step: 'Configuring PlaceholderIcon Settings',
+          step: 'Configuring Server Settings',
           percent: 55,
           details: 'Applying gameplay configuration and network ports...'
         });
@@ -186,8 +204,8 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           }
         });
 
-        // 4. Install GeyserMC if selected
-        if (enableCrossplay) {
+        // 4. Install GeyserMC if selected (only for non-modded servers)
+        if (enableCrossplay && !isModded) {
           setCreationStatus({
             step: 'Setting Up Cross-Play',
             percent: 70,
@@ -209,8 +227,10 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           });
         }
 
-        // 5. Install selected plugins with live step updates
-        const pluginsToInstall = selectedPlugins.filter(p => p !== 'skinsrestorer' || isCracked);
+        // 5. Install selected plugins with live step updates (Paper/Purpur only, not modded)
+        const pluginsToInstall = isModded
+          ? []
+          : selectedPlugins.filter(p => p !== 'skinsrestorer' || isCracked);
         if (pluginsToInstall.length > 0) {
           for (let i = 0; i < pluginsToInstall.length; i++) {
             const pluginId = pluginsToInstall[i];
@@ -232,7 +252,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
         setCreationStatus({
           step: 'Finalizing Setup',
           percent: 100,
-          details: 'PlaceholderIcon created successfully!'
+          details: 'Server created successfully!'
         });
 
         await refreshServers();
@@ -247,47 +267,40 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
     } catch (err) {
       setIsCreating(false);
       setCreationStatus(null);
-      await showAlert('Create PlaceholderIcon Error', `Error creating server: ${err}`, 'warning');
+      await showAlert('Create Server Error', `Error creating server: ${err}`, 'warning');
     }
   };
 
   const steps = [
-    { id: 'basic', label: '1. Engine', icon: PlaceholderIcon },
-    { id: 'performance', label: '2. RAM & JVM', icon: PlaceholderIcon },
-    { id: 'crossplay', label: '3. Cross-Play', icon: PlaceholderIcon },
-    { id: 'cracked', label: '4. Gameplay', icon: PlaceholderIcon },
-    { id: 'network', label: '5. Network', icon: PlaceholderIcon },
-    { id: 'plugins', label: '6. Plugins', icon: PlaceholderIcon },
+    { id: 'basic', label: '1. Engine' },
+    { id: 'performance', label: '2. RAM & JVM' },
+    { id: 'crossplay', label: '3. Cross-Play' },
+    { id: 'cracked', label: '4. Gameplay' },
+    { id: 'network', label: '5. Network' },
+    { id: 'plugins', label: '6. Plugins' },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="glass-panel w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="bg-surface-elevated w-full max-w-2xl h-[550px] max-h-[90vh] rounded-2xl border border-border-default shadow-2xl overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/5 text-slate-200 flex items-center justify-center border border-white/10">
-              <PlaceholderIcon className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Create New Minecraft PlaceholderIcon</h2>
-              <p className="text-xs text-slate-400">Complete setup wizard with cross-play, RAM, & networking</p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-default">
+          <div className="flex items-center">
+            <h2 className="text-base font-bold text-content-primary">Create New Minecraft Server</h2>
           </div>
 
           <button
             onClick={onClose}
             disabled={isCreating || isDownloading}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition disabled:opacity-30"
+            className="text-content-secondary hover:text-content-primary p-1 rounded-lg hover:bg-surface-hover transition disabled:opacity-30"
           >
-            <PlaceholderIcon className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Step Navigation Bar */}
         <div className="flex items-center justify-between px-6 py-2.5 bg-surface-elevated border-b border-border-subtle overflow-x-auto">
           {steps.map((step) => {
-            const Icon = step.icon;
             const isActive = currentStep === step.id;
             return (
               <button
@@ -297,35 +310,50 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 onClick={() => setCurrentStep(step.id as WizardStep)}
                 className={`flex items-center gap-1.5 px-3 py-2 leading-none rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                   isActive
-                    ? 'bg-white/5 text-white border border-white/10'
-                    : 'text-slate-400 hover:text-slate-200 disabled:opacity-40'
+                    ? 'bg-success text-white font-bold'
+                    : 'text-content-secondary hover:text-content-primary disabled:opacity-40'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
                 <span>{step.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Dynamic Multi-Stage Creation & PlaceholderIcon Progress Banner */}
+        {/* Dynamic Multi-Stage Creation & Server Progress Banner */}
         {(isCreating || isDownloading || creationStatus) && (
           <div className="bg-surface-base border-b border-border-default p-4 space-y-2.5 animate-in fade-in duration-300">
-            <div className="flex justify-between items-center text-xs font-bold text-white">
+            <div className="flex justify-between items-center text-xs font-bold text-content-primary">
               <span className="flex items-center gap-2">
-                <PlaceholderIcon className="w-4 h-4 animate-spin text-slate-200" />
-                <span>{creationStatus?.step || (downloadProgress ? `Downloading ${downloadProgress.software.toUpperCase()} ${downloadProgress.version}` : 'Creating PlaceholderIcon Instance...')}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>
+                  {isDownloading && downloadProgress
+                    ? `Downloading ${downloadProgress.software.toUpperCase()} ${downloadProgress.version}`
+                    : creationStatus?.step || 'Setting Up Server Instance...'}
+                </span>
               </span>
-              <span className="font-mono text-slate-200">{creationStatus?.percent || downloadProgress?.percent || 0}%</span>
+              <span className="font-mono text-content-primary">
+                {isDownloading && downloadProgress
+                  ? Math.round(downloadProgress.percent)
+                  : creationStatus?.percent || 0}%
+              </span>
             </div>
             <div className="w-full h-2 bg-surface-base rounded-full overflow-hidden border border-border-subtle">
               <div
                 className="h-full bg-success transition-all duration-300"
-                style={{ width: `${creationStatus?.percent || downloadProgress?.percent || 0}%` }}
+                style={{
+                  width: `${
+                    isDownloading && downloadProgress
+                      ? Math.round(downloadProgress.percent)
+                      : creationStatus?.percent || 0
+                  }%`,
+                }}
               />
             </div>
-            <p className="text-[11px] text-slate-400 font-mono truncate">
-              {creationStatus?.details || (downloadProgress ? `Downloading engine jar: ${downloadProgress.percent}%` : 'Setting up server environment...')}
+            <p className="text-[11px] text-content-secondary font-mono truncate">
+              {isDownloading && downloadProgress
+                ? `Downloading engine jar: ${Math.round(downloadProgress.percent)}%`
+                : creationStatus?.details || 'Preparing server environment...'}
             </p>
           </div>
         )}
@@ -337,10 +365,9 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300">PlaceholderIcon Name</label>
+                  <label className="text-xs font-semibold text-content-primary">Server Name</label>
                   {isNameDuplicate && (
-                    <span className="text-[10px] text-danger-fg font-semibold flex items-center gap-1">
-                      <PlaceholderIcon className="w-3 h-3" />
+                    <span className="text-[10px] text-warning-fg font-semibold flex items-center gap-1">
                       Name already in use
                     </span>
                   )}
@@ -354,48 +381,62 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   placeholder="e.g. Friends Survival SMP"
                   className={`w-full px-4 py-2.5 bg-surface-base border rounded-xl text-xs text-content-primary focus:outline-none transition ${
                     isNameDuplicate
-                      ? 'border-danger bg-danger/20 text-danger-fg focus:border-danger'
+                      ? 'border-warning-fg/20 bg-warning-bg text-warning-fg focus:border-warning-fg/20'
                       : 'border-border-default focus:border-border-hover'
                   }`}
                 />
                 {isNameDuplicate && (
-                  <p className="text-[11px] text-danger-fg leading-tight">
+                  <p className="text-[11px] text-warning-fg leading-tight">
                     A server with this name already exists. Please choose a different name.
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">PlaceholderIcon Engine (Software)</label>
+                <label className="text-xs font-semibold text-content-primary">Server Engine (Software)</label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { id: 'paper', label: 'PaperMC (Recommended)', desc: 'High performance + Plugins + GeyserMC' },
                     { id: 'purpur', label: 'PurpurMC', desc: 'Highly customizable Paper fork' },
-                    { id: 'fabric', label: 'Fabric', desc: 'Lightweight modern modded engine' },
+                    { id: 'fabric', label: 'Fabric', desc: 'Lightweight modern modded engine (Java mods only)' },
                     { id: 'vanilla', label: 'Vanilla Mojang', desc: 'Standard un-modded server' },
-                  ].map((item) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      onClick={() => setSoftware(item.id as ServerSoftwareType)}
-                      className={`p-3 rounded-xl text-left border transition ${
-                        software === item.id
-                          ? 'bg-white/5 border-white/10 text-white'
-                          : 'bg-surface-card border-border-default text-content-secondary hover:border-border-hover'
-                      }`}
-                    >
-                      <strong className="block text-xs text-white font-bold">{item.label}</strong>
-                      <span className="text-[10px] text-slate-400 leading-tight block mt-0.5">{item.desc}</span>
-                    </button>
-                  ))}
+                  ].map((item) => {
+                    const isSelected = software === item.id;
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        disabled={isCreating || isDownloading}
+                        onClick={() => {
+                          const newSw = item.id as ServerSoftwareType;
+                          setSoftware(newSw);
+                          if (isModdedServerSoftware(newSw)) {
+                            setEnableCrossplay(false);
+                          }
+                        }}
+                        className={`p-3 rounded-xl text-left border transition ${
+                          isSelected
+                            ? 'bg-success text-white font-bold border-transparent shadow-sm'
+                            : 'bg-surface-card border-border-default hover:border-border-hover'
+                        }`}
+                      >
+                        <strong className={`block text-xs font-bold ${isSelected ? 'text-white' : 'text-content-primary'}`}>
+                          {item.label}
+                        </strong>
+                        <span className={`text-[10px] leading-tight block mt-0.5 ${isSelected ? 'text-white/90' : 'text-content-secondary'}`}>
+                          {item.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300">Minecraft Version</label>
+                  <label className="text-xs font-semibold text-content-primary">Minecraft Version</label>
                   {version.startsWith('26') && (
-                    <span className="text-[10px] text-slate-200 font-mono">Requires Java 25 (auto-handled)</span>
+                    <span className="text-[10px] text-content-primary font-mono">Requires Java 25 (auto-handled)</span>
                   )}
                 </div>
                 <select
@@ -418,9 +459,9 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {currentStep === 'performance' && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold text-slate-300">
-                  <span>Dedicated PlaceholderIcon RAM:</span>
-                  <span className="text-slate-200 font-mono font-bold text-sm">{ramGb} GB</span>
+                <div className="flex justify-between text-xs font-semibold text-content-primary">
+                  <span>Dedicated Server RAM:</span>
+                  <span className="text-content-primary font-mono font-bold text-sm">{ramGb} GB</span>
                 </div>
                 <input
                   type="range"
@@ -438,7 +479,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       type="button"
                       onClick={() => setRamGb(gb)}
                       className={`px-2.5 py-1 rounded text-xs font-mono font-bold ${
-                        ramGb === gb ? 'bg-success text-surface-base' : 'bg-surface-base text-content-secondary'
+                        ramGb === gb ? 'bg-success text-white' : 'bg-surface-base text-content-secondary'
                       }`}
                     >
                       {gb}G
@@ -448,10 +489,10 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
               </div>
 
               {/* Aikar Flags Switch */}
-              <div className="flex items-center justify-between p-3 bg-surface-base/60 rounded-xl border border-border-subtle">
+              <div className="flex items-center justify-between p-3 bg-surface-base rounded-xl border border-border-subtle">
                 <div>
-                  <span className="text-xs font-bold text-white block">Enable Aikar's Optimized G1GC Flags</span>
-                  <span className="text-[10px] text-slate-400">Eliminates GC lag spikes during gameplay</span>
+                  <span className="text-xs font-bold text-content-primary block">Enable Aikar's Optimized G1GC Flags</span>
+                  <span className="text-[10px] text-content-secondary">Eliminates GC lag spikes during gameplay</span>
                 </div>
                 <input
                   type="checkbox"
@@ -463,7 +504,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
               {/* Java Version */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-content-primary flex items-center gap-1.5">
                   <JavaIcon className="w-4 h-4" />
                   <span>Java Runtime Environment</span>
                 </label>
@@ -485,26 +526,64 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {/* STEP 3: Cross-Play (GeyserMC) */}
           {currentStep === 'crossplay' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-surface-base/60 rounded-xl border border-border-default">
+              {/* Amber Warning for Modded Servers */}
+              {isModded && (
+                <div className="p-4 rounded-xl bg-warning-bg border border-warning-fg/30 text-warning-fg space-y-1.5 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-warning-fg shrink-0" />
+                    <span className="text-xs font-bold">
+                      Bedrock Cross-Play Incompatible with Java Mods
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-warning-fg/90">
+                    Minecraft Bedrock Edition cannot interpret or synchronize Java edition mods, custom entities, or modded item mechanics. Because this server uses {software === 'fabric' ? 'Fabric' : software.toUpperCase()}, GeyserMC cross-play is disabled to prevent client crashes and protocol desynchronization. If you need Bedrock cross-play, please choose a plugin-based engine like PaperMC or PurpurMC.
+                  </p>
+                </div>
+              )}
+
+              <div
+                className={`flex items-center justify-between p-4 rounded-xl border transition ${
+                  isModded
+                    ? 'bg-surface-card/40 border-border-subtle opacity-50 cursor-not-allowed'
+                    : 'bg-surface-base border-border-default'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <PlaceholderIcon className="w-5 h-5 text-slate-200" />
                   <div>
-                    <span className="text-xs font-bold text-white block">Enable GeyserMC + Floodgate</span>
-                    <span className="text-[10px] text-slate-400">Bedrock (mobile, console, Windows 10/11) players can join</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-content-primary block">
+                        Enable GeyserMC + Floodgate
+                      </span>
+                      {isModded && (
+                        <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-warning-bg text-warning-fg border border-warning-fg/30">
+                          Unavailable on Modded
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-content-secondary">
+                      {isModded
+                        ? 'Bedrock cross-play bridge cannot run alongside Java mods'
+                        : 'Bedrock (mobile, console, Windows 10/11) players can join'}
+                    </span>
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={enableCrossplay}
-                  onChange={(e) => setEnableCrossplay(e.target.checked)}
-                  className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                  disabled={isModded || isCreating}
+                  checked={!isModded && enableCrossplay}
+                  onChange={(e) => {
+                    if (!isModded) setEnableCrossplay(e.target.checked);
+                  }}
+                  className={`w-4 h-4 accent-emerald-500 ${
+                    isModded ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
+                  }`}
                 />
               </div>
 
-              {enableCrossplay && (
+              {!isModded && enableCrossplay && (
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Bedrock Port (UDP)</label>
+                    <label className="text-xs font-semibold text-content-primary">Bedrock Port (UDP)</label>
                     <input
                       type="number"
                       value={bedrockPort}
@@ -514,7 +593,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Bedrock Auth Mode</label>
+                    <label className="text-xs font-semibold text-content-primary">Bedrock Auth Mode</label>
                     <select
                       value={authType}
                       onChange={(e) => setAuthType(e.target.value as any)}
@@ -533,127 +612,18 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {/* STEP 4: Gameplay Rules & Features */}
           {currentStep === 'cracked' && (
             <div className="space-y-4">
-              {/* Gameplay Gamerules Section */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Popular Gameplay Enhancements
-                </span>
-                
-                <div className="grid grid-cols-1 gap-2.5">
-                  {/* Keep Inventory */}
-                  <div 
-                    onClick={() => setKeepInventory(!keepInventory)}
-                    className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default cursor-pointer hover:border-border-hover transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-white block">Keep Inventory on Death</span>
-                        <span className="text-[10px] text-slate-400">Never lose items, tools, armor, or XP upon dying</span>
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={keepInventory}
-                      onChange={(e) => setKeepInventory(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
-                    />
-                  </div>
-
-                  {/* Show Coordinates */}
-                  <div 
-                    onClick={() => setShowCoordinates(!showCoordinates)}
-                    className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default cursor-pointer hover:border-border-hover transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-white block">Show Coordinates HUD</span>
-                        <span className="text-[10px] text-slate-400">Live on-screen PlaceholderIcon, Y, Z coordinates for Bedrock & Java players</span>
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={showCoordinates}
-                      onChange={(e) => setShowCoordinates(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
-                    />
-                  </div>
-
-                  {/* 1-Player Sleep */}
-                  <div 
-                    onClick={() => setOnePlayerSleep(!onePlayerSleep)}
-                    className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default cursor-pointer hover:border-border-hover transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-white block">Instant 1-Player Sleep</span>
-                        <span className="text-[10px] text-slate-400">Only 1 player needs to sleep in bed to skip the night</span>
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={onePlayerSleep}
-                      onChange={(e) => setOnePlayerSleep(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
-                    />
-                  </div>
-
-                  {/* Disable Mob Griefing */}
-                  <div 
-                    onClick={() => setDisableMobGriefing(!disableMobGriefing)}
-                    className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default cursor-pointer hover:border-border-hover transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-white block">Anti-Creeper / Mob Griefing</span>
-                        <span className="text-[10px] text-slate-400">Prevent Creeper explosions and Endermen from breaking blocks</span>
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={disableMobGriefing}
-                      onChange={(e) => setDisableMobGriefing(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
-                    />
-                  </div>
-
-                  {/* Disable Fire Spread */}
-                  <div 
-                    onClick={() => setDisableFireSpread(!disableFireSpread)}
-                    className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default cursor-pointer hover:border-border-hover transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
-                      <div>
-                        <span className="text-xs font-bold text-white block">Disable Fire Spread</span>
-                        <span className="text-[10px] text-slate-400">Prevent accidental fires from burning down wooden builds</span>
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={disableFireSpread}
-                      onChange={(e) => setDisableFireSpread(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
-                    />
-                  </div>
-                </div>
-              </div>
 
               {/* Launcher Access & World Defaults */}
-              <div className="space-y-2 pt-2 border-t border-white/5">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div className="space-y-2 pt-2 border-t border-border-subtle">
+                <span className="text-xs font-bold uppercase tracking-wider text-content-secondary">
                   Launcher Access & World Defaults
                 </span>
 
-                <div className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default">
+                <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-default">
                   <div className="flex items-center gap-3">
-                    <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                     <div>
-                      <span className="text-xs font-bold text-white block">Cracked (Offline Mode) Support</span>
-                      <span className="text-[10px] text-slate-400">Allows non-premium accounts (TLauncher, SKLauncher, Prism) + auto SkinsRestorer</span>
+                      <span className="text-xs font-bold text-content-primary block">Cracked (Offline Mode) Support</span>
+                      <span className="text-[10px] text-content-secondary">Allows non-premium accounts (TLauncher, SKLauncher, Prism) + auto SkinsRestorer</span>
                     </div>
                   </div>
                   <input
@@ -666,7 +636,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Difficulty</label>
+                    <label className="text-xs font-semibold text-content-primary">Difficulty</label>
                     <select
                       value={difficulty}
                       onChange={(e) => setDifficulty(e.target.value)}
@@ -680,7 +650,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Gamemode</label>
+                    <label className="text-xs font-semibold text-content-primary">Gamemode</label>
                     <select
                       value={gamemode}
                       onChange={(e) => setGamemode(e.target.value)}
@@ -693,12 +663,11 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 bg-surface-base/60 rounded-xl border border-border-default">
+                <div className="flex items-center justify-between p-3.5 bg-surface-base rounded-xl border border-border-default">
                   <div className="flex items-center gap-3">
-                    <PlaceholderIcon className="w-5 h-5 text-slate-200 shrink-0" />
                     <div>
-                      <span className="text-xs font-bold text-white block">PvP (Player vs Player)</span>
-                      <span className="text-[10px] text-slate-400">Allow players to attack and damage each other</span>
+                      <span className="text-xs font-bold text-content-primary block">PvP (Player vs Player)</span>
+                      <span className="text-[10px] text-content-secondary">Allow players to attack and damage each other</span>
                     </div>
                   </div>
                   <input
@@ -710,7 +679,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">PlaceholderIcon MOTD</label>
+                  <label className="text-xs font-semibold text-content-primary">Server MOTD</label>
                   <input
                     type="text"
                     value={motd}
@@ -726,8 +695,8 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {currentStep === 'network' && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">Choose PlaceholderIcon Networking & Sharing Mode</label>
-                <p className="text-[11px] text-slate-400">
+                <label className="text-xs font-semibold text-content-primary">Choose Server Networking & Sharing Mode</label>
+                <p className="text-[11px] text-content-secondary">
                   Select how players will connect to this Minecraft server. You can change this anytime later.
                 </p>
               </div>
@@ -738,7 +707,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   onClick={() => setNetworkMode('cloud_relay')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     networkMode === 'cloud_relay'
-                      ? 'bg-white/5 border-white/10 text-white'
+                      ? 'bg-success text-white font-bold border-transparent shadow-sm'
                       : 'bg-surface-card border-border-default hover:border-border-hover'
                   }`}
                 >
@@ -748,12 +717,18 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-white">PlayIt.gg Tunnel (Recommended)</strong>
-                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-white/5 text-white border border-white/10">
+                          <strong className={`text-xs font-bold ${networkMode === 'cloud_relay' ? 'text-white' : 'text-content-primary'}`}>
+                            PlayIt.gg Tunnel (Recommended)
+                          </strong>
+                          <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                            networkMode === 'cloud_relay'
+                              ? 'bg-white/20 text-white border border-white/30'
+                              : 'bg-success text-white'
+                          }`}>
                             Universal Internet Play
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className={`text-xs ${networkMode === 'cloud_relay' ? 'text-white/90' : 'text-content-secondary'}`}>
                           Play online with friends worldwide. Bypasses CGNAT & strict firewalls with zero router port forwarding.
                         </p>
                       </div>
@@ -769,39 +744,34 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   }}
                   className={`p-4 rounded-xl border transition-all ${
                     !upnpStatus.isSupported
-                      ? 'bg-surface-base/60 border-danger/20 opacity-60 cursor-not-allowed'
+                      ? 'bg-surface-base border-warning-fg/20 opacity-60 cursor-not-allowed'
                       : networkMode === 'upnp'
-                      ? 'border-success/70 bg-success/10 shadow-sm'
+                      ? 'bg-success text-white font-bold border-transparent shadow-sm cursor-pointer'
                       : 'bg-surface-card border-border-default hover:border-border-hover cursor-pointer'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          !upnpStatus.isSupported
-                            ? 'bg-danger/10 text-danger-fg'
-                            : networkMode === 'upnp'
-                            ? 'bg-success text-surface-base'
-                            : 'bg-white/5 text-slate-200'
-                        }`}
-                      >
-                        {!upnpStatus.isSupported ? <PlaceholderIcon className="w-4 h-4" /> : <PlaceholderIcon className="w-4 h-4" />}
-                      </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-white">Direct UPnP Port Forward</strong>
+                          <strong className={`text-xs font-bold ${networkMode === 'upnp' ? 'text-white' : 'text-content-primary'}`}>
+                            Direct UPnP Port Forward
+                          </strong>
                           {upnpStatus.isSupported ? (
-                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-surface-base text-content-primary border border-border-default">
+                            <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                              networkMode === 'upnp'
+                                ? 'bg-white/20 text-white border border-white/30'
+                                : 'bg-surface-base text-content-primary border border-border-default'
+                            }`}>
                               Recommended
                             </span>
                           ) : !upnpStatus.isSupported ? (
-                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-danger/10 text-danger-fg border border-danger/30">
+                            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-warning-bg text-warning-fg border border-warning-fg/30">
                               Unsupported by Gateway
                             </span>
                           ) : null}
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className={`text-xs ${networkMode === 'upnp' ? 'text-white/90' : 'text-content-secondary'}`}>
                           {upnpStatus.isSupported
                             ? 'Direct connection via automated router port mapping (lowest latency).'
                             : 'Your local network gateway or ISP does not support UPnP IGD automatic port mapping. Please select PlayIt.gg Tunnel or Local LAN.'}
@@ -829,24 +799,25 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                   onClick={() => setNetworkMode('lan_only')}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     networkMode === 'lan_only'
-                      ? 'bg-white/5 border-white/10 text-white'
+                      ? 'bg-success text-white font-bold border-transparent shadow-sm'
                       : 'bg-surface-card border-border-default hover:border-border-hover'
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="shrink-0 pt-1">
-                      <div className={`p-2 rounded-lg ${networkMode === 'lan_only' ? 'bg-success text-surface-base' : 'bg-neutral-bg text-content-primary'}`}>
-                        <PlaceholderIcon className="w-4 h-4" />
-                      </div>
-                    </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-white">Only Local LAN</strong>
-                          <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-surface-card text-content-primary border border-border-default">
+                          <strong className={`text-xs font-bold ${networkMode === 'lan_only' ? 'text-white' : 'text-content-primary'}`}>
+                            Only Local LAN
+                          </strong>
+                          <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                            networkMode === 'lan_only'
+                              ? 'bg-white/20 text-white border border-white/30'
+                              : 'bg-surface-card text-content-primary border border-border-default'
+                          }`}>
                             Offline / Same Wi-Fi
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className={`text-xs ${networkMode === 'lan_only' ? 'text-white/90' : 'text-content-secondary'}`}>
                           Offline mode for friends connected to your same Wi-Fi or local network.
                         </p>
                       </div>
@@ -860,75 +831,90 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           {currentStep === 'plugins' && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white">Recommended Starter Plugins</h3>
-                <p className="text-xs text-slate-400">
-                  Select essential plugins to auto-install during server setup.
+                <h3 className="text-sm font-bold text-content-primary">Starter Plugins & Addons</h3>
+                <p className="text-xs text-content-secondary">
+                  {isModded
+                    ? 'Fabric servers utilize mods instead of Spigot plugins.'
+                    : 'Select essential plugins to auto-install during server setup.'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5">
-                {[
-                  {
-                    id: 'skinsrestorer',
-                    name: 'SkinsRestorer (Crucial for Cracked)',
-                    desc: 'Restores player skins for offline/cracked and Bedrock crossplay players automatically.'
-                  },
-                  {
-                    id: 'viaversion',
-                    name: 'ViaVersion (Multi-Version Protocol)',
-                    desc: 'Allows newer and older Minecraft clients to join this server without version restrictions.'
-                  },
-                  {
-                    id: 'essentialsx',
-                    name: 'EssentialsX (Economy & Teleports)',
-                    desc: 'Adds /spawn, /tpa, /home, /sethome, /warp, /back and basic SMP server utility commands.'
-                  },
-                  {
-                    id: 'chunky',
-                    name: 'Chunky (World Pre-Generator)',
-                    desc: 'Pre-generates chunks to permanently eliminate player exploration lag and TPS drops.'
-                  }
-                ].map((item) => {
-                  const isChecked = selectedPlugins.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        if (isChecked) setSelectedPlugins(selectedPlugins.filter(x => x !== item.id));
-                        else setSelectedPlugins([...selectedPlugins, item.id]);
-                      }}
-                      className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between transition ${
-                        isChecked
-                          ? 'bg-white/5 border-white/10'
-                          : 'bg-surface-card border-border-default hover:border-border-hover'
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <strong className="block text-xs text-white">{item.name}</strong>
-                        <span className="text-[11px] text-slate-400 block">{item.desc}</span>
-                      </div>
+              {isModded ? (
+                <div className="p-4 rounded-xl bg-surface-card border border-border-default space-y-2">
+                  <div className="flex items-center gap-2 text-content-primary font-bold text-xs">
+                    <Info className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Plugins Not Applicable for Fabric</span>
+                  </div>
+                  <p className="text-xs text-content-secondary leading-relaxed">
+                    Bukkit/Spigot plugins are not supported on Fabric servers. Once your server is created, you can install custom Fabric mods (.jar files) via the Mods manager or directly in the server directory.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    {
+                      id: 'skinsrestorer',
+                      name: 'SkinsRestorer (Crucial for Cracked)',
+                      desc: 'Restores player skins for offline/cracked and Bedrock crossplay players automatically.'
+                    },
+                    {
+                      id: 'viaversion',
+                      name: 'ViaVersion (Multi-Version Protocol)',
+                      desc: 'Allows newer and older Minecraft clients to join this server without version restrictions.'
+                    },
+                    {
+                      id: 'essentialsx',
+                      name: 'EssentialsX (Economy & Teleports)',
+                      desc: 'Adds /spawn, /tpa, /home, /sethome, /warp, /back and basic SMP server utility commands.'
+                    },
+                    {
+                      id: 'chunky',
+                      name: 'Chunky (World Pre-Generator)',
+                      desc: 'Pre-generates chunks to permanently eliminate player exploration lag and TPS drops.'
+                    }
+                  ].map((item) => {
+                    const isChecked = selectedPlugins.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (isCreating || isDownloading) return;
+                          if (isChecked) setSelectedPlugins(selectedPlugins.filter(x => x !== item.id));
+                          else setSelectedPlugins([...selectedPlugins, item.id]);
+                        }}
+                        className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between transition ${
+                          isChecked
+                            ? 'bg-surface-hover border-border-default'
+                            : 'bg-surface-card border-border-default hover:border-border-hover'
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <strong className="block text-xs text-content-primary">{item.name}</strong>
+                          <span className="text-[11px] text-content-secondary block">{item.desc}</span>
+                        </div>
 
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {}}
-                        className="w-4 h-4 accent-emerald-500 cursor-pointer ml-3"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}}
+                          className="w-4 h-4 accent-emerald-500 cursor-pointer ml-3"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border-default bg-surface-base/80">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border-default bg-surface-base">
           <div>
             {currentStep !== 'basic' && (
               <button
                 type="button"
-                disabled={isCreating}
+                disabled={isCreating || isDownloading}
                 onClick={() => {
                   const idx = steps.findIndex(s => s.id === currentStep);
                   if (idx > 0) setCurrentStep(steps[idx - 1].id as WizardStep);
@@ -944,7 +930,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             {currentStep !== 'plugins' ? (
               <button
                 type="button"
-                disabled={isCreating || (currentStep === 'basic' && (isNameDuplicate || !name.trim()))}
+                disabled={isCreating || isDownloading || (currentStep === 'basic' && (isNameDuplicate || !name.trim()))}
                 onClick={() => {
                   const idx = steps.findIndex(s => s.id === currentStep);
                   if (idx < steps.length - 1) setCurrentStep(steps[idx + 1].id as WizardStep);
@@ -952,17 +938,22 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                 className="flex items-center gap-1.5 px-4 py-2 bg-surface-card hover:bg-surface-hover text-content-primary rounded-lg text-xs font-semibold border border-border-default transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>Next Step</span>
-                <PlaceholderIcon className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleCreate}
                 disabled={isCreating || isDownloading || isNameDuplicate || !name.trim()}
-                className="flex items-center gap-2 px-5 py-2.5 bg-success hover:bg-success/80 text-surface-base font-bold text-xs rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2.5 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                {isCreating ? <PlaceholderIcon className="w-4 h-4 animate-spin" /> : <PlaceholderIcon className="w-4 h-4" />}
-                <span>{isCreating ? 'Setting Up PlaceholderIcon...' : 'Create & Launch PlaceholderIcon'}</span>
+                {isCreating ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Setting Up Server...</span>
+                  </>
+                ) : (
+                  <span>Create & Launch Server</span>
+                )}
               </button>
             )}
           </div>
