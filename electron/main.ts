@@ -7,6 +7,7 @@ import { registerNetworkIpc } from './ipc/network.ipc';
 import { registerPluginsIpc } from './ipc/plugins.ipc';
 import { registerConfigIpc } from './ipc/config.ipc';
 import { registerModsIpc } from './ipc/mods.ipc';
+import { registerWorldIpc } from './ipc/world.ipc';
 import { ServerManagerService } from './services/server-manager.service';
 import { PlayitService } from './services/playit.service';
 import { UpnpService } from './services/upnp.service';
@@ -67,7 +68,16 @@ async function createWindow() {
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      const isDevUrl = process.env.VITE_DEV_SERVER_URL && url.startsWith(process.env.VITE_DEV_SERVER_URL);
+      let isDevUrl = false;
+      if (process.env.VITE_DEV_SERVER_URL) {
+        try {
+          const devOrigin = new URL(process.env.VITE_DEV_SERVER_URL).origin;
+          const targetOrigin = new URL(url).origin;
+          isDevUrl = devOrigin === targetOrigin;
+        } catch {
+          isDevUrl = url.startsWith(process.env.VITE_DEV_SERVER_URL);
+        }
+      }
       if (!isDevUrl) {
         event.preventDefault();
         shell.openExternal(url);
@@ -81,6 +91,7 @@ async function createWindow() {
   registerPluginsIpc();
   registerModsIpc();
   registerConfigIpc(mainWindow);
+  registerWorldIpc(mainWindow);
 
   // Smooth window reveal
   mainWindow.once('ready-to-show', () => {

@@ -6,7 +6,7 @@ import { Terminal as TerminalIcon, Send } from 'lucide-react';
 import { useServerState, useServerActions } from '../../context/ServerContext';
 
 export const ConsoleTab: React.FC = () => {
-  const { status } = useServerState();
+  const { status, activeServer } = useServerState();
   const { sendCommand } = useServerActions();
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermInstance = useRef<XTerm | null>(null);
@@ -22,12 +22,12 @@ export const ConsoleTab: React.FC = () => {
       theme: {
         background: '#06090e',
         foreground: '#18181b',
-        cursor: '#10b981',
+        cursor: '#488f48',
         cursorAccent: '#06090e',
-        selectionBackground: 'rgba(16, 185, 129, 0.3)',
+        selectionBackground: 'rgba(48, 96, 48, 0.35)',
         black: '#0f172a',
         red: '#ef4444',
-        green: '#10b981',
+        green: '#306030',
         yellow: '#f59e0b',
         blue: '#3b82f6',
         magenta: '#8b5cf6',
@@ -35,7 +35,7 @@ export const ConsoleTab: React.FC = () => {
         white: '#f8fafc',
         brightBlack: '#64748b',
         brightRed: '#f87171',
-        brightGreen: '#34d399',
+        brightGreen: '#488f48',
         brightYellow: '#fbbf24',
         brightBlue: '#60a5fa',
         brightMagenta: '#a78bfa',
@@ -47,13 +47,13 @@ export const ConsoleTab: React.FC = () => {
       lineHeight: 1.4,
       cursorBlink: false,
       convertEol: true,
-      scrollback: 1500
+      scrollback: 2500
     });
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(terminalRef.current);
-    fitAddon.fit();
+    try { fitAddon.fit(); } catch {}
 
     xtermInstance.current = term;
     fitAddonInstance.current = fitAddon;
@@ -61,7 +61,7 @@ export const ConsoleTab: React.FC = () => {
     const initializeTerminal = async () => {
       let initialLogs: Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> = [];
       if (window.electronAPI) {
-        initialLogs = await window.electronAPI.getServerLogs();
+        initialLogs = await window.electronAPI.getServerLogs(activeServer?.id);
       }
 
       if (initialLogs.length === 0 && status !== 'ONLINE' && status !== 'STARTING') {
@@ -75,7 +75,7 @@ export const ConsoleTab: React.FC = () => {
             linesToWrite.push(`\x1b[1;32m${log.line}\x1b[0m`);
           } else if (log.line.includes('WARN')) {
             linesToWrite.push(`\x1b[33m${log.line}\x1b[0m`);
-          } else if (log.line.includes('ERROR')) {
+          } else if (log.line.includes('ERROR') || log.line.includes('Exception')) {
             linesToWrite.push(`\x1b[31m${log.line}\x1b[0m`);
           } else {
             linesToWrite.push(log.line);
@@ -83,28 +83,42 @@ export const ConsoleTab: React.FC = () => {
         }
         if (linesToWrite.length > 0) {
           term.writeln(linesToWrite.join('\r\n'));
+          term.scrollToBottom();
         }
       }
     };
     
     initializeTerminal();
 
-    const handleResize = () => fitAddon.fit();
+    // Auto-fit when tab container changes dimensions (e.g. unhidden)
+    const resizeObserver = new ResizeObserver(() => {
+      try {
+        fitAddon.fit();
+      } catch {}
+    });
+    if (terminalRef.current) {
+      resizeObserver.observe(terminalRef.current);
+    }
+
+    const handleResize = () => {
+      try { fitAddon.fit(); } catch {}
+    };
     window.addEventListener('resize', handleResize);
 
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       term.dispose();
       xtermInstance.current = null;
       fitAddonInstance.current = null;
     };
-  }, []);
+  }, [activeServer?.id]);
 
   // Listen for live logs via IPC
   useEffect(() => {
     if (!window.electronAPI) return;
 
-    const unsub = window.electronAPI.onServerLog((logData) => {
+    const unsub = window.electronAPI.onServerLog((logData: any) => {
       if (!xtermInstance.current) return;
       const term = xtermInstance.current;
       
@@ -127,6 +141,7 @@ export const ConsoleTab: React.FC = () => {
       
       if (linesToWrite.length > 0) {
         term.writeln(linesToWrite.join('\r\n'));
+        term.scrollToBottom();
       }
     });
 

@@ -78,6 +78,7 @@ export interface CloudTunnelStatus {
 export interface GeyserConfig {
   bedrockPort: number;
   bedrockAddress: string;
+  cloneRemotePort?: boolean;
   authType: 'floodgate' | 'online' | 'offline';
   motd1: string;
   motd2: string;

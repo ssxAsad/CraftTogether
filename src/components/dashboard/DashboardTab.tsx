@@ -20,7 +20,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
   const { startCloudTunnel, stopCloudTunnel, startUpnp, stopUpnp } = useNetworkActions();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [bedrockPort, setBedrockPort] = useState<number>(19132);
-  const [cloneRemotePort, setCloneRemotePort] = useState<boolean>(true);
+  const [cloneRemotePort, setCloneRemotePort] = useState<boolean>(false);
 
   useEffect(() => {
     if (activeServer && window.electronAPI) {
@@ -56,14 +56,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         if (parts.length > 1) {
           return parseInt(parts[1], 10);
         }
-      } else if (cloudTunnelStatus.serverAddress) {
-        const parts = cloudTunnelStatus.serverAddress.split(':');
-        if (parts.length > 1) {
-          return parseInt(parts[1], 10);
-        }
       }
+      // Never fall back to Java TCP tunnel port; use the real Bedrock UDP port
+      return bedrockPort || 19132;
     }
-    return cloneRemotePort ? (activeServer?.port || 25565) : bedrockPort;
+    return cloneRemotePort ? (activeServer?.port || 25565) : (bedrockPort || 19132);
   };
 
   const bedrockIp = getBedrockIp();
@@ -400,9 +397,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="text-sm font-bold text-content-primary">For Bedrock Clients</h2>
-                <p className="text-xs text-content-secondary">Enter IP and Port given below:</p>
+                <p className="text-xs text-content-secondary">
+                  {activeServer?.networkMode === 'cloud_relay' && !cloudTunnelStatus.bedrockAddress
+                    ? 'Local / LAN access (add Bedrock tunnel in Playit for internet)'
+                    : 'Enter IP and Port given below:'}
+                </p>
               </div>
             </div>
+            {activeServer?.networkMode === 'cloud_relay' && !cloudTunnelStatus.bedrockAddress && (
+              <Badge variant="warning">
+                LAN Port (19132)
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

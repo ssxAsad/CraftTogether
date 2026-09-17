@@ -11,6 +11,8 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<MainTabType>('servers');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
+  const [setupStep, setSetupStep] = useState<'directory' | 'dependencies' | 'playit'>('directory');
+  const [storageDirectory, setStorageDirectory] = useState<string>('');
   const { refreshServers } = useServerActions();
 
   useEffect(() => {
@@ -19,6 +21,10 @@ export const App: React.FC = () => {
         try {
           const status = await window.electronAPI.getSetupStatus();
           setIsSetupComplete(status.isSetupComplete);
+          if (!status.isSetupComplete) {
+            setSetupStep((status.setupStep as any) || 'directory');
+            setStorageDirectory(status.storageDirectory || '');
+          }
         } catch (e) {
           setIsSetupComplete(true);
         }
@@ -31,7 +37,9 @@ export const App: React.FC = () => {
   }, []);
 
   const handleSetupComplete = async (chosenDirectory: string) => {
-    if (!window.electronAPI) {
+    if (window.electronAPI?.completeSetup) {
+      await window.electronAPI.completeSetup();
+    } else {
       localStorage.setItem('craftora_setup_complete', 'true');
     }
     setIsSetupComplete(true);
@@ -53,7 +61,11 @@ export const App: React.FC = () => {
       {!isSetupComplete ? (
         <div className="flex flex-col flex-1 h-full w-full">
           <TitleBar />
-          <FirstLaunchScreen onComplete={handleSetupComplete} />
+          <FirstLaunchScreen
+            onComplete={handleSetupComplete}
+            initialStep={setupStep}
+            initialDirectory={storageDirectory}
+          />
         </div>
       ) : (
         <div className="flex flex-1 h-full w-full overflow-hidden">
@@ -69,16 +81,17 @@ export const App: React.FC = () => {
             <TitleBar />
 
             <main className="flex-1 bg-surface-base overflow-hidden relative border-l border-border-subtle">
-              {activeTab === 'servers' ? (
+              <div className={`h-full ${activeTab === 'servers' ? 'block' : 'hidden'}`}>
                 <ServersTab
                   onOpenCreateModal={() => setIsCreateModalOpen(true)}
                   onNavigateToConsole={() => setActiveTab('console')}
                 />
-              ) : (
+              </div>
+              <div className={`h-full ${activeTab === 'console' ? 'block' : 'hidden'}`}>
                 <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-8 h-8 rounded-full border-2 border-border-default border-t-transparent animate-spin" /></div>}>
                   <ConsoleTab />
                 </React.Suspense>
-              )}
+              </div>
             </main>
           </div>
         </div>

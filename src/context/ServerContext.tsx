@@ -333,6 +333,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const selectServer = useCallback((server: ServerInstanceConfig) => {
     if (status !== 'STOPPED' && activeServer?.id !== server.id) return;
+    if (activeServer?.id === server.id) return;
     setActiveServer(server);
     localStorage.setItem('craftora_active_server_id', server.id);
     if (window.electronAPI) {

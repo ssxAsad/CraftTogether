@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { PlayItIcon, JavaIcon } from '../common/Icons';
 import { PlayitSetupScreen } from './PlayitSetupScreen';
 
 interface GlobalSetupScreenProps {
   onSetupComplete: () => void;
+  initialWizardStep?: 'dependencies' | 'playit';
 }
 
 interface DepItem {
-  id: 'java' | 'cloud_relay' | 'papermc' | 'plugins';
+  id: 'java' | 'cloud_relay';
   name: string;
   description: string;
   status: 'ready' | 'missing' | 'installing' | 'queued' | 'error';
@@ -23,16 +23,6 @@ const DEP_META: Record<DepItem['id'], { label: string; desc: string; readyLabel:
     desc: 'Required to run the Minecraft server. Downloaded once, used for all servers.',
     readyLabel: 'Installed'
   },
-  papermc: {
-    label: 'Minecraft Server',
-    desc: 'The core Minecraft server software (PaperMC). Saved to your workspace folder.',
-    readyLabel: 'Downloaded'
-  },
-  plugins: {
-    label: 'Server Plugins',
-    desc: 'Adds cross-play support for mobile & console players, plus skin support for all accounts.',
-    readyLabel: 'Downloaded'
-  },
   cloud_relay: {
     label: 'PlayIt.gg Tunnel',
     desc: 'Lets friends join your server from anywhere over the internet, with no router setup needed.',
@@ -40,13 +30,11 @@ const DEP_META: Record<DepItem['id'], { label: string; desc: string; readyLabel:
   }
 };
 
-export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupComplete }) => {
-  const [wizardStep, setWizardStep] = useState<'dependencies' | 'playit'>('dependencies');
+export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupComplete, initialWizardStep = 'dependencies' }) => {
+  const [wizardStep, setWizardStep] = useState<'dependencies' | 'playit'>(initialWizardStep);
 
   const [dependencies, setDependencies] = useState<DepItem[]>([
     { id: 'java', name: DEP_META.java.label, description: DEP_META.java.desc, status: 'missing', progress: 0 },
-    { id: 'papermc', name: DEP_META.papermc.label, description: DEP_META.papermc.desc, status: 'missing', progress: 0 },
-    { id: 'plugins', name: DEP_META.plugins.label, description: DEP_META.plugins.desc, status: 'missing', progress: 0 },
     { id: 'cloud_relay', name: DEP_META.cloud_relay.label, description: DEP_META.cloud_relay.desc, status: 'missing', progress: 0 }
   ]);
 
@@ -93,8 +81,9 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
     if (window.electronAPI?.checkSetupDependencies) {
       try {
         const results = await window.electronAPI.checkSetupDependencies();
+        const filteredResults = results.filter((res: any) => res.id === 'java' || res.id === 'cloud_relay');
         setDependencies(prev => {
-          return results.map((res: DepItem) => {
+          return filteredResults.map((res: DepItem) => {
             const existing = prev.find(p => p.id === res.id);
             // Preserve 'queued' or 'installing' state if backend says missing
             if (existing && (existing.status === 'queued' || existing.status === 'installing') && res.status !== 'ready') {
@@ -112,8 +101,6 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
       setTimeout(() => {
         setDependencies([
           { id: 'java', name: DEP_META.java.label, description: DEP_META.java.desc, status: 'missing', progress: 0 },
-          { id: 'papermc', name: DEP_META.papermc.label, description: DEP_META.papermc.desc, status: 'missing', progress: 0 },
-          { id: 'plugins', name: DEP_META.plugins.label, description: DEP_META.plugins.desc, status: 'missing', progress: 0 },
           { id: 'cloud_relay', name: DEP_META.cloud_relay.label, description: DEP_META.cloud_relay.desc, status: 'missing', progress: 0 }
         ]);
       }, 500);
@@ -144,7 +131,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         }
       } catch {
         setDependencies((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, status: 'error', progress: 0, details: 'PlaceholderIcon error' } : item))
+          prev.map((item) => (item.id === id ? { ...item, status: 'error', progress: 0, details: 'Download error' } : item))
         );
       }
       await checkAll();
@@ -187,26 +174,30 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
   if (wizardStep === 'playit') {
     return (
       <PlayitSetupScreen
-        onBack={() => setWizardStep('dependencies')}
+        onBack={() => {
+          if (window.electronAPI?.setSetupStep) {
+            window.electronAPI.setSetupStep('dependencies');
+          }
+          setWizardStep('dependencies');
+        }}
         onComplete={onSetupComplete}
       />
     );
   }
 
-  // Step 1: PlaceholderIcon dependencies
+  // Step 1: Download dependencies
   return (
     <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-y-auto max-h-screen">
       {/* Header */}
       <div className="text-center mb-6 pt-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-bg border border-border-default text-content-primary text-xs font-bold uppercase tracking-wider mb-3">
-          <PlaceholderIcon className="w-3.5 h-3.5" />
-          <span>Step 1 of 2 — PlaceholderIcon Required Files</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-bg border border-border-default text-black text-xs font-bold uppercase tracking-wider mb-3">
+          <span>Step 1 of 2 — Download Required Files</span>
         </div>
-        <h2 className="text-3xl font-extrabold text-content-primary mb-2 tracking-tight">
+        <h2 className="text-3xl font-extrabold text-black mb-2 tracking-tight">
           Get Your Server Ready
         </h2>
         <p className="text-content-secondary text-sm max-w-2xl mx-auto">
-          PlaceholderIcon the 4 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
+          Download the 2 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
         </p>
       </div>
 
@@ -214,13 +205,13 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
       <div className="flex items-center justify-between bg-surface-elevated/80 p-4 rounded-2xl border border-border-default mb-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div>
-            <h4 className="text-sm font-bold text-content-primary">
-              {allReady ? 'Everything is ready!' : `${4 - readyCount} item${4 - readyCount === 1 ? '' : 's'} left to download`}
+            <h4 className="text-sm font-bold text-black">
+              {allReady ? 'Everything is ready!' : `${2 - readyCount} item${2 - readyCount === 1 ? '' : 's'} left to download`}
             </h4>
             <p className="text-xs text-content-secondary">
               {allReady
                 ? 'All components are downloaded and ready to use.'
-                : 'Click "PlaceholderIcon All" to get everything at once.'}
+                : 'Click "Download All" to get everything at once.'}
             </p>
           </div>
         </div>
@@ -229,24 +220,19 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           <button
             onClick={checkAll}
             disabled={isChecking}
-            className="p-2.5 rounded-xl bg-neutral-bg hover:bg-surface-hover text-content-primary transition cursor-pointer border border-border-subtle"
+            className="px-4 py-2.5 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs transition cursor-pointer shadow-md flex items-center gap-1.5"
             title="Refresh"
           >
-            <PlaceholderIcon className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+            Refresh
           </button>
 
           {!allReady && (
             <button
               onClick={handleInstallAll}
               disabled={isInstallingAll || isChecking}
-              className="px-5 py-2.5 rounded-xl bg-success hover:bg-success/80 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
+              className="px-5 py-2.5 rounded-xl bg-success hover:bg-success/90 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-2 cursor-pointer shadow-lg"
             >
-              {isInstallingAll ? (
-                <PlaceholderIcon className="w-4 h-4 animate-spin" />
-              ) : (
-                <PlaceholderIcon className="w-4 h-4" />
-              )}
-              <span>{isInstallingAll ? 'Downloading...' : 'PlaceholderIcon All'}</span>
+              <span>{isInstallingAll ? 'Downloading...' : 'Download All'}</span>
             </button>
           )}
         </div>
@@ -261,27 +247,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           dep={dependencies.find((d) => d.id === 'java')!}
           meta={DEP_META.java}
           onInstall={() => handleInstallSingle('java')}
-          buttonLabel="PlaceholderIcon Java"
-        />
-
-        {/* PaperMC */}
-        <DepCard
-          id="papermc"
-          icon={<PlaceholderIcon className="w-8 h-8 text-content-primary" />}
-          dep={dependencies.find((d) => d.id === 'papermc')!}
-          meta={DEP_META.papermc}
-          onInstall={() => handleInstallSingle('papermc')}
-          buttonLabel="PlaceholderIcon Server"
-        />
-
-        {/* Plugins */}
-        <DepCard
-          id="plugins"
-          icon={<PlaceholderIcon className="w-8 h-8 text-content-primary" />}
-          dep={dependencies.find((d) => d.id === 'plugins')!}
-          meta={DEP_META.plugins}
-          onInstall={() => handleInstallSingle('plugins')}
-          buttonLabel="PlaceholderIcon Plugins"
+          buttonLabel="Download Java"
         />
 
         {/* PlayIt.gg */}
@@ -292,7 +258,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           dep={dependencies.find((d) => d.id === 'cloud_relay')!}
           meta={DEP_META.cloud_relay}
           onInstall={() => handleInstallSingle('cloud_relay')}
-          buttonLabel="PlaceholderIcon Tunnel"
+          buttonLabel="Download Tunnel"
         />
       </div>
 
@@ -301,15 +267,19 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
         <button
           type="button"
           disabled={!allReady}
-          onClick={() => setWizardStep('playit')}
+          onClick={() => {
+            if (window.electronAPI?.setSetupStep) {
+              window.electronAPI.setSetupStep('playit');
+            }
+            setWizardStep('playit');
+          }}
           className={`px-6 py-2.5 font-bold text-xs rounded-xl flex items-center gap-2 transition shadow-lg ${
             allReady 
-              ? 'bg-success hover:bg-success/80 text-white cursor-pointer' 
+              ? 'bg-success hover:bg-success/90 text-white cursor-pointer' 
               : 'bg-neutral-bg text-content-secondary cursor-not-allowed'
           }`}
         >
           <span>Continue</span>
-          <PlaceholderIcon className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -337,17 +307,16 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
 
           {dep.status === 'ready' ? (
             <span className="flex items-center gap-1 text-[11px] font-semibold text-content-primary bg-surface-base px-2.5 py-1 rounded border border-border-default">
-              <PlaceholderIcon className="w-3.5 h-3.5" />
+              <span className="text-success font-bold">✓</span>
               {meta.readyLabel}
             </span>
           ) : dep.status === 'installing' ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-content-primary bg-neutral-bg px-2.5 py-1 rounded border border-border-default">
-              <PlaceholderIcon className="w-3.5 h-3.5 animate-spin text-content-primary" />
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-content-primary bg-neutral-bg px-2.5 py-1 rounded border border-border-default">
+              <span className="w-3 h-3 rounded-full border-2 border-content-primary border-t-transparent animate-spin inline-block" />
               Downloading
             </span>
           ) : dep.status === 'queued' ? (
             <span className="flex items-center gap-1 text-[11px] font-semibold text-warning-fg bg-warning/10 px-2.5 py-1 rounded border border-warning-fg/30">
-              <PlaceholderIcon className="w-3.5 h-3.5" />
               In Queue
             </span>
           ) : dep.status === 'error' ? (
@@ -396,7 +365,6 @@ const DepCard: React.FC<DepCardProps> = ({ icon, iconPadding = 'p-2.5', dep, met
           onClick={onInstall}
           className="w-full py-2 rounded-lg bg-success hover:bg-success/80 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
         >
-          <PlaceholderIcon className="w-4 h-4" />
           <span>{buttonLabel}</span>
         </button>
       )}

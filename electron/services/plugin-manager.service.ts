@@ -36,7 +36,7 @@ export class PluginManagerService {
       name: 'SkinsRestorer',
       description: 'Restores player skins for cracked (offline-mode) servers & allows custom /skin commands.',
       category: 'Cosmetic / Cracked',
-      downloadUrl: 'https://github.com/SkinsRestorer/SkinsRestorerX/releases/latest/download/SkinsRestorer.jar',
+      downloadUrl: 'https://github.com/SkinsRestorer/SkinsRestorer/releases/latest/download/SkinsRestorer.jar',
       icon: 'UserCheck',
       recommendedForCracked: true
     },
@@ -77,7 +77,7 @@ export class PluginManagerService {
       name: 'Chunky',
       description: 'Pre-generates world chunks in advance to eliminate chunk-loading lag spikes during gameplay.',
       category: 'Performance',
-      downloadUrl: 'https://hangarcdn.papermc.io/plugins/pop4959/Chunky/versions/1.4.28/PAPER/Chunky-1.4.28.jar',
+      downloadUrl: 'https://hangarcdn.papermc.io/plugins/pop4959/Chunky/versions/1.5.3/PAPER/Chunky-Bukkit-1.5.3.jar',
       icon: 'Zap'
     },
     {
@@ -93,7 +93,7 @@ export class PluginManagerService {
       name: 'OnlySleep',
       description: 'Modern 1-player sleep plugin with bossbars, percentages, and custom messages.',
       category: 'Core Gameplay',
-      downloadUrl: 'https://github.com/onlysleep', // Will be resolved dynamically
+      downloadUrl: 'https://cdn.modrinth.com/data/Tr6srgFS/versions/zMA4y7Td/Onlysleep-1.4.1.jar',
       icon: 'Moon'
     }
   ];
@@ -141,16 +141,17 @@ export class PluginManagerService {
 
   /**
    * Dynamically resolves the latest direct jar download URL from Modrinth CDN with fallback.
+   * Ensures only Bukkit/Paper-compatible plugin builds are selected (not NeoForge/Fabric mods).
    */
   static async resolvePluginUrl(pluginId: string): Promise<string> {
     const popular = this.POPULAR_PLUGINS.find(p => p.id === pluginId);
     if (!popular) throw new Error(`Plugin ${pluginId} not found`);
 
+    // Chunky on Modrinth only hosts Forge/NeoForge/Fabric mods; its Paper plugin is on Hangar.
     const modrinthSlugs: Record<string, string> = {
       viaversion: 'viaversion',
       viabackwards: 'viabackwards',
       essentialsx: 'essentialsx',
-      chunky: 'chunky',
       skinsrestorer: 'skinsrestorer',
       coreprotect: 'coreprotect',
       onlysleep: 'onlysleep'
@@ -159,15 +160,23 @@ export class PluginManagerService {
     if (modrinthSlugs[pluginId]) {
       try {
         const slug = modrinthSlugs[pluginId];
-        const versions = await JarDownloaderService.fetchJson<Array<{ files: Array<{ url: string; primary?: boolean; filename: string }> }>>(
+        const versions = await JarDownloaderService.fetchJson<Array<{ loaders?: string[]; files: Array<{ url: string; primary?: boolean; filename: string }> }>>(
           `https://api.modrinth.com/v2/project/${slug}/version`
         );
         if (versions && versions.length > 0) {
+          const validLoaders = ['paper', 'spigot', 'bukkit', 'purpur', 'folia'];
+
           for (const ver of versions) {
+            // Strictly check that this version is built for Paper/Bukkit loaders
+            if (ver.loaders && Array.isArray(ver.loaders)) {
+              const hasValidLoader = ver.loaders.some(l => validLoaders.includes(l.toLowerCase()));
+              if (!hasValidLoader) continue;
+            }
+
             if (ver.files && ver.files.length > 0) {
               const jarFile = ver.files.find(f => f.filename.endsWith('.jar') && !f.filename.includes('sources'));
               if (jarFile?.url) {
-                logger.info(`Resolved latest ${popular.name} from Modrinth CDN: ${jarFile.filename}`);
+                logger.info(`Resolved latest ${popular.name} for Paper/Bukkit from Modrinth CDN: ${jarFile.filename}`);
                 return jarFile.url;
               }
             }
@@ -200,6 +209,13 @@ export class PluginManagerService {
     }
 
     const destFile = path.join(pluginsDir, `${popular.name}.jar`);
+
+    // 0. If plugin is already present and valid on disk, skip redundant download
+    if (fs.existsSync(destFile) && fs.statSync(destFile).size > 1000) {
+      logger.info(`Plugin ${popular.name} already installed on server (${destFile}).`);
+      if (onProgress) onProgress(100);
+      return destFile;
+    }
 
     // 1. Check workspace pre-cache first!
     try {
@@ -270,6 +286,13 @@ export class PluginManagerService {
     // Clean up filename
     const safeName = pluginName.replace(/[^a-zA-Z0-9_\-\ ]/g, '').trim().replace(/\ /g, '_');
     const destFile = path.join(pluginsDir, `${safeName}.jar`);
+
+    // If plugin already exists on disk, don't download again
+    if (fs.existsSync(destFile) && fs.statSync(destFile).size > 1000) {
+      logger.info(`Spiget plugin ${pluginName} already installed on server (${destFile}).`);
+      if (onProgress) onProgress(100);
+      return destFile;
+    }
 
     const downloadUrl = `https://api.spiget.org/v2/resources/${spigetId}/download`;
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { PlaceholderIcon } from '../common/PlaceholderIcon';
 import { Trash2, LayoutDashboard, Globe, Gamepad2, Users, Settings, Puzzle, Package } from 'lucide-react';
 import { useServerState, useServerActions } from '../../context/ServerContext';
 import { isModdedServerSoftware } from '../../types';
@@ -7,6 +6,7 @@ import { isModdedServerSoftware } from '../../types';
 const DashboardTab = React.lazy(() => import('../dashboard/DashboardTab').then(m => ({ default: m.DashboardTab })));
 const NetworkTab = React.lazy(() => import('../network/NetworkTab').then(m => ({ default: m.NetworkTab })));
 const ConfigTab = React.lazy(() => import('../config/ConfigTab').then(m => ({ default: m.ConfigTab })));
+const WorldSettingsTab = React.lazy(() => import('../world/WorldSettingsTab').then(m => ({ default: m.WorldSettingsTab })));
 const PlayersTab = React.lazy(() => import('../players/PlayersTab').then(m => ({ default: m.PlayersTab })));
 const PluginsTab = React.lazy(() => import('../plugins/PluginsTab').then(m => ({ default: m.PluginsTab })));
 const ModsTab = React.lazy(() => import('../mods/ModsTab').then(m => ({ default: m.ModsTab })));
@@ -17,6 +17,7 @@ export type ServerSubTabType =
   | 'plugins'
   | 'mods'
   | 'players'
+  | 'world'
   | 'config';
 
 export interface ServersTabProps {
@@ -71,10 +72,6 @@ export const ServersTab: React.FC<ServersTabProps> = ({
   if (servers.length === 0 || !activeServer) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-surface-elevated border border-border-default flex items-center justify-center">
-          <PlaceholderIcon className="w-8 h-8 text-content-primary font-bold" />
-        </div>
-
         <div className="space-y-2 max-w-md">
           <h2 className="text-xl font-bold text-content-primary">No Minecraft Servers Yet</h2>
           <p className="text-xs text-content-secondary leading-relaxed">
@@ -84,9 +81,8 @@ export const ServersTab: React.FC<ServersTabProps> = ({
 
         <button
           onClick={onOpenCreateModal}
-          className="px-6 py-2.5 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition"
+          className="px-6 py-2.5 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition cursor-pointer"
         >
-          <PlaceholderIcon className="w-4 h-4" />
           <span>Create a New Server</span>
         </button>
       </div>
@@ -100,6 +96,7 @@ export const ServersTab: React.FC<ServersTabProps> = ({
       ? { id: 'mods', label: 'Mods', icon: Package }
       : { id: 'plugins', label: 'Plugins', icon: Puzzle },
     { id: 'players', label: 'Players', icon: Users },
+    { id: 'world', label: 'World Settings', icon: Gamepad2 },
     { id: 'config', label: 'Settings', icon: Settings },
   ];
 
@@ -123,6 +120,9 @@ export const ServersTab: React.FC<ServersTabProps> = ({
         break;
       case 'players':
         content = <PlayersTab />;
+        break;
+      case 'world':
+        content = <WorldSettingsTab />;
         break;
       case 'config':
         content = <ConfigTab />;

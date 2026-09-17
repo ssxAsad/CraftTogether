@@ -164,34 +164,26 @@ export class JarDownloaderService {
   private static async resolveDownloadUrl(software: ServerSoftwareType, version: string): Promise<string> {
     if (software === 'paper') {
       try {
-        const versionData = await this.fetchJson<{ builds: number[] }>(
-          `https://fill.papermc.io/v3/projects/paper/versions/${version}`
-        );
-        if (versionData.builds && versionData.builds.length > 0) {
-          const latestBuild = versionData.builds[0];
-          const buildData = await this.fetchJson<{ downloads: { 'server:default': { url: string } } }>(
-            `https://fill.papermc.io/v3/projects/paper/versions/${version}/builds/${latestBuild}`
-          );
-          if (buildData?.downloads?.['server:default']?.url) {
-            return buildData.downloads['server:default'].url;
+        const builds = await this.fetchJson<Array<{
+          id: number;
+          channel?: string;
+          downloads?: { 'server:default'?: { url?: string; name?: string } };
+        }>>(`https://fill.papermc.io/v3/projects/paper/versions/${version}/builds`);
+
+        if (Array.isArray(builds) && builds.length > 0) {
+          // Prefer the latest STABLE build if available; otherwise use the top build
+          const targetBuild = builds.find(b => b.channel === 'STABLE') || builds[0];
+          const downloadUrl = targetBuild?.downloads?.['server:default']?.url;
+          if (downloadUrl) {
+            logger.info(`Resolved Paper build ${targetBuild.id} (${targetBuild.channel || 'default'}) for ${version}: ${downloadUrl}`);
+            return downloadUrl;
           }
         }
       } catch (v3Err) {
-        logger.warn('Paper V3 lookup failed, attempting V2 endpoint', v3Err);
+        logger.warn('Paper V3 builds lookup failed', v3Err);
       }
 
-      // Paper V2 fallback
-      const v2Data = await this.fetchJson<{ builds: number[] }>(
-        `https://api.papermc.io/v2/projects/paper/versions/${version}`
-      );
-      if (!v2Data.builds || v2Data.builds.length === 0) {
-        throw new Error(`No builds found for Paper version ${version}`);
-      }
-      const latestBuild = v2Data.builds[v2Data.builds.length - 1];
-      const buildData = await this.fetchJson<{ downloads: { application: { name: string } } }>(
-        `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${latestBuild}`
-      );
-      return `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${latestBuild}/downloads/${buildData.downloads.application.name}`;
+      throw new Error(`Could not resolve download URL for Paper version ${version}`);
     }
 
     if (software === 'purpur') {
@@ -227,35 +219,42 @@ export class JarDownloaderService {
 
   /**
    * Generic file downloader with redirect handling and byte stream progress.
+   * Resolves redirects in-memory before opening file write streams on disk.
    */
   static downloadFile(
     url: string,
     destPath: string,
-    onProgress?: (percent: number, downloaded: number, total: number) => void
+    onProgress?: (percent: number, downloaded: number, total: number) => void,
+    maxRedirects = 8
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(destPath);
+      if (maxRedirects <= 0) {
+        return reject(new Error(`Too many redirects encountered while downloading: ${url}`));
+      }
+
       const client = url.startsWith('https') ? https : http;
 
       const request = client.get(url, { headers: { 'User-Agent': 'Craftora/1.0.0' } }, (res) => {
-        // Follow redirects (both relative and absolute)
+        // Follow redirects (both relative and absolute) purely in memory
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          file.close();
-          if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+          res.resume(); // Discard socket stream data
           try {
             const redirectUrl = new URL(res.headers.location, url).href;
-            return this.downloadFile(redirectUrl, destPath, onProgress).then(resolve).catch(reject);
+            return this.downloadFile(redirectUrl, destPath, onProgress, maxRedirects - 1).then(resolve).catch(reject);
           } catch (urlErr) {
             return reject(new Error(`Invalid redirect URL: ${res.headers.location}`));
           }
         }
 
         if (res.statusCode !== 200) {
-          file.close();
-          if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+          res.resume();
           return reject(new Error(`Server returned HTTP ${res.statusCode}: ${res.statusMessage}`));
         }
 
+        // Ensure target directory exists before creating write stream
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+        const file = fs.createWriteStream(destPath);
         const totalBytes = parseInt(res.headers['content-length'] || '0', 10);
         let downloadedBytes = 0;
 
@@ -267,16 +266,26 @@ export class JarDownloaderService {
           }
         });
 
-        res.pipe(file);
-
-        file.on('finish', () => {
-          file.close(() => resolve());
+        res.on('error', (err) => {
+          file.destroy();
+          try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch {}
+          reject(err);
         });
+
+        file.on('error', (err) => {
+          file.destroy();
+          try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch {}
+          reject(err);
+        });
+
+        file.on('close', () => {
+          resolve();
+        });
+
+        res.pipe(file);
       });
 
       request.on('error', (err) => {
-        file.close();
-        if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
         reject(err);
       });
     });

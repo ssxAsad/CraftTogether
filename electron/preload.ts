@@ -2,9 +2,11 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 export interface IElectronAPI {
   // First Launch & Workspace setup
-  getSetupStatus: () => Promise<{ isSetupComplete: boolean; storageDirectory: string }>;
+  getSetupStatus: () => Promise<{ isSetupComplete: boolean; setupStep: 'directory' | 'dependencies' | 'playit' | 'complete'; storageDirectory: string }>;
   validateDirectory: (targetPath: string) => Promise<{ isValid: boolean; isEmpty: boolean; error?: string; path: string }>;
   setStorageDirectory: (targetPath: string) => Promise<boolean>;
+  setSetupStep: (step: 'directory' | 'dependencies' | 'playit' | 'complete') => Promise<boolean>;
+  completeSetup: () => Promise<boolean>;
   browseDirectory: () => Promise<{ path: string; validation: { isValid: boolean; isEmpty: boolean; error?: string } } | null>;
   checkSetupDependencies: () => Promise<any[]>;
   installSetupDependency: (id: 'java' | 'cloud_relay' | 'papermc' | 'plugins') => Promise<boolean>;
@@ -20,7 +22,7 @@ export interface IElectronAPI {
   getServerPlayers: () => Promise<any[]>;
 
   // Subscriptions
-  getServerLogs: () => Promise<Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>>;
+  getServerLogs: (serverId?: string) => Promise<Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>>;
   clearServerLogs: () => Promise<void>;
   onServerLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system' } | Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }>) => void) => () => void;
   onServerStatusChanged: (callback: (status: string) => void) => () => void;
@@ -79,6 +81,14 @@ export interface IElectronAPI {
   toggleMod: (params: { serverId: string; filename: string }) => Promise<boolean>;
   deleteMod: (params: { serverId: string; filename: string }) => Promise<boolean>;
 
+  // World Management
+  getWorldInfo: (serverId: string) => Promise<any>;
+  inspectWorldSource: (sourcePath: string) => Promise<any>;
+  browseWorldSource: (mode?: 'file' | 'folder') => Promise<{ sourcePath: string; inspection: any } | null>;
+  browseWorldExportTarget: (defaultFilename: string) => Promise<string | null>;
+  importWorld: (params: { serverId: string; sourcePath: string; backupCurrent?: boolean }) => Promise<any>;
+  exportWorld: (params: { serverId: string; targetZipPath: string }) => Promise<any>;
+
   // Config & Properties
   readProperties: (serverId: string) => Promise<any>;
   writeProperties: (params: { serverId: string; properties: any }) => Promise<boolean>;
@@ -102,6 +112,8 @@ const electronAPI: IElectronAPI = {
   getSetupStatus: () => ipcRenderer.invoke('app:get-setup-status'),
   validateDirectory: (targetPath) => ipcRenderer.invoke('app:validate-directory', targetPath),
   setStorageDirectory: (targetPath) => ipcRenderer.invoke('app:set-storage-directory', targetPath),
+  setSetupStep: (step) => ipcRenderer.invoke('app:set-setup-step', step),
+  completeSetup: () => ipcRenderer.invoke('app:complete-setup'),
   browseDirectory: () => ipcRenderer.invoke('dialog:browse-directory'),
   checkSetupDependencies: () => ipcRenderer.invoke('setup:check-dependencies'),
   installSetupDependency: (id) => ipcRenderer.invoke('setup:install-dependency', id),
@@ -121,7 +133,7 @@ const electronAPI: IElectronAPI = {
   getServerPlayers: () => ipcRenderer.invoke('server:get-players'),
 
   // Subscriptions
-  getServerLogs: () => ipcRenderer.invoke('server:get-logs'),
+  getServerLogs: (serverId?: string) => ipcRenderer.invoke('server:get-logs', serverId),
   clearServerLogs: () => ipcRenderer.invoke('server:clear-logs'),
   onServerLog: (callback) => {
     const handler = (_: any, data: any) => callback(data);
@@ -209,6 +221,14 @@ const electronAPI: IElectronAPI = {
   uploadModPackage: (params) => ipcRenderer.invoke('mods:upload-package', params),
   toggleMod: (params) => ipcRenderer.invoke('mods:toggle', params),
   deleteMod: (params) => ipcRenderer.invoke('mods:delete', params),
+
+  // World Management
+  getWorldInfo: (serverId) => ipcRenderer.invoke('world:get-info', serverId),
+  inspectWorldSource: (sourcePath) => ipcRenderer.invoke('world:inspect-source', sourcePath),
+  browseWorldSource: (mode) => ipcRenderer.invoke('world:browse-source', mode),
+  browseWorldExportTarget: (defaultFilename) => ipcRenderer.invoke('world:browse-export-target', defaultFilename),
+  importWorld: (params) => ipcRenderer.invoke('world:import', params),
+  exportWorld: (params) => ipcRenderer.invoke('world:export', params),
 
   // Config & Properties
   readProperties: (serverId) => ipcRenderer.invoke('config:read-properties', serverId),

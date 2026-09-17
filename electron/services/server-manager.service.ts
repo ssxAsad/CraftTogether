@@ -227,9 +227,36 @@ export class ServerManagerService {
       // Handle process exit
       this.activeProcess.on('exit', (code, signal) => {
         logger.info(`Server process exited with code ${code}, signal ${signal}`);
-        this.emitLog(`[Craftora] Server stopped with exit code: ${code}`, 'system');
-        this.cleanUpProcess();
-        this.setStatus('STOPPED');
+        const wasStarting = this.status === 'STARTING';
+
+        // Detect if a crash report was generated or if it exited prematurely while STARTING
+        let hasCrash = false;
+        if (this.activeConfig?.serverDir) {
+          const crashDir = path.join(this.activeConfig.serverDir, 'crash-reports');
+          if (fs.existsSync(crashDir)) {
+            try {
+              const files = fs.readdirSync(crashDir);
+              if (files.length > 0) {
+                const latest = files.sort().reverse()[0];
+                const stat = fs.statSync(path.join(crashDir, latest));
+                // Crash report generated within the last 2 minutes
+                if (Date.now() - stat.mtimeMs < 120000) {
+                  hasCrash = true;
+                }
+              }
+            } catch {}
+          }
+        }
+
+        if (code !== 0 || wasStarting || hasCrash) {
+          this.emitLog(`[Craftora] Server terminated unexpectedly (exit code: ${code}). Status marked as CRASHED.`, 'stderr');
+          this.cleanUpProcess();
+          this.setStatus('CRASHED');
+        } else {
+          this.emitLog(`[Craftora] Server stopped cleanly with exit code: ${code}`, 'system');
+          this.cleanUpProcess();
+          this.setStatus('STOPPED');
+        }
       });
 
       this.activeProcess.on('error', (err) => {
@@ -520,8 +547,30 @@ export class ServerManagerService {
     return this.activeConfig;
   }
 
-  static getLogHistory(): Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> {
-    return [...this.logHistory];
+  static getLogHistory(serverDir?: string): Array<{ line: string; type: 'stdout' | 'stderr' | 'system' }> {
+    if (this.logHistory.length > 0) {
+      return [...this.logHistory];
+    }
+
+    const targetDir = serverDir || this.activeConfig?.serverDir;
+    if (targetDir) {
+      const latestLogPath = path.join(targetDir, 'logs', 'latest.log');
+      if (fs.existsSync(latestLogPath)) {
+        try {
+          const content = fs.readFileSync(latestLogPath, 'utf-8');
+          const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+          const tail = lines.slice(-500);
+          return tail.map(line => ({
+            line,
+            type: (line.includes('ERROR') || line.includes('Exception') || line.includes('WARN')) ? 'stderr' : 'stdout'
+          }));
+        } catch (e) {
+          logger.warn('Failed to read latest.log from disk', e);
+        }
+      }
+    }
+
+    return [];
   }
 
   static clearLogs(): void {

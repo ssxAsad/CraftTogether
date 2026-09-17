@@ -59,8 +59,9 @@ export function registerServerIpc(mainWindow: BrowserWindow): void {
     return ServerManagerService.getPlayers();
   });
 
-  ipcMain.handle('server:get-logs', () => {
-    return ServerManagerService.getLogHistory();
+  ipcMain.handle('server:get-logs', (_, serverId?: string) => {
+    const serverDir = serverId ? AppPaths.getServerPath(serverId) : undefined;
+    return ServerManagerService.getLogHistory(serverDir);
   });
 
   ipcMain.handle('server:clear-logs', () => {

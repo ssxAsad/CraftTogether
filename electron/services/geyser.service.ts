@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { JarDownloaderService } from './jar-downloader.service';
+import { ConfigParserService } from './config-parser.service';
 import { Logger } from '../utils/logger';
 
 const logger = new Logger('GeyserService');
@@ -8,7 +9,7 @@ const logger = new Logger('GeyserService');
 export interface GeyserConfig {
   bedrockPort: number;
   bedrockAddress: string;
-  cloneRemotePort: boolean;
+  cloneRemotePort?: boolean;
   authType: 'floodgate' | 'online' | 'offline';
   motd1: string;
   motd2: string;
@@ -69,7 +70,7 @@ export class GeyserService {
     this.ensureGeyserConfig(serverDir, {
       bedrockPort: 19132,
       bedrockAddress: '0.0.0.0',
-      cloneRemotePort: true,
+      cloneRemotePort: false,
       authType: 'floodgate',
       motd1: 'Craftora Cross-Play Server',
       motd2: 'Java & Bedrock Supported!',
@@ -88,7 +89,7 @@ export class GeyserService {
     const defaultConfig: GeyserConfig = {
       bedrockPort: 19132,
       bedrockAddress: '0.0.0.0',
-      cloneRemotePort: true,
+      cloneRemotePort: false,
       authType: 'floodgate',
       motd1: 'Craftora Server',
       motd2: 'Cross-Play Active',
@@ -132,28 +133,45 @@ export class GeyserService {
     }
 
     const configPath = path.join(geyserFolder, 'config.yml');
+
+    // Read actual Java server port from server.properties if available
+    let javaPort = 25565;
+    try {
+      const props = ConfigParserService.readProperties(serverDir);
+      if (props['server-port']) {
+        javaPort = Number(props['server-port']) || 25565;
+      }
+    } catch {}
+
+    const bedrockPort = Number(config.bedrockPort) || 19132;
+    const cloneRemotePort = config.cloneRemotePort === true;
+    const authType = config.authType || 'floodgate';
+    const motd1 = (config.motd1 || 'Craftora Bedrock Server').replace(/"/g, '');
+    const motd2 = (config.motd2 || 'Java + Bedrock Cross-Play').replace(/"/g, '');
+    const passthroughMotd = config.passthroughMotd !== false;
+    const passthroughMaxPlayers = config.passthroughMaxPlayers !== false;
     
     // Clean YAML template with proper GeyserMC bindings
     const yamlContent = `# GeyserMC Configuration - Managed by Craftora
 bedrock:
   address: 0.0.0.0
-  port: ${config.bedrockPort}
-  clone-remote-port: ${config.cloneRemotePort}
-  motd1: "${config.motd1}"
-  motd2: "${config.motd2}"
+  port: ${bedrockPort}
+  clone-remote-port: ${cloneRemotePort ? 'true' : 'false'}
+  motd1: "${motd1}"
+  motd2: "${motd2}"
   server-name: "Craftora"
   enable-proxy-connections: false
 
 remote:
   address: 127.0.0.1
-  port: 25565
-  auth-type: ${config.authType}
+  port: ${javaPort}
+  auth-type: ${authType}
   use-proxy-protocol: false
 
-passthrough-motd: ${config.passthroughMotd}
+passthrough-motd: ${passthroughMotd ? 'true' : 'false'}
 passthrough-protocol-name: true
 passthrough-player-counts: true
-passthrough-max-players: ${config.passthroughMaxPlayers}
+passthrough-max-players: ${passthroughMaxPlayers ? 'true' : 'false'}
 legacy-ping-passthrough: false
 ping-passthrough-interval: 3
 forward-hostname: true

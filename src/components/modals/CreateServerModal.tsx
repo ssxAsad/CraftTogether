@@ -133,7 +133,8 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
           const vers = await window.electronAPI.getSoftwareVersions(software);
           if (vers && vers.length > 0) {
             setAvailableVersions(vers);
-            setVersion(vers[0]);
+            // Default to verified stable 26.2 for maximum plugin and GeyserMC cross-play stability
+            setVersion(vers.includes('26.2') ? '26.2' : vers[0]);
           }
         } catch (e) {
           console.error(e);
@@ -218,6 +219,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             config: {
               bedrockPort,
               bedrockAddress: '0.0.0.0',
+              cloneRemotePort: false,
               authType,
               motd1: name,
               motd2: 'Java + Bedrock Cross-Play',

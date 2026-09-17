@@ -66,15 +66,46 @@ export const PluginsTab: React.FC = () => {
     }
   };
 
-  const handleInstall = async (pluginId: string) => {
+  const normalizePluginName = (s: string) => {
+    return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  const isPluginInstalled = (name: string) => {
+    const target = normalizePluginName(name);
+    if (!target) return false;
+
+    return installed.some(p => {
+      const installedNorm = normalizePluginName(p.name);
+      return installedNorm.includes(target) || target.includes(installedNorm);
+    });
+  };
+
+  const handleInstall = async (plugin: PopularPlugin) => {
     if (!activeServer) return;
-    setInstallingId(pluginId);
+    setInstallingId(plugin.id);
     if (window.electronAPI) {
       try {
         await window.electronAPI.installPlugin({
           serverId: activeServer.id,
-          pluginId
+          pluginId: plugin.id
         });
+
+        // Optimistically record as installed immediately so UI updates on 1st click
+        setInstalled(prev => {
+          if (prev.some(p => normalizePluginName(p.name).includes(normalizePluginName(plugin.name)) || normalizePluginName(plugin.name).includes(normalizePluginName(p.name)))) {
+            return prev;
+          }
+          return [...prev, {
+            name: plugin.name,
+            filename: `${plugin.name}.jar`,
+            size: 1024 * 1024,
+            enabled: true,
+            isCustom: true
+          }];
+        });
+
+        // Small yield to let Windows NTFS finish directory indexing
+        await new Promise(r => setTimeout(r, 120));
         await loadData();
       } catch (err) {
         await showAlert('Plugin Install Error', `Failed to install plugin: ${err}`, 'warning');
@@ -93,6 +124,23 @@ export const PluginsTab: React.FC = () => {
           spigetId: plugin.id,
           pluginName: plugin.name
         });
+
+        // Optimistically record as installed immediately
+        const safeName = plugin.name.replace(/[^a-zA-Z0-9_\-\ ]/g, '').trim().replace(/\ /g, '_');
+        setInstalled(prev => {
+          if (prev.some(p => normalizePluginName(p.name).includes(normalizePluginName(plugin.name)) || normalizePluginName(plugin.name).includes(normalizePluginName(p.name)))) {
+            return prev;
+          }
+          return [...prev, {
+            name: safeName,
+            filename: `${safeName}.jar`,
+            size: 1024 * 1024,
+            enabled: true,
+            isCustom: true
+          }];
+        });
+
+        await new Promise(r => setTimeout(r, 120));
         await loadData();
         await showAlert('Success', `Installed plugin ${plugin.name} successfully.`, 'success');
       } catch (err) {
@@ -133,11 +181,6 @@ export const PluginsTab: React.FC = () => {
 
   const renderIcon = (iconName: string) => {
     return <Puzzle className="w-8 h-8 text-content-primary" />;
-  };
-
-  const isPluginInstalled = (name: string) => {
-    const cleanName = name.replace(/[^a-zA-Z0-9_\-\ ]/g, '').trim().replace(/\ /g, '_');
-    return installed.some(p => p.name.toLowerCase().includes(cleanName.toLowerCase()) || p.name.toLowerCase().includes(name.toLowerCase()));
   };
 
   return (
@@ -264,7 +307,7 @@ export const PluginsTab: React.FC = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleInstall(plugin.id)}
+                      onClick={() => handleInstall(plugin)}
                       disabled={isBusy}
                       className="w-full py-2 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
                     >

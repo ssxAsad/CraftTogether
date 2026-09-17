@@ -9,6 +9,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
   ipcMain.handle('app:get-setup-status', () => {
     return {
       isSetupComplete: AppPaths.isSetupComplete(),
+      setupStep: AppPaths.getSetupStep(),
       storageDirectory: AppPaths.getBaseDir()
     };
   });
@@ -19,6 +20,16 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('app:set-storage-directory', (_, targetPath: string) => {
     AppPaths.setStorageDir(targetPath);
+    return true;
+  });
+
+  ipcMain.handle('app:set-setup-step', (_, step: 'directory' | 'dependencies' | 'playit' | 'complete') => {
+    AppPaths.setSetupStep(step);
+    return true;
+  });
+
+  ipcMain.handle('app:complete-setup', () => {
+    AppPaths.completeSetup();
     return true;
   });
 

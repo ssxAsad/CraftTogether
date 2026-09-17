@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import { PlaceholderIcon } from '@/components/common/PlaceholderIcon';
 import { PlayItIcon } from '../common/Icons';
 
 interface PlayitSetupScreenProps {
@@ -110,7 +109,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
       {/* Step Indicator Header */}
       <div className="text-center mb-6 pt-2">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-bg border border-border-default text-content-primary text-xs font-bold uppercase tracking-wider mb-3">
-          <PlaceholderIcon className="w-3.5 h-3.5" />
           <span>Step 2 of 2: Global Multiplayer Setup</span>
         </div>
         <h2 className="text-3xl font-extrabold text-content-primary mb-2 tracking-tight">
@@ -119,37 +117,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
         <p className="text-content-secondary text-sm max-w-xl mx-auto">
           Play with friends across the internet for free. PlayIt assigns a public server address without touching your router.
         </p>
-      </div>
-
-      {/* Feature Highlights */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-6">
-        {[
-          {
-            icon: <PlaceholderIcon className="w-5 h-5" />,
-            title: 'Universal Internet Play',
-            desc: 'Works on any ISP, including restrictive CGNAT networks.'
-          },
-          {
-            icon: <PlaceholderIcon className="w-5 h-5" />,
-            title: 'Private IP Shield',
-            desc: 'Hides your home IP with built-in DDoS protection.'
-          },
-          {
-            icon: <PlaceholderIcon className="w-5 h-5" />,
-            title: 'Zero Router Config',
-            desc: 'No port forwarding, no router login, no static IP needed.'
-          }
-        ].map((item) => (
-          <div key={item.title} className="bg-surface-elevated/80 border border-border-default rounded-2xl p-4 flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-surface-card border border-border-subtle text-content-primary flex items-center justify-center shrink-0">
-              {item.icon}
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-content-primary">{item.title}</h4>
-              <p className="text-[11px] text-content-secondary mt-0.5">{item.desc}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Main Card */}
@@ -162,7 +129,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <h3 className="text-lg font-bold text-content-primary">PlayIt.gg Account Link</h3>
               {isAgentLinked ? (
                 <span className="flex items-center gap-1 text-xs font-bold text-content-primary bg-surface-base px-2.5 py-0.5 rounded border border-border-default">
-                  <PlaceholderIcon className="w-3.5 h-3.5" />
                   Linked & Active
                 </span>
               ) : (
@@ -192,8 +158,10 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
         {isTunnelReady ? (
           /* === SUCCESS STATE: Linked and Tunnel Exists === */
           <div className="bg-surface-base border border-border-default rounded-xl p-6 text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-surface-card text-content-primary flex items-center justify-center mx-auto border border-border-default">
-              <PlaceholderIcon className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-full bg-success/20 text-success flex items-center justify-center mx-auto border border-success/30">
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             <div>
               <h4 className="text-base font-bold text-content-primary">Setup Complete!</h4>
@@ -210,7 +178,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               {!tunnelStatus.bedrockAddress && (
                 <div className="mt-5 p-3.5 bg-info/10 border border-info-fg/30 rounded-xl text-left text-xs text-info-fg leading-relaxed max-w-md mx-auto">
                   <strong className="text-content-primary block mb-1">Hosting for mobile/console players?</strong>
-                  To allow Minecraft Bedrock players to join over the internet, you must go to your <button onClick={() => window.electronAPI?.openExternal('https://playit.gg/account/tunnels')} className="text-info-fg hover:underline font-semibold cursor-pointer">PlayIt Tunnels Dashboard</button> and click <strong>Add Tunnel &rarr; Minecraft Bedrock</strong>. Ensure the <strong>Local Port</strong> is set to <strong>25565</strong>.
+                  To allow Minecraft Bedrock players to join over the internet, you must go to your <button onClick={() => window.electronAPI?.openExternal('https://playit.gg/account/tunnels')} className="text-info-fg hover:underline font-semibold cursor-pointer">PlayIt Tunnels Dashboard</button> and click <strong>Add Tunnel &rarr; Minecraft Bedrock</strong>. Ensure the <strong>Local Port</strong> is set to <strong>19132</strong>.
                 </div>
               )}
             </div>
@@ -219,7 +187,9 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
           /* === SUCCESS BUT NO TUNNEL: Linked but no tunnel added === */
           <div className="bg-warning/10 border border-warning-fg/30 rounded-xl p-6 text-center space-y-4">
             <div className="w-14 h-14 rounded-full bg-warning/20 text-warning-fg flex items-center justify-center mx-auto border border-warning-fg/30">
-              <PlaceholderIcon className="w-7 h-7" />
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
             </div>
             <div>
               <h4 className="text-base font-bold text-content-primary">Checking for Tunnel...</h4>
@@ -227,7 +197,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 We've successfully connected to your PlayIt account! Now, please ensure you have added a Minecraft Java tunnel on the PlayIt website and assigned it to this new agent.
               </p>
               <p className="text-xs text-info-fg mt-3 max-w-md mx-auto leading-relaxed bg-info/10 p-2 rounded-lg border border-info-fg/20">
-                <strong>Tip for Bedrock Cross-play:</strong> If you want mobile players to join, add a second <strong>Minecraft Bedrock</strong> tunnel and set its Local Port to <strong>25565</strong>.
+                <strong>Tip for Bedrock Cross-play:</strong> If you want mobile players to join, add a second <strong>Minecraft Bedrock</strong> tunnel and set its Local Port to <strong>19132</strong>.
               </p>
             </div>
             <div className="flex items-center justify-center gap-3">
@@ -241,7 +211,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-warning hover:bg-warning/80 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-warning/20 cursor-pointer"
               >
-                Open Dashboard <PlaceholderIcon className="w-4 h-4" />
+                Open Dashboard
               </button>
               <button
                 onClick={() => {
@@ -251,7 +221,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-surface-card hover:bg-surface-hover text-content-primary font-bold rounded-xl text-sm transition-all border border-border-default cursor-pointer"
               >
-                <PlaceholderIcon className="w-4 h-4" /> Refresh
+                Refresh
               </button>
             </div>
             <p className="text-[11px] text-content-secondary">
@@ -273,7 +243,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 onClick={handleLinkAccount}
                 className="w-full py-3 bg-success hover:bg-success/80 active:scale-95 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-success/20 cursor-pointer"
               >
-                <PlaceholderIcon className="w-4 h-4" />
                 <span>Link PlayIt.gg Account</span>
               </button>
               <p className="text-[11px] text-content-muted text-center">
@@ -285,7 +254,10 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
         ) : claimState === 'starting' ? (
           /* === STARTING: Spawning the agent === */
           <div className="flex flex-col items-center gap-4 py-8">
-            <PlaceholderIcon className="w-8 h-8 text-content-primary animate-spin" />
+            <svg className="w-8 h-8 text-content-primary animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             <div className="text-center">
               <p className="text-sm font-semibold text-content-primary">Starting PlayIt.gg Agent...</p>
               <p className="text-xs text-content-secondary mt-1">Generating your secure claim link, please wait.</p>
@@ -308,9 +280,9 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                     step.active ? 'bg-warning/10 border-warning-fg/40 text-warning-fg' :
                     'bg-neutral-bg border-border-default text-content-muted'}`}>
                   {step.done ? (
-                    <PlaceholderIcon className="w-3 h-3" />
+                    <span className="text-success font-bold text-xs">✓</span>
                   ) : step.active ? (
-                    <PlaceholderIcon className="w-3 h-3 animate-spin" />
+                    <span className="w-3 h-3 rounded-full border-2 border-warning-fg border-t-transparent animate-spin inline-block" />
                   ) : (
                     <span className="w-3 h-3 rounded-full border border-current flex items-center justify-center text-[9px]">{step.n}</span>
                   )}
@@ -341,8 +313,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                     onClick={handleCopyClaimUrl}
                     className="text-content-secondary hover:text-content-primary flex items-center gap-1 font-semibold cursor-pointer"
                   >
-                    {copiedUrl ? <PlaceholderIcon className="w-3 h-3" /> : <PlaceholderIcon className="w-3 h-3" />}
-                    {copiedUrl ? 'Copied' : 'PlaceholderIcon'}
+                    {copiedUrl ? '✓ Copied' : 'Copy'}
                   </button>
                 </div>
                 <code className="text-xs text-content-primary font-mono block break-all select-all">
@@ -358,7 +329,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
                 onClick={handleReopenBrowser}
                 className="px-4 py-2 bg-neutral-bg hover:bg-surface-hover text-content-primary border border-border-default rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               >
-                <PlaceholderIcon className="w-3.5 h-3.5" />
                 Re-open in Browser
               </button>
               <button
@@ -380,7 +350,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
           onClick={onBack}
           className="px-4 py-2.5 bg-neutral-bg hover:bg-surface-hover text-content-primary text-xs font-semibold rounded-xl flex items-center gap-2 transition cursor-pointer"
         >
-          <PlaceholderIcon className="w-4 h-4" />
           <span>Back to Dependencies</span>
         </button>
 
@@ -406,7 +375,6 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
             }`}
           >
             <span>Complete Setup</span>
-            <PlaceholderIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

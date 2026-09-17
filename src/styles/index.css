@@ -11,6 +11,47 @@ body {
   color: #18181b; /* slate-200 / text-content-primary */
 }
 
+h1, h2, h3, h4, h5, h6 {
+  color: #000000 !important;
+}
+
+/* Premium primary action button polish for #306030 */
+button.bg-success,
+button[class*="bg-success"],
+.btn-success {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px -2px rgba(48, 96, 48, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+button.bg-success:hover,
+button[class*="bg-success"]:hover,
+.btn-success:hover {
+  background-color: #3d7a3d !important;
+  box-shadow: 0 6px 20px -2px rgba(48, 96, 48, 0.6), 0 3px 8px -1px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+button.bg-success:active,
+button[class*="bg-success"]:active,
+.btn-success:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px -1px rgba(48, 96, 48, 0.35);
+}
+
+button.bg-success:disabled,
+button[class*="bg-success"]:disabled,
+.btn-success:disabled {
+  background-color: #e4e4e7 !important;
+  color: #a1a1aa !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+}
+
 /* Custom Scrollbar for professional desktop apps */
 ::-webkit-scrollbar {
   width: 5px;
