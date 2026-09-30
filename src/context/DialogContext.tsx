@@ -97,9 +97,11 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const isDeleteDialog = options.title.toLowerCase().includes('delete') || Boolean(options.confirmText?.toLowerCase().includes('delete'));
+
   const renderIcon = () => {
-    if (options.title.toLowerCase().includes('delete')) {
-      return <Trash2 className="w-5 h-5 text-danger-fg" />;
+    if (isDeleteDialog) {
+      return <Trash2 className="w-5 h-5 text-white" />;
     }
     switch (options.type) {
       case 'warning':
@@ -124,10 +126,12 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans">
           <div className="bg-surface-elevated w-full max-w-md rounded-xl border border-border-subtle shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3.5">
-              <div className={`p-2 rounded-lg shrink-0 border ${
-                options.type === 'warning'
-                  ? 'bg-danger/10 border-danger/20'
-                  : 'bg-neutral-bg border-border-default'
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                isDeleteDialog
+                  ? 'bg-red-700 text-white shadow-sm'
+                  : options.type === 'warning'
+                  ? 'bg-danger/10 border border-danger/20'
+                  : 'bg-neutral-bg border border-border-default'
               }`}>
                 {renderIcon()}
               </div>
@@ -169,8 +173,10 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               <button
                 type="button"
                 onClick={handleConfirm}
-                className={`px-4 py-2 font-bold text-xs rounded-lg transition ${
-                  options.type === 'warning' 
+                className={`px-4 py-2 font-bold text-xs rounded-lg transition shadow-sm ${
+                  isDeleteDialog
+                    ? 'bg-red-700 hover:bg-red-800 text-white'
+                    : options.type === 'warning' 
                     ? 'bg-danger hover:bg-danger/80 text-white' 
                     : 'bg-success hover:bg-success/80 text-white'
                 }`}

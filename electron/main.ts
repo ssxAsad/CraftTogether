@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { AppPaths } from './utils/paths';
 import { Logger } from './utils/logger';
 import { registerServerIpc } from './ipc/server.ipc';
@@ -12,6 +13,7 @@ import { ServerManagerService } from './services/server-manager.service';
 import { PlayitService } from './services/playit.service';
 import { UpnpService } from './services/upnp.service';
 import { LanBroadcastService } from './services/lan-broadcast.service';
+import { handleSquirrelEvent } from './utils/squirrel';
 
 // __filename and __dirname are globally available in CommonJS
 
@@ -35,9 +37,16 @@ let mainWindow: BrowserWindow | null = null;
 async function createWindow() {
   AppPaths.init();
 
-  const iconPath = process.platform === 'win32'
-    ? path.join(__dirname, '../src/assets/craftora.ico')
-    : path.join(__dirname, '../src/assets/craftora.png');
+  const getIconPath = () => {
+    const ext = process.platform === 'win32' ? 'ico' : 'png';
+    const packagedPath = path.join(__dirname, `../dist/craftora.${ext}`);
+    const publicPath = path.join(__dirname, `../public/craftora.${ext}`);
+    const srcPath = path.join(__dirname, `../src/assets/craftora.${ext}`);
+    if (fs.existsSync(packagedPath)) return packagedPath;
+    if (fs.existsSync(publicPath)) return publicPath;
+    return srcPath;
+  };
+  const iconPath = getIconPath();
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -54,7 +63,7 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      backgroundThrottling: true
+      backgroundThrottling: false // Keep full 60fps and realtime server telemetry even when running in background
     }
   });
 
@@ -106,24 +115,42 @@ async function createWindow() {
   }
 }
 
-// App lifecycle
-app.whenReady().then(createWindow);
+// Handle Squirrel.Windows install/update/uninstall events immediately
+if (!handleSquirrelEvent()) {
+  // Ensure single-instance lock
+  const gotTheLock = app.requestSingleInstanceLock();
 
-app.on('window-all-closed', async () => {
-  // Graceful cleanup on quit
-  logger.info('Shutting down services and network tunnels...');
-  await ServerManagerService.stopServer();
-  await PlayitService.stopTunnel();
-  await UpnpService.closePort();
-  LanBroadcastService.stopBroadcasting();
-
-  if (process.platform !== 'darwin') {
+  if (!gotTheLock) {
     app.quit();
-  }
-});
+  } else {
+    app.on('second-instance', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+      }
+    });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    // App lifecycle
+    app.whenReady().then(createWindow);
   }
-});
+
+  app.on('window-all-closed', async () => {
+    // Graceful cleanup on quit
+    logger.info('Shutting down services and network tunnels...');
+    await ServerManagerService.stopServer();
+    await PlayitService.stopTunnel();
+    await UpnpService.closePort();
+    LanBroadcastService.stopBroadcasting();
+
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+}
+

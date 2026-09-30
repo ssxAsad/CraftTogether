@@ -29,16 +29,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-64 bg-surface-elevated flex flex-col justify-between p-3 select-none shrink-0 overflow-y-auto">
       <div className="space-y-4">
         {/* BRAND HEADER (Seamlessly elevated at window top) */}
-        <div className="flex items-center gap-3 px-1 py-2 mb-2 titlebar-drag">
+        <div className="flex items-center gap-3.5 px-1 py-1.5 mb-2 titlebar-drag">
           <img
             src={logoImg}
             alt="Craftora"
-            className="w-9 h-9 object-contain shrink-0 titlebar-no-drag drop-shadow-sm"
+            className="w-[52px] h-[52px] object-contain shrink-0 titlebar-no-drag rounded-xl mix-blend-multiply drop-shadow-md select-none transition-transform hover:scale-105 duration-200"
             style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
-          <span className="font-extrabold text-xl text-content-primary tracking-tight titlebar-no-drag select-none">
-            Craftora
-          </span>
+          <div className="flex flex-col justify-center select-none titlebar-no-drag">
+            <span className="font-extrabold text-2xl text-content-primary tracking-tight select-none leading-none">
+              Craftora
+            </span>
+          </div>
         </div>
 
         {/* SERVERS SECTION */}

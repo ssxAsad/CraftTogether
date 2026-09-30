@@ -118,7 +118,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
           <img
             src={logoImg}
             alt="Craftora"
-            className="w-20 h-20 mx-auto object-contain mb-6 drop-shadow-md"
+            className="w-20 h-20 mx-auto object-contain mb-6 drop-shadow-md rounded-2xl mix-blend-multiply select-none"
             style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
           <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">

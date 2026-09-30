@@ -171,10 +171,10 @@ export const ModsTab: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(mod.filename)}
-                    className="p-1.5 rounded-lg bg-danger hover:bg-danger/80 text-white transition"
+                    className="p-1.5 rounded-lg bg-red-700 hover:bg-red-800 text-white transition shadow-sm"
                     title="Delete Mod"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 text-white" />
                   </button>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 {
   "name": "craftora",
   "version": "1.0.0",
-  "description": "Craftora - Modern, High-Performance Windows Minecraft Server Manager & Host",
+  "description": "Craftora - Modern, High-Performance Windows Minecraft Server Manager and Host",
   "main": "dist-electron/main.js",
   "scripts": {
     "start": "vite",
