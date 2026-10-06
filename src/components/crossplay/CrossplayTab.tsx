@@ -18,7 +18,7 @@ export const CrossplayTab: React.FC = () => {
     bedrockAddress: '0.0.0.0',
     cloneRemotePort: false,
     authType: 'floodgate',
-    motd1: 'Craftora Bedrock Server',
+    motd1: 'CraftTogether Bedrock Server',
     motd2: 'Java + Bedrock Cross-Play',
     passthroughMotd: true,
     passthroughMaxPlayers: true

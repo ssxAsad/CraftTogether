@@ -15,7 +15,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
   initialDirectory = ''
 }) => {
   const [step, setStep] = useState<1 | 2>(initialStep === 'dependencies' || initialStep === 'playit' ? 2 : 1);
-  const [selectedPath, setSelectedPath] = useState(initialDirectory || 'C:\\CraftoraServers');
+  const [selectedPath, setSelectedPath] = useState(initialDirectory || 'C:\\CraftTogetherServers');
   const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<{
     isValid: boolean;
@@ -28,7 +28,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
     if (initialDirectory) {
       setSelectedPath(initialDirectory);
     } else {
-      const defaultPath = 'C:\\CraftoraServers';
+      const defaultPath = 'C:\\CraftTogetherServers';
       setSelectedPath(defaultPath);
       validatePath(defaultPath);
     }
@@ -76,7 +76,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
       }
     } else {
       // Dummy behavior for browser
-      const dummyPath = 'C:\\EmptyCraftoraDirectory';
+      const dummyPath = 'C:\\EmptyCraftTogetherDirectory';
       setSelectedPath(dummyPath);
       validatePath(dummyPath);
     }
@@ -117,12 +117,12 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
         <div className="text-center mb-10">
           <img
             src={logoImg}
-            alt="Craftora"
+            alt="CraftTogether"
             className="w-20 h-20 mx-auto object-contain mb-6 drop-shadow-md rounded-2xl mix-blend-multiply select-none"
             style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
           <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
-            Welcome to <span className="text-black">Craftora</span>
+            Welcome to <span className="text-black">CraftTogether</span>
           </h1>
           <p className="text-content-secondary text-sm">
             Set up your dedicated workspace folder to get started.

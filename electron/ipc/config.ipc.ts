@@ -124,11 +124,17 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
       const serverPath = path.join(sDir, e.name);
       const props = await ConfigParserService.readPropertiesAsync(serverPath);
       let meta: any = {};
-      const metaPath = path.join(serverPath, 'craftora.json');
+      const metaPath = path.join(serverPath, 'crafttogether.json');
+      const legacyMetaPath = path.join(serverPath, 'craftora.json');
       
       try {
-        const metaContent = await fs.promises.readFile(metaPath, 'utf8');
-        meta = JSON.parse(metaContent);
+        if (fs.existsSync(metaPath)) {
+          const metaContent = await fs.promises.readFile(metaPath, 'utf8');
+          meta = JSON.parse(metaContent);
+        } else if (fs.existsSync(legacyMetaPath)) {
+          const metaContent = await fs.promises.readFile(legacyMetaPath, 'utf8');
+          meta = JSON.parse(metaContent);
+        }
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
           console.warn('Failed to parse server metadata for', e.name, err);
@@ -147,7 +153,7 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
         port: props['server-port'] || meta.port || 25565,
         isCracked: props['online-mode'] === false || meta.isCracked === true,
         networkMode: meta.networkMode === 'lan_only' ? 'lan_only' : meta.networkMode === 'upnp' ? 'upnp' : 'cloud_relay',
-        motd: props['motd'] || meta.motd || 'Craftora Server',
+        motd: props['motd'] || meta.motd || 'CraftTogether Server',
         keepInventory: meta.keepInventory !== undefined ? meta.keepInventory : true,
         showCoordinates: meta.showCoordinates !== undefined ? meta.showCoordinates : true,
         onePlayerSleep: meta.onePlayerSleep !== undefined ? meta.onePlayerSleep : true,
@@ -163,15 +169,23 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
     try {
       const serverDir = AppPaths.getServerPath(serverId);
       AppPaths.ensureDir(serverDir);
-      const metaPath = path.join(serverDir, 'craftora.json');
+      const metaPath = path.join(serverDir, 'crafttogether.json');
+      const legacyMetaPath = path.join(serverDir, 'craftora.json');
       let existing: any = {};
       if (fs.existsSync(metaPath)) {
         try {
           existing = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
         } catch (e) {}
+      } else if (fs.existsSync(legacyMetaPath)) {
+        try {
+          existing = JSON.parse(fs.readFileSync(legacyMetaPath, 'utf8'));
+        } catch (e) {}
       }
       const updated = { ...existing, ...config };
       fs.writeFileSync(metaPath, JSON.stringify(updated, null, 2), 'utf8');
+      try {
+        fs.writeFileSync(legacyMetaPath, JSON.stringify(updated, null, 2), 'utf8');
+      } catch {}
       return true;
     } catch (err) {
       console.error('Failed to save server config', err);

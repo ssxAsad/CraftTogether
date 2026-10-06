@@ -1,7 +1,7 @@
 {
-  "name": "craftora",
+  "name": "crafttogether",
   "version": "1.0.0",
-  "description": "Craftora - Modern, High-Performance Windows Minecraft Server Manager and Host",
+  "description": "CraftTogether - Modern, High-Performance Windows Minecraft Server Manager and Host",
   "main": "dist-electron/main.js",
   "scripts": {
     "start": "vite",
@@ -22,7 +22,7 @@
     "papermc",
     "electron"
   ],
-  "author": "Craftora",
+  "author": "CraftTogether",
   "license": "MIT",
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",

@@ -63,7 +63,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // 2. Fetch server instances from local storage directory immediately (<2ms)
         const list = await window.electronAPI.listServers();
         if (list && list.length > 0) {
-          const savedActiveId = localStorage.getItem('craftora_active_server_id');
+          const savedActiveId = localStorage.getItem('crafttogether_active_server_id') || localStorage.getItem('craftora_active_server_id');
           const mapped: ServerInstanceConfig[] = list.map((s: any) => ({
             id: s.id,
             name: s.name || s.id,
@@ -110,7 +110,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { path: 'java.exe', version: '21.0.9', majorVersion: 21, isDefault: true, vendor: 'Eclipse Temurin' }
       ];
       setJavaRuntimes(mockJavas);
-      const savedMock = localStorage.getItem('craftora_mock_servers');
+      const savedMock = localStorage.getItem('crafttogether_mock_servers') || localStorage.getItem('craftora_mock_servers');
       if (savedMock) {
         try {
           const parsed = JSON.parse(savedMock);
@@ -229,7 +229,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           properties: {
             'server-port': config.port,
             'online-mode': !config.isCracked,
-            'motd': `Craftora ${config.name}`
+            'motd': `CraftTogether ${config.name}`
           }
         });
 
@@ -255,6 +255,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         await refreshServers();
+        localStorage.setItem('crafttogether_active_server_id', cleanId);
         localStorage.setItem('craftora_active_server_id', cleanId);
         setIsDownloading(false);
       } catch (err) {
@@ -268,7 +269,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const newServer: ServerInstanceConfig = {
           ...config,
           id: cleanId,
-          serverDir: `C:/Craftora/servers/${cleanId}`,
+          serverDir: `C:/CraftTogether/servers/${cleanId}`,
           keepInventory: config.keepInventory !== undefined ? config.keepInventory : true,
           showCoordinates: config.showCoordinates !== undefined ? config.showCoordinates : true,
           onePlayerSleep: config.onePlayerSleep !== undefined ? config.onePlayerSleep : true,
@@ -277,10 +278,12 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
         setServers(prev => {
           const updated = [...prev, newServer];
+          localStorage.setItem('crafttogether_mock_servers', JSON.stringify(updated));
           localStorage.setItem('craftora_mock_servers', JSON.stringify(updated));
           return updated;
         });
         setActiveServer(newServer);
+        localStorage.setItem('crafttogether_active_server_id', cleanId);
         localStorage.setItem('craftora_active_server_id', cleanId);
         setIsDownloading(false);
       }, 1500);
@@ -298,6 +301,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setServers(prev => {
       const updated = prev.map(s => s.id === serverId ? { ...s, ...partial } : s);
       if (!window.electronAPI) {
+        localStorage.setItem('crafttogether_mock_servers', JSON.stringify(updated));
         localStorage.setItem('craftora_mock_servers', JSON.stringify(updated));
       }
       return updated;
@@ -316,14 +320,17 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const remaining = servers.filter(s => s.id !== serverId);
     setServers(remaining);
     if (!window.electronAPI) {
+      localStorage.setItem('crafttogether_mock_servers', JSON.stringify(remaining));
       localStorage.setItem('craftora_mock_servers', JSON.stringify(remaining));
     }
     if (activeServer?.id === serverId) {
       const nextActive = remaining.length > 0 ? remaining[0] : null;
       setActiveServer(nextActive);
       if (nextActive) {
+        localStorage.setItem('crafttogether_active_server_id', nextActive.id);
         localStorage.setItem('craftora_active_server_id', nextActive.id);
       } else {
+        localStorage.removeItem('crafttogether_active_server_id');
         localStorage.removeItem('craftora_active_server_id');
       }
     }
@@ -335,6 +342,7 @@ export const ServerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (status !== 'STOPPED' && activeServer?.id !== server.id) return;
     if (activeServer?.id === server.id) return;
     setActiveServer(server);
+    localStorage.setItem('crafttogether_active_server_id', server.id);
     localStorage.setItem('craftora_active_server_id', server.id);
     if (window.electronAPI) {
       window.electronAPI.clearServerLogs();

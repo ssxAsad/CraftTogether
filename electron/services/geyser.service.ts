@@ -72,7 +72,7 @@ export class GeyserService {
       bedrockAddress: '0.0.0.0',
       cloneRemotePort: false,
       authType: 'floodgate',
-      motd1: 'Craftora Cross-Play Server',
+      motd1: 'CraftTogether Cross-Play Server',
       motd2: 'Java & Bedrock Supported!',
       passthroughMotd: true,
       passthroughMaxPlayers: true
@@ -91,7 +91,7 @@ export class GeyserService {
       bedrockAddress: '0.0.0.0',
       cloneRemotePort: false,
       authType: 'floodgate',
-      motd1: 'Craftora Server',
+      motd1: 'CraftTogether Server',
       motd2: 'Cross-Play Active',
       passthroughMotd: true,
       passthroughMaxPlayers: true
@@ -146,20 +146,20 @@ export class GeyserService {
     const bedrockPort = Number(config.bedrockPort) || 19132;
     const cloneRemotePort = config.cloneRemotePort === true;
     const authType = config.authType || 'floodgate';
-    const motd1 = (config.motd1 || 'Craftora Bedrock Server').replace(/"/g, '');
+    const motd1 = (config.motd1 || 'CraftTogether Bedrock Server').replace(/"/g, '');
     const motd2 = (config.motd2 || 'Java + Bedrock Cross-Play').replace(/"/g, '');
     const passthroughMotd = config.passthroughMotd !== false;
     const passthroughMaxPlayers = config.passthroughMaxPlayers !== false;
     
     // Clean YAML template with proper GeyserMC bindings
-    const yamlContent = `# GeyserMC Configuration - Managed by Craftora
+    const yamlContent = `# GeyserMC Configuration - Managed by CraftTogether
 bedrock:
   address: 0.0.0.0
   port: ${bedrockPort}
   clone-remote-port: ${cloneRemotePort ? 'true' : 'false'}
   motd1: "${motd1}"
   motd2: "${motd2}"
-  server-name: "Craftora"
+  server-name: "CraftTogether"
   enable-proxy-connections: false
 
 remote:

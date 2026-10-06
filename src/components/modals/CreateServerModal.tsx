@@ -54,7 +54,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
   const [gamemode, setGamemode] = useState('survival');
   const [pvp, setPvp] = useState(true);
   const [maxPlayers, setMaxPlayers] = useState(20);
-  const [motd, setMotd] = useState('A Craftora Minecraft Server');
+  const [motd, setMotd] = useState('A CraftTogether Minecraft Server');
 
   // 5. Network Sharing (Cloud Relay, Direct UPnP, Only LAN)
   const [networkMode, setNetworkMode] = useState<NetworkMode>('cloud_relay');

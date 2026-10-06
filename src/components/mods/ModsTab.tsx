@@ -119,7 +119,7 @@ export const ModsTab: React.FC = () => {
           Upload a Mod Package (.zip)
         </h3>
         <p className="text-xs text-content-secondary mb-4 leading-relaxed max-w-2xl">
-          Download mod files from CurseForge or Modrinth, optionally zip them into a single package, and upload the <strong>.zip</strong> here. Craftora will automatically extract the <code>.jar</code> files directly into your server's <code>mods/</code> folder to make them work.
+          Download mod files from CurseForge or Modrinth, optionally zip them into a single package, and upload the <strong>.zip</strong> here. CraftTogether will automatically extract the <code>.jar</code> files directly into your server's <code>mods/</code> folder to make them work.
         </p>
 
         <div className="flex items-center gap-4">

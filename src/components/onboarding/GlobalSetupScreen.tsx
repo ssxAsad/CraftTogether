@@ -197,7 +197,7 @@ export const GlobalSetupScreen: React.FC<GlobalSetupScreenProps> = ({ onSetupCom
           Get Your Server Ready
         </h2>
         <p className="text-content-secondary text-sm max-w-2xl mx-auto">
-          Download the 2 components Craftora needs to run your server. This only happens once — everything is saved to your workspace for future use.
+          Download the 2 components CraftTogether needs to run your server. This only happens once — everything is saved to your workspace for future use.
         </p>
       </div>
 

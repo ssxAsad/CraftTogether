@@ -14,7 +14,7 @@ export class LanBroadcastService {
   /**
    * Starts broadcasting Minecraft LAN discovery packets.
    */
-  static startBroadcasting(motd: string = 'Craftora LAN Server', port: number = 25565): void {
+  static startBroadcasting(motd: string = 'CraftTogether LAN Server', port: number = 25565): void {
     if (this.isRunning) return;
 
     try {

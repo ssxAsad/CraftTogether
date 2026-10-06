@@ -133,7 +133,7 @@ export class ServerManagerService {
 
     const jarPath = path.join(config.serverDir, 'server.jar');
     if (!fs.existsSync(jarPath)) {
-      this.emitLog(`[Craftora] Error: server.jar not found at ${jarPath}`, 'system');
+      this.emitLog(`[CraftTogether] Error: server.jar not found at ${jarPath}`, 'system');
       return false;
     }
 
@@ -168,7 +168,7 @@ export class ServerManagerService {
     let currentJava = await JavaDetectorService.probeJavaPath(javaExecutable);
 
     if (!currentJava || currentJava.majorVersion < requiredMajor) {
-      this.emitLog(`[Craftora] Minecraft ${config.version} requires Java ${requiredMajor}+ (Selected: ${currentJava ? `Java ${currentJava.majorVersion}` : 'Default PATH'}). Searching for compatible runtime...`, 'system');
+      this.emitLog(`[CraftTogether] Minecraft ${config.version} requires Java ${requiredMajor}+ (Selected: ${currentJava ? `Java ${currentJava.majorVersion}` : 'Default PATH'}). Searching for compatible runtime...`, 'system');
 
       const allRuntimes = await JavaDetectorService.detectJavaRuntimes();
       const compatible = allRuntimes.find(r => r.majorVersion >= requiredMajor);
@@ -176,25 +176,25 @@ export class ServerManagerService {
       if (compatible) {
         javaExecutable = compatible.path;
         config.javaPath = compatible.path;
-        this.emitLog(`[Craftora] Auto-selected compatible Java ${compatible.majorVersion} (${compatible.path})`, 'system');
+        this.emitLog(`[CraftTogether] Auto-selected compatible Java ${compatible.majorVersion} (${compatible.path})`, 'system');
       } else {
-        this.emitLog(`[Craftora] Downloading portable OpenJDK ${requiredMajor} to workspace...`, 'system');
+        this.emitLog(`[CraftTogether] Downloading portable OpenJDK ${requiredMajor} to workspace...`, 'system');
         const downloadedJava = await JavaDetectorService.downloadAndExtractPortableJdk(requiredMajor, (pct) => {
-          this.emitLog(`[Craftora] Downloading Java ${requiredMajor}... ${pct}%`, 'system');
+          this.emitLog(`[CraftTogether] Downloading Java ${requiredMajor}... ${pct}%`, 'system');
         });
         if (downloadedJava) {
           javaExecutable = downloadedJava;
           config.javaPath = downloadedJava;
-          this.emitLog(`[Craftora] Portable Java ${requiredMajor} is ready! Launching server...`, 'system');
+          this.emitLog(`[CraftTogether] Portable Java ${requiredMajor} is ready! Launching server...`, 'system');
         } else {
-          this.emitLog(`[Craftora] Warning: Could not auto-download Java ${requiredMajor}. Attempting launch with current runtime...`, 'system');
+          this.emitLog(`[CraftTogether] Warning: Could not auto-download Java ${requiredMajor}. Attempting launch with current runtime...`, 'system');
         }
       }
     }
 
     const jvmArgs = this.buildJvmArguments(config.allocatedRamGb, config.useAikarFlags);
-    this.emitLog(`[Craftora] Launching ${config.serverSoftware.toUpperCase()} (${config.version}) with ${config.allocatedRamGb}GB RAM...`, 'system');
-    this.emitLog(`[Craftora] Java: ${javaExecutable}`, 'system');
+    this.emitLog(`[CraftTogether] Launching ${config.serverSoftware.toUpperCase()} (${config.version}) with ${config.allocatedRamGb}GB RAM...`, 'system');
+    this.emitLog(`[CraftTogether] Java: ${javaExecutable}`, 'system');
 
     try {
       this.activeProcess = spawn(javaExecutable, jvmArgs, {
@@ -249,11 +249,11 @@ export class ServerManagerService {
         }
 
         if (code !== 0 || wasStarting || hasCrash) {
-          this.emitLog(`[Craftora] Server terminated unexpectedly (exit code: ${code}). Status marked as CRASHED.`, 'stderr');
+          this.emitLog(`[CraftTogether] Server terminated unexpectedly (exit code: ${code}). Status marked as CRASHED.`, 'stderr');
           this.cleanUpProcess();
           this.setStatus('CRASHED');
         } else {
-          this.emitLog(`[Craftora] Server stopped cleanly with exit code: ${code}`, 'system');
+          this.emitLog(`[CraftTogether] Server stopped cleanly with exit code: ${code}`, 'system');
           this.cleanUpProcess();
           this.setStatus('STOPPED');
         }
@@ -261,7 +261,7 @@ export class ServerManagerService {
 
       this.activeProcess.on('error', (err) => {
         logger.error('Failed to spawn server process', err);
-        this.emitLog(`[Craftora] Process error: ${err.message}`, 'system');
+        this.emitLog(`[CraftTogether] Process error: ${err.message}`, 'system');
         this.cleanUpProcess();
         this.setStatus('CRASHED');
       });
@@ -270,7 +270,7 @@ export class ServerManagerService {
       return true;
     } catch (err: any) {
       logger.error('Failed to start server', err);
-      this.emitLog(`[Craftora] Start error: ${err.message}`, 'system');
+      this.emitLog(`[CraftTogether] Start error: ${err.message}`, 'system');
       this.setStatus('CRASHED');
       return false;
     }
@@ -287,7 +287,7 @@ export class ServerManagerService {
       }
 
       this.setStatus('STOPPING');
-      this.emitLog('[Craftora] Sending graceful stop command to server...', 'system');
+      this.emitLog('[CraftTogether] Sending graceful stop command to server...', 'system');
 
       try {
         this.activeProcess.stdin?.write('stop\n');
@@ -299,7 +299,7 @@ export class ServerManagerService {
       // Timeout fallback: force kill after 15 seconds if hanging
       const forceTimeout = setTimeout(() => {
         if (this.activeProcess) {
-          this.emitLog('[Craftora] Server hung on shutdown. Force terminating...', 'system');
+          this.emitLog('[CraftTogether] Server hung on shutdown. Force terminating...', 'system');
           this.activeProcess.kill('SIGKILL');
         }
         resolve(true);
@@ -317,7 +317,7 @@ export class ServerManagerService {
    */
   static killServer(): void {
     if (this.activeProcess) {
-      this.emitLog('[Craftora] Killing server process...', 'system');
+      this.emitLog('[CraftTogether] Killing server process...', 'system');
       this.activeProcess.kill('SIGKILL');
       this.cleanUpProcess();
       this.setStatus('STOPPED');
@@ -329,7 +329,7 @@ export class ServerManagerService {
    */
   static sendCommand(cmd: string): boolean {
     if (!this.activeProcess || this.status !== 'ONLINE') {
-      this.emitLog(`[Craftora] Cannot send command: Server is not online.`, 'system');
+      this.emitLog(`[CraftTogether] Cannot send command: Server is not online.`, 'system');
       return false;
     }
 
@@ -350,7 +350,7 @@ export class ServerManagerService {
     // 1. Detect Server Ready
     if (line.includes('Done (') && line.includes('For help, type "help"')) {
       this.setStatus('ONLINE');
-      this.emitLog('[Craftora] Server is ONLINE and accepting connections! ✨', 'system');
+      this.emitLog('[CraftTogether] Server is ONLINE and accepting connections! ✨', 'system');
       this.applyGamerules();
     }
 
@@ -396,35 +396,35 @@ export class ServerManagerService {
       if (this.activeConfig.keepInventory !== undefined) {
         const val = this.activeConfig.keepInventory ? 'true' : 'false';
         this.sendCommand(`gamerule keepInventory ${val}`);
-        this.emitLog(`[Craftora] Applied gamerule: keepInventory = ${val}`, 'system');
+        this.emitLog(`[CraftTogether] Applied gamerule: keepInventory = ${val}`, 'system');
       }
 
       // 2. Show Coordinates HUD
       if (this.activeConfig.showCoordinates !== undefined) {
         const val = this.activeConfig.showCoordinates ? 'true' : 'false';
         this.sendCommand(`gamerule showCoordinates ${val}`);
-        this.emitLog(`[Craftora] Applied gamerule: showCoordinates = ${val}`, 'system');
+        this.emitLog(`[CraftTogether] Applied gamerule: showCoordinates = ${val}`, 'system');
       }
 
       // 3. 1-Player Instant Sleep Percentage
       if (this.activeConfig.onePlayerSleep !== undefined) {
         const pct = this.activeConfig.onePlayerSleep ? 1 : 100;
         this.sendCommand(`gamerule playersSleepingPercentage ${pct}`);
-        this.emitLog(`[Craftora] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
+        this.emitLog(`[CraftTogether] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
       }
 
       // 4. Disable Mob Griefing
       if (this.activeConfig.disableMobGriefing !== undefined) {
         const val = this.activeConfig.disableMobGriefing ? 'false' : 'true';
         this.sendCommand(`gamerule mobGriefing ${val}`);
-        this.emitLog(`[Craftora] Applied gamerule: mobGriefing = ${val}`, 'system');
+        this.emitLog(`[CraftTogether] Applied gamerule: mobGriefing = ${val}`, 'system');
       }
 
       // 5. Disable Fire Spread
       if (this.activeConfig.disableFireSpread !== undefined) {
         const val = this.activeConfig.disableFireSpread ? 'false' : 'true';
         this.sendCommand(`gamerule doFireTick ${val}`);
-        this.emitLog(`[Craftora] Applied gamerule: doFireTick = ${val}`, 'system');
+        this.emitLog(`[CraftTogether] Applied gamerule: doFireTick = ${val}`, 'system');
       }
     }, 1500);
   }

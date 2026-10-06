@@ -102,12 +102,14 @@ export class AppPaths {
       }
 
       if (currentUserData && fs.existsSync(currentUserData)) {
-        // Clean up redundant nested Craftora directory if present
-        const legacyNested = path.join(currentUserData, 'Craftora');
-        if (fs.existsSync(legacyNested)) {
-          try {
-            fs.rmSync(legacyNested, { recursive: true, force: true });
-          } catch {}
+        // Clean up redundant nested directory if present
+        for (const legacyName of ['Craftora', 'CraftTogether']) {
+          const legacyNested = path.join(currentUserData, legacyName);
+          if (fs.existsSync(legacyNested)) {
+            try {
+              fs.rmSync(legacyNested, { recursive: true, force: true });
+            } catch {}
+          }
         }
 
         // Clean up any legacy server or jar files in userData
@@ -286,7 +288,7 @@ export class AppPaths {
 
   static getBaseDir(): string {
     if (!this.baseDir) this.init();
-    return this.baseDir || 'C:\\CraftoraServers';
+    return this.baseDir || 'C:\\CraftTogetherServers';
   }
 
   static getServersDir(): string {

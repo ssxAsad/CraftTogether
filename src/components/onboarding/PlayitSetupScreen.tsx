@@ -299,7 +299,7 @@ export const PlayitSetupScreen: React.FC<PlayitSetupScreenProps> = ({ onComplete
               <p className="text-xs text-content-secondary">
                 Log into your PlayIt.gg account if prompted, then click the green{' '}
                 <strong className="text-content-primary">"Claim Agent"</strong>{' '}
-                button on the page. Craftora will detect it automatically.
+                button on the page. CraftTogether will detect it automatically.
               </p>
             </div>
 

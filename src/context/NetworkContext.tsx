@@ -170,7 +170,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingNetwork(true);
     if (window.electronAPI?.startUpnp) {
       try {
-        const res = await window.electronAPI.startUpnp({ port, protocol: 'TCP', description: 'Craftora Server' });
+        const res = await window.electronAPI.startUpnp({ port, protocol: 'TCP', description: 'CraftTogether Server' });
         setUpnpStatus(res);
         if (res.externalIp) setPublicIp(res.externalIp);
         setIsLoadingNetwork(false);
@@ -244,7 +244,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isActive: true,
         status: 'ONLINE',
         claimUrl: null,
-        serverAddress: 'craftora-demo.craft.ply.gg',
+        serverAddress: 'crafttogether-demo.craft.ply.gg',
         port,
         error: null
       };
@@ -273,7 +273,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const toggleLan = async (motd: string = 'Craftora LAN'): Promise<void> => {
+  const toggleLan = async (motd: string = 'CraftTogether LAN'): Promise<void> => {
     if (window.electronAPI) {
       if (isLanBroadcasting) {
         await window.electronAPI.stopLanBroadcast();
@@ -289,7 +289,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const applyNetworkMode = async (
     mode: NetworkMode,
-    serverName: string = 'Craftora Server',
+    serverName: string = 'CraftTogether Server',
     port: number = 25565
   ): Promise<void> => {
     if (window.electronAPI) {
@@ -327,7 +327,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
           isActive: true,
           status: 'ONLINE',
           claimUrl: null,
-          serverAddress: 'craftora-demo.craft.ply.gg',
+          serverAddress: 'crafttogether-demo.craft.ply.gg',
           port,
           error: null
         });

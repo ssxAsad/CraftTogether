@@ -52,7 +52,7 @@ export const WorldSettingsTab: React.FC = () => {
   const [properties, setProperties] = useState<ServerProperties>({
     'server-port': 25565,
     'online-mode': true,
-    'motd': 'A Craftora Minecraft Server',
+    'motd': 'A CraftTogether Minecraft Server',
     'max-players': 20,
     'difficulty': 'normal',
     'gamemode': 'survival',
@@ -671,7 +671,7 @@ export const WorldSettingsTab: React.FC = () => {
           type="text"
           value={properties.motd || ''}
           onChange={(e) => setProperties({ ...properties, motd: e.target.value })}
-          placeholder="A Craftora Minecraft Server"
+          placeholder="A CraftTogether Minecraft Server"
           className="w-full px-4 py-3 bg-surface-base border border-border-default rounded-xl text-sm font-mono text-content-primary focus:outline-none focus:border-border-default"
         />
       </GlassCard>

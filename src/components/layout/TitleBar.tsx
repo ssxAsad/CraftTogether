@@ -46,7 +46,7 @@ export const TitleBar: React.FC = () => {
           type="button"
           onClick={handleClose}
           className="w-12 h-full flex items-center justify-center text-content-secondary hover:text-white hover:bg-danger active:bg-danger/80 transition cursor-pointer"
-          title="Close (Exit Craftora)"
+          title="Close (Exit CraftTogether)"
         >
           <X className="w-4 h-4" />
         </button>

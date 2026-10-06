@@ -108,7 +108,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-content-primary tracking-tight">
-                {activeServer?.name || 'Craftora Server'}
+                {activeServer?.name || 'CraftTogether Server'}
               </h1>
               <Badge variant="warning">
                 {activeServer?.serverSoftware.toUpperCase()} {activeServer?.version}

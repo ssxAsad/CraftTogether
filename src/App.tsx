@@ -29,7 +29,7 @@ export const App: React.FC = () => {
           setIsSetupComplete(true);
         }
       } else {
-        const stored = localStorage.getItem('craftora_setup_complete');
+        const stored = localStorage.getItem('crafttogether_setup_complete') || localStorage.getItem('craftora_setup_complete');
         setIsSetupComplete(stored === 'true');
       }
     };
@@ -40,6 +40,7 @@ export const App: React.FC = () => {
     if (window.electronAPI?.completeSetup) {
       await window.electronAPI.completeSetup();
     } else {
+      localStorage.setItem('crafttogether_setup_complete', 'true');
       localStorage.setItem('craftora_setup_complete', 'true');
     }
     setIsSetupComplete(true);

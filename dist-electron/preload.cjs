@@ -1,1 +1,129 @@
-"use strict";const r=require("electron"),t={getSetupStatus:()=>r.ipcRenderer.invoke("app:get-setup-status"),validateDirectory:e=>r.ipcRenderer.invoke("app:validate-directory",e),setStorageDirectory:e=>r.ipcRenderer.invoke("app:set-storage-directory",e),setSetupStep:e=>r.ipcRenderer.invoke("app:set-setup-step",e),completeSetup:()=>r.ipcRenderer.invoke("app:complete-setup"),browseDirectory:()=>r.ipcRenderer.invoke("dialog:browse-directory"),checkSetupDependencies:()=>r.ipcRenderer.invoke("setup:check-dependencies"),installSetupDependency:e=>r.ipcRenderer.invoke("setup:install-dependency",e),onSetupDependencyProgress:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("setup:dependency-progress",n),()=>r.ipcRenderer.removeListener("setup:dependency-progress",n)},startServer:e=>r.ipcRenderer.invoke("server:start",e),stopServer:()=>r.ipcRenderer.invoke("server:stop"),killServer:()=>r.ipcRenderer.invoke("server:kill"),sendCommand:e=>r.ipcRenderer.invoke("server:send-command",e),getServerStatus:()=>r.ipcRenderer.invoke("server:get-status"),getServerMetrics:()=>r.ipcRenderer.invoke("server:get-metrics"),getServerPlayers:()=>r.ipcRenderer.invoke("server:get-players"),getServerLogs:e=>r.ipcRenderer.invoke("server:get-logs",e),clearServerLogs:()=>r.ipcRenderer.invoke("server:clear-logs"),onServerLog:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("server:log",n),()=>r.ipcRenderer.removeListener("server:log",n)},onServerStatusChanged:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("server:status-changed",n),()=>r.ipcRenderer.removeListener("server:status-changed",n)},onServerMetricsUpdated:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("server:metrics-updated",n),()=>r.ipcRenderer.removeListener("server:metrics-updated",n)},onServerPlayersUpdated:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("server:players-updated",n),()=>r.ipcRenderer.removeListener("server:players-updated",n)},onDownloadProgress:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("jars:download-progress",n),()=>r.ipcRenderer.removeListener("jars:download-progress",n)},detectJava:()=>r.ipcRenderer.invoke("java:detect-all"),installJava21:()=>r.ipcRenderer.invoke("java:install-21"),onJavaInstallProgress:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("java:install-progress",n),()=>r.ipcRenderer.removeListener("java:install-progress",n)},getSoftwareVersions:e=>r.ipcRenderer.invoke("jars:get-versions",e),downloadJar:e=>r.ipcRenderer.invoke("jars:download-jar",e),checkUpnpSupport:e=>r.ipcRenderer.invoke("upnp:check-support",e),startUpnp:e=>r.ipcRenderer.invoke("upnp:start",e||{}),stopUpnp:e=>r.ipcRenderer.invoke("upnp:stop",e||{}),getUpnpStatus:()=>r.ipcRenderer.invoke("upnp:get-status"),startCloudTunnel:e=>r.ipcRenderer.invoke("cloud-tunnel:start",e||{}),stopCloudTunnel:()=>r.ipcRenderer.invoke("cloud-tunnel:stop"),getCloudTunnelStatus:()=>r.ipcRenderer.invoke("cloud-tunnel:get-status"),ensureCloudTunnelBinary:()=>r.ipcRenderer.invoke("cloud-tunnel:ensure-binary"),onCloudTunnelStatus:e=>{const n=(o,i)=>e(i);return r.ipcRenderer.on("cloud-tunnel:status-update",n),()=>{r.ipcRenderer.removeListener("cloud-tunnel:status-update",n)}},startLanBroadcast:e=>r.ipcRenderer.invoke("lan:start",e),stopLanBroadcast:()=>r.ipcRenderer.invoke("lan:stop"),getLanStatus:()=>r.ipcRenderer.invoke("lan:get-status"),getNetworkDiagnostics:()=>r.ipcRenderer.invoke("network:get-diagnostics"),checkPort:e=>r.ipcRenderer.invoke("network:check-port",e),isGeyserInstalled:e=>r.ipcRenderer.invoke("geyser:is-installed",e),installGeyser:e=>r.ipcRenderer.invoke("geyser:install",e),removeGeyser:e=>r.ipcRenderer.invoke("geyser:remove",e),getGeyserConfig:e=>r.ipcRenderer.invoke("geyser:get-config",e),saveGeyserConfig:e=>r.ipcRenderer.invoke("geyser:save-config",e),getPluginCatalog:()=>r.ipcRenderer.invoke("plugins:get-catalog"),getInstalledPlugins:e=>r.ipcRenderer.invoke("plugins:get-installed",e),installPlugin:e=>r.ipcRenderer.invoke("plugins:install",e),installSpigetPlugin:e=>r.ipcRenderer.invoke("plugins:install-spiget",e),togglePlugin:e=>r.ipcRenderer.invoke("plugins:toggle",e),deletePlugin:e=>r.ipcRenderer.invoke("plugins:delete",e),ensureSkinsRestorer:e=>r.ipcRenderer.invoke("plugins:ensure-skins-restorer",e),getInstalledMods:e=>r.ipcRenderer.invoke("mods:get-installed",e),uploadModPackage:e=>r.ipcRenderer.invoke("mods:upload-package",e),toggleMod:e=>r.ipcRenderer.invoke("mods:toggle",e),deleteMod:e=>r.ipcRenderer.invoke("mods:delete",e),getWorldInfo:e=>r.ipcRenderer.invoke("world:get-info",e),inspectWorldSource:e=>r.ipcRenderer.invoke("world:inspect-source",e),browseWorldSource:e=>r.ipcRenderer.invoke("world:browse-source",e),browseWorldExportTarget:e=>r.ipcRenderer.invoke("world:browse-export-target",e),importWorld:e=>r.ipcRenderer.invoke("world:import",e),exportWorld:e=>r.ipcRenderer.invoke("world:export",e),readProperties:e=>r.ipcRenderer.invoke("config:read-properties",e),writeProperties:e=>r.ipcRenderer.invoke("config:write-properties",e),setCrackedMode:e=>r.ipcRenderer.invoke("config:set-cracked",e),listServers:()=>r.ipcRenderer.invoke("servers:list"),saveServerConfig:e=>r.ipcRenderer.invoke("servers:save-config",e),deleteServer:e=>r.ipcRenderer.invoke("servers:delete",e),getServersDir:()=>r.ipcRenderer.invoke("paths:get-servers-dir"),openExternal:e=>r.ipcRenderer.invoke("system:open-external",e),minimizeWindow:()=>r.ipcRenderer.send("window:minimize"),maximizeWindow:()=>r.ipcRenderer.send("window:maximize"),closeWindow:()=>r.ipcRenderer.send("window:close")};r.contextBridge.exposeInMainWorld("electronAPI",t);
+"use strict";
+const electron = require("electron");
+const electronAPI = {
+  // First launch setup
+  getSetupStatus: () => electron.ipcRenderer.invoke("app:get-setup-status"),
+  validateDirectory: (targetPath) => electron.ipcRenderer.invoke("app:validate-directory", targetPath),
+  setStorageDirectory: (targetPath) => electron.ipcRenderer.invoke("app:set-storage-directory", targetPath),
+  setSetupStep: (step) => electron.ipcRenderer.invoke("app:set-setup-step", step),
+  completeSetup: () => electron.ipcRenderer.invoke("app:complete-setup"),
+  browseDirectory: () => electron.ipcRenderer.invoke("dialog:browse-directory"),
+  checkSetupDependencies: () => electron.ipcRenderer.invoke("setup:check-dependencies"),
+  installSetupDependency: (id) => electron.ipcRenderer.invoke("setup:install-dependency", id),
+  onSetupDependencyProgress: (callback) => {
+    const handler = (_, data) => callback(data);
+    electron.ipcRenderer.on("setup:dependency-progress", handler);
+    return () => electron.ipcRenderer.removeListener("setup:dependency-progress", handler);
+  },
+  // Server process
+  startServer: (config) => electron.ipcRenderer.invoke("server:start", config),
+  stopServer: () => electron.ipcRenderer.invoke("server:stop"),
+  killServer: () => electron.ipcRenderer.invoke("server:kill"),
+  sendCommand: (cmd) => electron.ipcRenderer.invoke("server:send-command", cmd),
+  getServerStatus: () => electron.ipcRenderer.invoke("server:get-status"),
+  getServerMetrics: () => electron.ipcRenderer.invoke("server:get-metrics"),
+  getServerPlayers: () => electron.ipcRenderer.invoke("server:get-players"),
+  // Subscriptions
+  getServerLogs: (serverId) => electron.ipcRenderer.invoke("server:get-logs", serverId),
+  clearServerLogs: () => electron.ipcRenderer.invoke("server:clear-logs"),
+  onServerLog: (callback) => {
+    const handler = (_, data) => callback(data);
+    electron.ipcRenderer.on("server:log", handler);
+    return () => electron.ipcRenderer.removeListener("server:log", handler);
+  },
+  onServerStatusChanged: (callback) => {
+    const handler = (_, status) => callback(status);
+    electron.ipcRenderer.on("server:status-changed", handler);
+    return () => electron.ipcRenderer.removeListener("server:status-changed", handler);
+  },
+  onServerMetricsUpdated: (callback) => {
+    const handler = (_, metrics) => callback(metrics);
+    electron.ipcRenderer.on("server:metrics-updated", handler);
+    return () => electron.ipcRenderer.removeListener("server:metrics-updated", handler);
+  },
+  onServerPlayersUpdated: (callback) => {
+    const handler = (_, players) => callback(players);
+    electron.ipcRenderer.on("server:players-updated", handler);
+    return () => electron.ipcRenderer.removeListener("server:players-updated", handler);
+  },
+  onDownloadProgress: (callback) => {
+    const handler = (_, progress) => callback(progress);
+    electron.ipcRenderer.on("jars:download-progress", handler);
+    return () => electron.ipcRenderer.removeListener("jars:download-progress", handler);
+  },
+  // Java & Jars
+  detectJava: () => electron.ipcRenderer.invoke("java:detect-all"),
+  installJava21: () => electron.ipcRenderer.invoke("java:install-21"),
+  onJavaInstallProgress: (callback) => {
+    const handler = (_, percent) => callback(percent);
+    electron.ipcRenderer.on("java:install-progress", handler);
+    return () => electron.ipcRenderer.removeListener("java:install-progress", handler);
+  },
+  getSoftwareVersions: (software) => electron.ipcRenderer.invoke("jars:get-versions", software),
+  downloadJar: (params) => electron.ipcRenderer.invoke("jars:download-jar", params),
+  // UPnP Direct Port Forwarding
+  checkUpnpSupport: (forceRefresh) => electron.ipcRenderer.invoke("upnp:check-support", forceRefresh),
+  startUpnp: (params) => electron.ipcRenderer.invoke("upnp:start", params || {}),
+  stopUpnp: (params) => electron.ipcRenderer.invoke("upnp:stop", params || {}),
+  getUpnpStatus: () => electron.ipcRenderer.invoke("upnp:get-status"),
+  // Cloud Relay (Playit Zero-Auth Engine)
+  startCloudTunnel: (params) => electron.ipcRenderer.invoke("cloud-tunnel:start", params || {}),
+  stopCloudTunnel: () => electron.ipcRenderer.invoke("cloud-tunnel:stop"),
+  getCloudTunnelStatus: () => electron.ipcRenderer.invoke("cloud-tunnel:get-status"),
+  ensureCloudTunnelBinary: () => electron.ipcRenderer.invoke("cloud-tunnel:ensure-binary"),
+  onCloudTunnelStatus: (callback) => {
+    const handler = (_, status) => callback(status);
+    electron.ipcRenderer.on("cloud-tunnel:status-update", handler);
+    return () => {
+      electron.ipcRenderer.removeListener("cloud-tunnel:status-update", handler);
+    };
+  },
+  // LAN Discovery
+  startLanBroadcast: (params) => electron.ipcRenderer.invoke("lan:start", params),
+  stopLanBroadcast: () => electron.ipcRenderer.invoke("lan:stop"),
+  getLanStatus: () => electron.ipcRenderer.invoke("lan:get-status"),
+  // Network diagnostics
+  getNetworkDiagnostics: () => electron.ipcRenderer.invoke("network:get-diagnostics"),
+  checkPort: (port) => electron.ipcRenderer.invoke("network:check-port", port),
+  // Cross-play (GeyserMC)
+  isGeyserInstalled: (serverId) => electron.ipcRenderer.invoke("geyser:is-installed", serverId),
+  installGeyser: (serverId) => electron.ipcRenderer.invoke("geyser:install", serverId),
+  removeGeyser: (serverId) => electron.ipcRenderer.invoke("geyser:remove", serverId),
+  getGeyserConfig: (serverId) => electron.ipcRenderer.invoke("geyser:get-config", serverId),
+  saveGeyserConfig: (params) => electron.ipcRenderer.invoke("geyser:save-config", params),
+  // Plugins
+  getPluginCatalog: () => electron.ipcRenderer.invoke("plugins:get-catalog"),
+  getInstalledPlugins: (serverId) => electron.ipcRenderer.invoke("plugins:get-installed", serverId),
+  installPlugin: (params) => electron.ipcRenderer.invoke("plugins:install", params),
+  installSpigetPlugin: (params) => electron.ipcRenderer.invoke("plugins:install-spiget", params),
+  togglePlugin: (params) => electron.ipcRenderer.invoke("plugins:toggle", params),
+  deletePlugin: (params) => electron.ipcRenderer.invoke("plugins:delete", params),
+  ensureSkinsRestorer: (serverId) => electron.ipcRenderer.invoke("plugins:ensure-skins-restorer", serverId),
+  // Mods
+  getInstalledMods: (serverId) => electron.ipcRenderer.invoke("mods:get-installed", serverId),
+  uploadModPackage: (params) => electron.ipcRenderer.invoke("mods:upload-package", params),
+  toggleMod: (params) => electron.ipcRenderer.invoke("mods:toggle", params),
+  deleteMod: (params) => electron.ipcRenderer.invoke("mods:delete", params),
+  // World Management
+  getWorldInfo: (serverId) => electron.ipcRenderer.invoke("world:get-info", serverId),
+  inspectWorldSource: (sourcePath) => electron.ipcRenderer.invoke("world:inspect-source", sourcePath),
+  browseWorldSource: (mode) => electron.ipcRenderer.invoke("world:browse-source", mode),
+  browseWorldExportTarget: (defaultFilename) => electron.ipcRenderer.invoke("world:browse-export-target", defaultFilename),
+  importWorld: (params) => electron.ipcRenderer.invoke("world:import", params),
+  exportWorld: (params) => electron.ipcRenderer.invoke("world:export", params),
+  // Config & Properties
+  readProperties: (serverId) => electron.ipcRenderer.invoke("config:read-properties", serverId),
+  writeProperties: (params) => electron.ipcRenderer.invoke("config:write-properties", params),
+  setCrackedMode: (params) => electron.ipcRenderer.invoke("config:set-cracked", params),
+  listServers: () => electron.ipcRenderer.invoke("servers:list"),
+  saveServerConfig: (params) => electron.ipcRenderer.invoke("servers:save-config", params),
+  deleteServer: (serverId) => electron.ipcRenderer.invoke("servers:delete", serverId),
+  getServersDir: () => electron.ipcRenderer.invoke("paths:get-servers-dir"),
+  // System & Shell
+  openExternal: (url) => electron.ipcRenderer.invoke("system:open-external", url),
+  // Window frame controls
+  minimizeWindow: () => electron.ipcRenderer.send("window:minimize"),
+  maximizeWindow: () => electron.ipcRenderer.send("window:maximize"),
+  closeWindow: () => electron.ipcRenderer.send("window:close")
+};
+electron.contextBridge.exposeInMainWorld("electronAPI", electronAPI);

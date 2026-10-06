@@ -49,6 +49,7 @@ async function createWindow() {
   const iconPath = getIconPath();
 
   mainWindow = new BrowserWindow({
+    title: 'CraftTogether',
     width: 1280,
     height: 820,
     minWidth: 1050,
@@ -105,7 +106,7 @@ async function createWindow() {
   // Smooth window reveal
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
-    logger.info('Craftora main window displayed');
+    logger.info('CraftTogether main window displayed');
   });
 
   if (process.env.VITE_DEV_SERVER_URL) {

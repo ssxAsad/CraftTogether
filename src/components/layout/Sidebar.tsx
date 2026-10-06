@@ -32,13 +32,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center gap-3.5 px-1 py-1.5 mb-2 titlebar-drag">
           <img
             src={logoImg}
-            alt="Craftora"
+            alt="CraftTogether"
             className="w-[52px] h-[52px] object-contain shrink-0 titlebar-no-drag rounded-xl mix-blend-multiply drop-shadow-md select-none transition-transform hover:scale-105 duration-200"
             style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
           <div className="flex flex-col justify-center select-none titlebar-no-drag">
             <span className="font-extrabold text-2xl text-content-primary tracking-tight select-none leading-none">
-              Craftora
+              CraftTogether
             </span>
           </div>
         </div>
