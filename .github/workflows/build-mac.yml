@@ -43,14 +43,14 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: |
           set -o pipefail
-          npx electron-builder --mac zip --arm64 --x64 2>&1 | tee build-zip.log || {
+          npx electron-builder --mac zip --arm64 --x64 --publish never 2>&1 | tee build-zip.log || {
             ERR=$(tail -n 25 build-zip.log | tr '\n' ' ')
             echo "::error::ZIP package failed: $ERR"
             exit 1
           }
           for attempt in 1 2 3; do
             echo "Building macOS DMG (attempt $attempt/3)..."
-            if npx electron-builder --mac dmg --arm64 --x64 2>&1 | tee build-dmg.log; then
+            if npx electron-builder --mac dmg --arm64 --x64 --publish never 2>&1 | tee build-dmg.log; then
               break
             fi
             if [ "$attempt" -eq 3 ]; then
