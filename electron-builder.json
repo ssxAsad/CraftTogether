@@ -56,13 +56,11 @@
     ],
     "artifactName": "${productName}-macOS-${arch}-${version}.${ext}",
     "hardenedRuntime": false,
-    "gatekeeperAssess": false
+    "gatekeeperAssess": false,
+    "notarize": false
   },
   "dmg": {
     "title": "CraftTogether ${version}",
-    "contents": [
-      { "x": 130, "y": 220 },
-      { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
-    ]
+    "sign": false
   }
 }
