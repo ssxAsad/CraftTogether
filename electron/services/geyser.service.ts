@@ -151,7 +151,7 @@ export class GeyserService {
     const passthroughMotd = config.passthroughMotd !== false;
     const passthroughMaxPlayers = config.passthroughMaxPlayers !== false;
     
-    // Clean YAML template with proper GeyserMC bindings
+    // Clean YAML template with high-performance GeyserMC tuning
     const yamlContent = `# GeyserMC Configuration - Managed by CraftTogether
 bedrock:
   address: 0.0.0.0
@@ -173,15 +173,27 @@ passthrough-protocol-name: true
 passthrough-player-counts: true
 passthrough-max-players: ${passthroughMaxPlayers ? 'true' : 'false'}
 legacy-ping-passthrough: false
-ping-passthrough-interval: 3
+ping-passthrough-interval: 10
 forward-hostname: true
 
 max-players: 100
 debug-mode: false
-allow-third-party-capes: true
+allow-third-party-capes: false
 show-cooldown: title
 show-coordinates: true
 disable-custom-skins: false
+
+# High-Performance Tuning for Smooth Gameplay & Low RAM
+advanced:
+  cache-images: 14
+  scoreboard-packet-threshold: 20
+  add-team-suggestions: false
+  bedrock:
+    compression-level: 1
+    mtu: 1400
+  java:
+    use-direct-connection: true
+    disable-compression: true
 `;
 
     fs.writeFileSync(configPath, yamlContent, 'utf-8');

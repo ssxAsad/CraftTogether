@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, execFile, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -53,6 +53,8 @@ export class ServerManagerService {
   private static activeConfig: ServerInstanceConfig | null = null;
   private static startTime: number = 0;
   private static monitorTimer: NodeJS.Timeout | null = null;
+  private static lastCpuTime: number | null = null;
+  private static lastSampleTime: number | null = null;
 
   private static players: Map<string, PlayerInfo> = new Map();
   private static currentMetrics: ServerMetrics = {
@@ -87,37 +89,57 @@ export class ServerManagerService {
   }
 
   /**
-   * Generates Aikar's optimized G1GC JVM startup flags based on allocated RAM.
+   * Generates optimized JVM startup flags with intelligent heap budgeting.
+   * Prevents total OS memory from exceeding allocated RAM allotment (reserving headroom for
+   * Metaspace, Netty direct buffers, JIT code cache, and native thread stacks).
    */
   static buildJvmArguments(ramGb: number, useAikarFlags: boolean = true): string[] {
-    const memoryArgs = [`-Xms${ramGb}G`, `-Xmx${ramGb}G`];
+    const totalAllottedMb = Math.max(2, ramGb || 4) * 1024;
+    // Reserve off-heap headroom for Metaspace (384M), Netty direct buffers (512M),
+    // and CodeCache/threads so the complete java.exe OS footprint stays strictly within the allotment.
+    const offHeapReserveMb = totalAllottedMb <= 2048 ? 512 : totalAllottedMb <= 4096 ? 768 : 1024;
+    const maxHeapMb = totalAllottedMb - offHeapReserveMb;
+    const initialHeapMb = Math.max(1024, Math.floor(maxHeapMb * 0.5));
+
+    const memoryArgs = [
+      `-Xms${initialHeapMb}M`,
+      `-Xmx${maxHeapMb}M`,
+      `-XX:MaxMetaspaceSize=384M`,
+      `-XX:ReservedCodeCacheSize=128M`,
+      `-XX:MaxDirectMemorySize=512M`
+    ];
 
     if (!useAikarFlags) {
       return [...memoryArgs, '-jar', 'server.jar', 'nogui'];
     }
 
-    // Aikar's modern G1GC tuning flags
+    // Aikar's modern G1GC tuning flags optimized to eliminate tick lag
     const aikarFlags = [
       '-XX:+UseG1GC',
       '-XX:+ParallelRefProcEnabled',
-      '-XX:MaxGCPauseMillis=200',
+      '-XX:MaxGCPauseMillis=130',
       '-XX:+UnlockExperimentalVMOptions',
       '-XX:+DisableExplicitGC',
-      '-XX:+AlwaysPreTouch',
-      '-XX:G1NewSizePercent=30',
-      '-XX:G1MaxNewSizePercent=40',
-      '-XX:G1ReservePercent=20',
+      '-XX:G1NewSizePercent=25',
+      '-XX:G1MaxNewSizePercent=35',
+      '-XX:G1ReservePercent=15',
       '-XX:G1HeapWastePercent=5',
       '-XX:G1MixedGCCountTarget=4',
-      '-XX:InitiatingHeapOccupancyPercent=15',
+      '-XX:InitiatingHeapOccupancyPercent=45',
       '-XX:G1MixedGCLiveThresholdPercent=90',
       '-XX:G1RSetUpdatingPauseTimePercent=5',
       '-XX:SurvivorRatio=32',
       '-XX:+PerfDisableSharedMem',
       '-XX:MaxTenuringThreshold=1',
+      '-XX:+UseStringDeduplication',
       '-Dusing.aikars.flags=https://mcflags.emc.gs',
       '-Daikars.new.flags=true'
     ];
+
+    // Only apply AlwaysPreTouch on systems with 10GB+ RAM to avoid physical memory exhaustion / disk swapping
+    if (totalAllottedMb >= 10240) {
+      aikarFlags.push('-XX:+AlwaysPreTouch');
+    }
 
     return [...memoryArgs, ...aikarFlags, '-jar', 'server.jar', 'nogui'];
   }
@@ -170,7 +192,7 @@ export class ServerManagerService {
     if (!currentJava || currentJava.majorVersion < requiredMajor) {
       this.emitLog(`[CraftTogether] Minecraft ${config.version} requires Java ${requiredMajor}+ (Selected: ${currentJava ? `Java ${currentJava.majorVersion}` : 'Default PATH'}). Searching for compatible runtime...`, 'system');
 
-      const allRuntimes = await JavaDetectorService.detectJavaRuntimes();
+      const allRuntimes = await JavaDetectorService.detectJavaRuntimes(true);
       const compatible = allRuntimes.find(r => r.majorVersion >= requiredMajor);
 
       if (compatible) {
@@ -334,8 +356,10 @@ export class ServerManagerService {
     }
 
     try {
-      this.emitLog(`> ${cmd}`, 'system');
-      this.activeProcess.stdin?.write(`${cmd}\n`);
+      const cleanCmd = cmd.replace(/[\r\n]/g, '').trim();
+      if (!cleanCmd) return false;
+      this.emitLog(`> ${cleanCmd}`, 'system');
+      this.activeProcess.stdin?.write(`${cleanCmd}\r\n`);
       return true;
     } catch (e: any) {
       logger.error('Failed to send command', e);
@@ -383,7 +407,7 @@ export class ServerManagerService {
   }
 
   /**
-   * Applies user-configured gameplay gamerules (keepInventory, showCoordinates, sleep percentage, etc.).
+   * Applies user-configured gameplay gamerules (keepInventory, sleep percentage, etc.).
    */
   private static applyGamerules(): void {
     if (!this.activeConfig) return;
@@ -399,28 +423,21 @@ export class ServerManagerService {
         this.emitLog(`[CraftTogether] Applied gamerule: keepInventory = ${val}`, 'system');
       }
 
-      // 2. Show Coordinates HUD
-      if (this.activeConfig.showCoordinates !== undefined) {
-        const val = this.activeConfig.showCoordinates ? 'true' : 'false';
-        this.sendCommand(`gamerule showCoordinates ${val}`);
-        this.emitLog(`[CraftTogether] Applied gamerule: showCoordinates = ${val}`, 'system');
-      }
-
-      // 3. 1-Player Instant Sleep Percentage
+      // 2. 1-Player Instant Sleep Percentage
       if (this.activeConfig.onePlayerSleep !== undefined) {
         const pct = this.activeConfig.onePlayerSleep ? 1 : 100;
         this.sendCommand(`gamerule playersSleepingPercentage ${pct}`);
         this.emitLog(`[CraftTogether] Applied gamerule: playersSleepingPercentage = ${pct}%`, 'system');
       }
 
-      // 4. Disable Mob Griefing
+      // 3. Disable Mob Griefing
       if (this.activeConfig.disableMobGriefing !== undefined) {
         const val = this.activeConfig.disableMobGriefing ? 'false' : 'true';
         this.sendCommand(`gamerule mobGriefing ${val}`);
         this.emitLog(`[CraftTogether] Applied gamerule: mobGriefing = ${val}`, 'system');
       }
 
-      // 5. Disable Fire Spread
+      // 4. Disable Fire Spread
       if (this.activeConfig.disableFireSpread !== undefined) {
         const val = this.activeConfig.disableFireSpread ? 'false' : 'true';
         this.sendCommand(`gamerule doFireTick ${val}`);
@@ -430,10 +447,25 @@ export class ServerManagerService {
   }
 
   /**
-   * Periodically queries pidusage for CPU and RAM consumption.
+   * Periodically queries CPU and RAM consumption using native OS process inspection.
+   * On Windows, queries WorkingSet64 and TotalProcessorTime via PowerShell / tasklist,
+   * completely bypassing deprecated wmic.exe which fails on Windows 11.
    */
   private static startMetricsMonitor(): void {
     if (this.monitorTimer) clearInterval(this.monitorTimer);
+
+    this.lastCpuTime = null;
+    this.lastSampleTime = null;
+
+    let maxPlayers = 20;
+    if (this.activeConfig?.serverDir) {
+      try {
+        const props = ConfigParserService.readProperties(this.activeConfig.serverDir);
+        if (props['max-players']) {
+          maxPlayers = Number(props['max-players']) || 20;
+        }
+      } catch {}
+    }
 
     this.monitorTimer = setInterval(async () => {
       if (!this.activeProcess || !this.activeProcess.pid || this.status === 'STOPPED') {
@@ -441,19 +473,15 @@ export class ServerManagerService {
       }
 
       try {
-        const stats = await pidusage(this.activeProcess.pid);
+        const stats = await this.getProcessStats(this.activeProcess.pid);
         const uptimeSeconds = Math.floor((Date.now() - this.startTime) / 1000);
 
-        // Normalize CPU usage across all logical CPU cores (0% to 100%)
-        const cpuCores = Math.max(1, os.cpus().length || 1);
-        const normalizedCpu = Math.min(100, Math.max(0, Math.round((stats.cpu / cpuCores) * 10) / 10));
-
         this.currentMetrics = {
-          cpu: normalizedCpu,
-          memoryMb: Math.round(stats.memory / (1024 * 1024)),
+          cpu: stats.cpu,
+          memoryMb: stats.memoryMb,
           tps: 20.0, // Stable TPS estimate
           onlinePlayers: this.players.size,
-          maxPlayers: this.activeConfig?.port ? 20 : 20,
+          maxPlayers,
           uptimeSeconds
         };
 
@@ -461,15 +489,115 @@ export class ServerManagerService {
           this.onMetricsCallback({ ...this.currentMetrics });
         }
       } catch (e) {
-        // process may have just closed
+        // Process may be transitioning or stopped
       }
-    }, 3000);
+    }, 2500);
+  }
+
+  /**
+   * Resolves CPU % and RAM (MB) for a target process ID cross-platform.
+   */
+  private static async getProcessStats(pid: number): Promise<{ memoryMb: number; cpu: number }> {
+    if (process.platform === 'win32') {
+      return this.getWindowsProcessStats(pid);
+    }
+    return this.getUnixProcessStats(pid);
+  }
+
+  /**
+   * Native Windows process inspection using PowerShell Get-Process, with tasklist fallback.
+   */
+  private static getWindowsProcessStats(pid: number): Promise<{ memoryMb: number; cpu: number }> {
+    return new Promise((resolve, reject) => {
+      const cmd = `$p = Get-Process -Id ${pid} -ErrorAction SilentlyContinue; if ($p) { Write-Output "$($p.WorkingSet64),$($p.TotalProcessorTime.TotalMilliseconds)" } else { Write-Output "NOT_FOUND" }`;
+
+      const psPath = process.env.SystemRoot
+        ? path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+        : 'powershell.exe';
+      const executable = fs.existsSync(psPath) ? psPath : 'powershell.exe';
+
+      execFile(executable, ['-NoProfile', '-NonInteractive', '-Command', cmd], { windowsHide: true, timeout: 2500 }, (err, stdout) => {
+        if (err || !stdout) {
+          // Fallback to tasklist for memory if PowerShell times out or fails
+          return this.getTasklistMemory(pid)
+            .then(memMb => resolve({ memoryMb: memMb, cpu: 0 }))
+            .catch(() => reject(err || new Error('Failed to query process metrics on Windows')));
+        }
+
+        const text = stdout.trim();
+        if (text === 'NOT_FOUND' || !text) {
+          return reject(new Error('Process not found'));
+        }
+
+        const parts = text.split(/[\r\n,]+/);
+        const memBytes = parseInt(parts[0], 10);
+        const cpuTimeMs = parseFloat(parts[1]);
+
+        if (isNaN(memBytes) || isNaN(cpuTimeMs)) {
+          return reject(new Error('Invalid metrics response format'));
+        }
+
+        const now = Date.now();
+        let cpuPercent = 0;
+        if (this.lastCpuTime !== null && this.lastSampleTime !== null) {
+          const deltaMs = now - this.lastSampleTime;
+          const deltaCpu = cpuTimeMs - this.lastCpuTime;
+          const cores = Math.max(1, os.cpus().length || 1);
+          if (deltaMs > 0 && deltaCpu >= 0) {
+            cpuPercent = Math.min(100, Math.max(0, Math.round(((deltaCpu / (deltaMs * cores)) * 100) * 10) / 10));
+          }
+        }
+
+        this.lastCpuTime = cpuTimeMs;
+        this.lastSampleTime = now;
+
+        resolve({
+          memoryMb: Math.round(memBytes / (1024 * 1024)),
+          cpu: cpuPercent
+        });
+      });
+    });
+  }
+
+  /**
+   * Lightweight fallback memory reader using Windows tasklist.
+   */
+  private static getTasklistMemory(pid: number): Promise<number> {
+    return new Promise((resolve, reject) => {
+      execFile('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], { windowsHide: true, timeout: 2000 }, (err, stdout) => {
+        if (err || !stdout) return reject(err || new Error('Tasklist failed'));
+        const match = stdout.trim().match(/"([^"]+)"\s*$/);
+        if (match) {
+          const kb = parseInt(match[1].replace(/[^\d]/g, ''), 10);
+          if (!isNaN(kb)) return resolve(Math.round(kb / 1024));
+        }
+        reject(new Error('Could not parse tasklist memory output'));
+      });
+    });
+  }
+
+  /**
+   * Unix process statistics fallback using pidusage (/proc/ or ps).
+   */
+  private static async getUnixProcessStats(pid: number): Promise<{ memoryMb: number; cpu: number }> {
+    const stats = await pidusage(pid);
+    const cpuCores = Math.max(1, os.cpus().length || 1);
+    const normalizedCpu = Math.min(100, Math.max(0, Math.round((stats.cpu / cpuCores) * 10) / 10));
+    return {
+      memoryMb: Math.round(stats.memory / (1024 * 1024)),
+      cpu: normalizedCpu
+    };
   }
 
   private static cleanUpProcess(): void {
     if (this.monitorTimer) {
       clearInterval(this.monitorTimer);
       this.monitorTimer = null;
+    }
+    this.lastCpuTime = null;
+    this.lastSampleTime = null;
+    if (process.platform !== 'win32') {
+      try { pidusage.clear(); } catch {}
     }
     this.flushLogs();
     this.activeProcess = null;

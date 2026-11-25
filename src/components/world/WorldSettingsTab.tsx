@@ -603,42 +603,64 @@ export const WorldSettingsTab: React.FC = () => {
 
           {/* View Distance Slider */}
           <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-semibold text-content-primary">
-              <span>View Distance:</span>
-              <span className="text-content-primary font-mono">{properties['view-distance'] || 10} Chunks</span>
+            <div className="flex justify-between items-center text-xs font-semibold text-content-primary">
+              <span>View Distance (Render Chunks):</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={4}
+                  max={64}
+                  value={properties['view-distance'] || 10}
+                  onChange={(e) =>
+                    setProperties({ ...properties, 'view-distance': Math.max(4, Math.min(64, parseInt(e.target.value, 10) || 10)) })
+                  }
+                  className="w-14 px-1.5 py-0.5 bg-surface-base border border-border-default rounded text-right font-mono text-xs text-content-primary focus:outline-none focus:border-emerald-500"
+                />
+                <span className="text-content-primary font-mono">Chunks</span>
+              </div>
             </div>
             <input
               type="range"
               min={4}
-              max={32}
+              max={64}
               value={properties['view-distance'] || 10}
               onChange={(e) =>
                 setProperties({ ...properties, 'view-distance': parseInt(e.target.value, 10) })
               }
               className="w-full accent-emerald-500 cursor-pointer"
             />
-            <span className="text-[10px] text-content-muted">Controls how far players can see terrain.</span>
+            <span className="text-[10px] text-content-muted">Controls client terrain render distance (expanded limit up to 64 chunks).</span>
           </div>
 
           {/* Simulation Distance */}
           <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-semibold text-content-primary">
+            <div className="flex justify-between items-center text-xs font-semibold text-content-primary">
               <span>Simulation Distance:</span>
-              <span className="text-content-primary font-mono">
-                {properties['simulation-distance'] || 10} Chunks
-              </span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={3}
+                  max={32}
+                  value={properties['simulation-distance'] || 10}
+                  onChange={(e) =>
+                    setProperties({ ...properties, 'simulation-distance': Math.max(3, Math.min(32, parseInt(e.target.value, 10) || 10)) })
+                  }
+                  className="w-14 px-1.5 py-0.5 bg-surface-base border border-border-default rounded text-right font-mono text-xs text-content-primary focus:outline-none focus:border-emerald-500"
+                />
+                <span className="text-content-primary font-mono">Chunks</span>
+              </div>
             </div>
             <input
               type="range"
-              min={4}
-              max={16}
+              min={3}
+              max={32}
               value={properties['simulation-distance'] || 10}
               onChange={(e) =>
                 setProperties({ ...properties, 'simulation-distance': parseInt(e.target.value, 10) })
               }
               className="w-full accent-emerald-500 cursor-pointer"
             />
-            <span className="text-[10px] text-content-muted">Chunks where mob AI and redstone operate.</span>
+            <span className="text-[10px] text-content-muted">Chunks where mob AI and redstone operate (expanded limit up to 32 chunks).</span>
           </div>
 
           {/* Whitelist Switch */}

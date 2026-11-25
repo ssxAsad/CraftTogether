@@ -20,6 +20,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
   const [validationResult, setValidationResult] = useState<{
     isValid: boolean;
     isEmpty: boolean;
+    isExistingWorkspace?: boolean;
     error?: string;
   } | null>(null);
 
@@ -54,7 +55,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
         setValidationResult({
           isValid: false,
           isEmpty: false,
-          error: 'The selected folder is not empty. Please select or create an empty folder to continue.'
+          error: 'The selected folder is not empty. Please select an empty folder or an existing CraftTogether directory.'
         });
       } else {
         setValidationResult({ isValid: true, isEmpty: true });
@@ -82,7 +83,11 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
     }
   };
 
-  const isDirectoryValid = Boolean(validationResult?.isValid && validationResult?.isEmpty && !validationResult?.error);
+  const isDirectoryValid = Boolean(
+    validationResult?.isValid &&
+    (validationResult?.isEmpty || validationResult?.isExistingWorkspace) &&
+    !validationResult?.error
+  );
 
   const handleNextStep = async () => {
     if (!isDirectoryValid || isValidating) return;
@@ -90,6 +95,11 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
     if (window.electronAPI) {
       try {
         await window.electronAPI.setStorageDirectory(selectedPath);
+        const status = await window.electronAPI.getSetupStatus();
+        if (status.isSetupComplete) {
+          onComplete(selectedPath);
+          return;
+        }
         if (window.electronAPI.setSetupStep) {
           await window.electronAPI.setSetupStep('dependencies');
         }
@@ -118,11 +128,11 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
           <img
             src={logoImg}
             alt="CraftTogether"
-            className="w-20 h-20 mx-auto object-contain mb-6 drop-shadow-md rounded-2xl mix-blend-multiply select-none"
+            className="w-20 h-20 mx-auto object-contain mb-6 drop-shadow-md rounded-2xl mix-blend-multiply dark:mix-blend-normal dark:ring-1 dark:ring-white/10 select-none"
             style={{ imageRendering: 'high-quality', WebkitUserDrag: 'none' } as any}
           />
-          <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
-            Welcome to <span className="text-black">CraftTogether</span>
+          <h1 className="text-4xl font-bold text-black dark:text-content-primary mb-2 tracking-tight">
+            Welcome to <span className="text-black dark:text-content-primary">CraftTogether</span>
           </h1>
           <p className="text-content-secondary text-sm">
             Set up your dedicated workspace folder to get started.
@@ -131,16 +141,20 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
 
         <div className="bg-surface-elevated/80 backdrop-blur-2xl rounded-3xl p-8 border border-border-default shadow-2xl">
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-black mb-2 flex items-center justify-between">
-              <span className="text-black font-semibold">
+            <label className="block text-sm font-semibold text-black dark:text-content-primary mb-2 flex items-center justify-between">
+              <span className="text-black dark:text-content-primary font-semibold">
                 Server Files Directory
               </span>
-              <span className="text-content-secondary text-xs font-semibold">Must be a strictly empty folder</span>
+              <span className="text-content-secondary text-xs font-semibold">
+                {validationResult?.isExistingWorkspace
+                  ? '✓ Existing CraftTogether workspace found'
+                  : 'Must be an empty folder or existing workspace'}
+              </span>
             </label>
             
             <div className="flex gap-3">
               <div className={`relative flex-1 rounded-xl overflow-hidden transition-all duration-300 border ${
-                validationResult?.error || (validationResult && !validationResult.isEmpty)
+                validationResult?.error || (validationResult && !validationResult.isEmpty && !validationResult.isExistingWorkspace)
                   ? 'border-warning-fg/50 bg-warning-bg ring-1 ring-warning-fg/30' 
                   : isDirectoryValid
                     ? 'border-success/60 bg-success/10 ring-2 ring-success/20' 
@@ -153,8 +167,8 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
                     setSelectedPath(e.target.value);
                     validatePath(e.target.value);
                   }}
-                  placeholder="Select an empty directory..."
-                  className="w-full bg-transparent px-4 py-4 text-black outline-none font-mono text-sm placeholder:text-content-muted"
+                  placeholder="Select an empty directory or existing workspace..."
+                  className="w-full bg-transparent px-4 py-4 text-black dark:text-content-primary outline-none font-mono text-sm placeholder:text-content-muted"
                   spellCheck={false}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -169,6 +183,16 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
               </button>
             </div>
           </div>
+
+          {validationResult?.isExistingWorkspace && !validationResult?.error && (
+            <div className="mb-8 animate-in slide-in-from-top-2 fade-in duration-300">
+              <div className="bg-success/10 border border-success/30 rounded-xl p-4 text-success text-sm flex items-start gap-3">
+                <p className="leading-relaxed font-medium">
+                  Existing CraftTogether workspace detected! All your existing servers, configs, and worlds will be loaded automatically.
+                </p>
+              </div>
+            </div>
+          )}
 
           {validationResult?.error && (
             <div className="mb-8 animate-in slide-in-from-top-2 fade-in duration-300">
@@ -188,7 +212,7 @@ export const FirstLaunchScreen: React.FC<FirstLaunchScreenProps> = ({
                   : 'bg-surface-card text-content-muted cursor-not-allowed opacity-50 border border-border-subtle'
               }`}
             >
-              Continue Setup
+              {validationResult?.isExistingWorkspace ? 'Open Existing Workspace' : 'Continue Setup'}
             </button>
           </div>
         </div>

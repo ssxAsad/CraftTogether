@@ -180,7 +180,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
             {metrics.cpu}%
           </div>
             {/* Progress bar */}
-          <div className="w-full h-1.5 bg-surface-card rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-surface-card dark:bg-surface-base rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
                 metrics.cpu > 80 ? 'bg-danger' : 'bg-success'
@@ -198,7 +198,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
           <div className="text-2xl font-black text-content-primary font-mono">
             {metrics.memoryMb} <span className="text-xs text-content-secondary font-sans font-normal">/ {ramMaxMb} MB</span>
           </div>
-          <div className="w-full h-1.5 bg-surface-card rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-surface-card dark:bg-surface-base rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
                 ramPercent > 85 ? 'bg-danger' : 'bg-success'
@@ -219,7 +219,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               {status === 'ONLINE' ? 'Optimal (20.0)' : 'Idle'}
             </span>
           </div>
-          <div className="w-full h-1.5 bg-surface-card rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-surface-card dark:bg-surface-base rounded-full overflow-hidden">
             <div
               className="h-full bg-success transition-all duration-500"
               style={{ width: status === 'ONLINE' ? '100%' : '0%' }}
@@ -241,7 +241,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
               View
             </button>
           </div>
-          <div className="w-full h-1.5 bg-surface-card rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-surface-card dark:bg-surface-base rounded-full overflow-hidden">
             <div
               className="h-full bg-success transition-all duration-500"
               style={{ width: `${(players.length / metrics.maxPlayers) * 100}%` }}

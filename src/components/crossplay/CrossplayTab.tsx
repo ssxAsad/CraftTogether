@@ -45,13 +45,18 @@ export const CrossplayTab: React.FC = () => {
   const handleInstall = async () => {
     if (!activeServer) return;
     setLoading(true);
-    if (window.electronAPI) {
-      await window.electronAPI.installGeyser(activeServer.id);
-      await checkGeyser();
-    } else {
-      setIsInstalled(true);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.installGeyser(activeServer.id);
+        await checkGeyser();
+      } else {
+        setIsInstalled(true);
+      }
+    } catch (e: any) {
+      await showAlert('Installation Error', `Failed to install GeyserMC: ${e?.message || e}`, 'warning');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
 

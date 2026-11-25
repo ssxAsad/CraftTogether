@@ -176,7 +176,7 @@ export const NetworkTab: React.FC = () => {
                     e.stopPropagation();
                     checkUpnpSupport(true);
                   }}
-                  className="px-4 py-1.5 bg-success hover:bg-success/80 text-surface-base font-medium rounded-lg text-xs transition"
+                  className="px-4 py-1.5 bg-success hover:bg-success/80 text-white font-medium rounded-lg text-xs transition"
                 >
                   Re-test
                 </button>
@@ -281,7 +281,7 @@ export const NetworkTab: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleOpenClaimUrl}
-                  className="px-4 py-2 bg-success hover:bg-success/80 text-surface-base font-bold text-xs rounded-lg flex items-center gap-2 transition shadow-md cursor-pointer"
+                  className="px-4 py-2 bg-success hover:bg-success/80 text-white font-bold text-xs rounded-lg flex items-center gap-2 transition shadow-md cursor-pointer"
                 >
                   <span>Re-open Claim Page in Browser</span>
                   <PlaceholderIcon className="w-3.5 h-3.5" />
@@ -312,7 +312,7 @@ export const NetworkTab: React.FC = () => {
                     window.open('https://playit.gg/account/tunnels', '_blank');
                   }
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-warning hover:bg-warning/80 text-surface-base font-bold rounded-lg text-xs transition shadow-md cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-warning hover:bg-warning/80 text-white font-bold rounded-lg text-xs transition shadow-md cursor-pointer"
               >
                 <span>Create Tunnel on PlayIt.gg</span>
                 <PlaceholderIcon className="w-3.5 h-3.5" />
@@ -339,7 +339,7 @@ export const NetworkTab: React.FC = () => {
                 />
                 <button
                   onClick={() => handleCopy(cloudTunnelStatus.serverAddress!, 'cloud-address')}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-success hover:bg-success/80 text-surface-base font-bold text-xs transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-success hover:bg-success/80 text-white font-bold text-xs transition cursor-pointer"
                 >
                   {copiedKey === 'cloud-address' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'cloud-address' ? 'Copied!' : 'Copy Address'}</span>
@@ -397,7 +397,7 @@ export const NetworkTab: React.FC = () => {
                 />
                 <button
                   onClick={() => handleCopy(`${publicIp || upnpStatus.externalIp}:${activePort}`, 'upnp-ip')}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-success text-surface-base font-bold text-xs hover:bg-success/80 transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-success text-white font-bold text-xs hover:bg-success/80 transition cursor-pointer"
                 >
                   {copiedKey === 'upnp-ip' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'upnp-ip' ? 'Copied!' : 'Copy IP Address'}</span>

@@ -28,17 +28,20 @@ export class DependencySetupService {
   static async checkAllDependencies(): Promise<DependencyStatus[]> {
     const results: DependencyStatus[] = [];
 
-    // 1. Check Java 21+
+    // 1. Check Java 21+ (always force-refresh so newly installed runtimes are detected immediately without app restart)
     try {
-      const runtimes = await JavaDetectorService.detectJavaRuntimes();
-      const hasJava21 = runtimes.some(r => r.majorVersion >= 21);
+      const runtimes = await JavaDetectorService.detectJavaRuntimes(true);
+      const java21 = runtimes.find(r => r.majorVersion >= 21);
+      const hasJava21 = Boolean(java21);
       results.push({
         id: 'java',
         name: 'Java 21 JRE Runtime',
         description: 'Required engine to run modern Minecraft servers (1.20.5+)',
         status: hasJava21 ? 'ready' : 'missing',
         progress: hasJava21 ? 100 : 0,
-        details: hasJava21 ? `Found Java ${runtimes.find(r => r.majorVersion >= 21)?.version}` : 'Not installed on system'
+        details: java21
+          ? `Found Java ${java21.version}${java21.vendor && java21.vendor !== 'Unknown' ? ` (${java21.vendor})` : ''}`
+          : 'Not installed on system'
       });
     } catch {
       results.push({
@@ -46,7 +49,8 @@ export class DependencySetupService {
         name: 'Java 21 JRE Runtime',
         description: 'Required engine to run modern Minecraft servers (1.20.5+)',
         status: 'missing',
-        progress: 0
+        progress: 0,
+        details: 'Not installed on system'
       });
     }
 

@@ -213,20 +213,24 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             details: 'Configuring GeyserMC & Floodgate Bedrock bridge...'
           });
 
-          await window.electronAPI.installGeyser(cleanId);
-          await window.electronAPI.saveGeyserConfig({
-            serverId: cleanId,
-            config: {
-              bedrockPort,
-              bedrockAddress: '0.0.0.0',
-              cloneRemotePort: false,
-              authType,
-              motd1: name,
-              motd2: 'Java + Bedrock Cross-Play',
-              passthroughMotd: true,
-              passthroughMaxPlayers: true
-            }
-          });
+          try {
+            await window.electronAPI.installGeyser(cleanId);
+            await window.electronAPI.saveGeyserConfig({
+              serverId: cleanId,
+              config: {
+                bedrockPort,
+                bedrockAddress: '0.0.0.0',
+                cloneRemotePort: false,
+                authType,
+                motd1: name,
+                motd2: 'Java + Bedrock Cross-Play',
+                passthroughMotd: true,
+                passthroughMaxPlayers: true
+              }
+            });
+          } catch (geyserErr) {
+            console.warn('Could not auto-install GeyserMC cross-play plugin during creation:', geyserErr);
+          }
         }
 
         // 5. Install selected plugins with live step updates (Paper/Purpur only, not modded)

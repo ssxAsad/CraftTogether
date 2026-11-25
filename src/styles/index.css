@@ -2,17 +2,111 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme tokens (preserved verbatim) */
+:root {
+  color-scheme: light;
+  --surface-base: 255 255 255;       /* #ffffff */
+  --surface-elevated: 244 244 245;   /* #f4f4f5 */
+  --surface-card: 228 228 231;       /* #e4e4e7 */
+  --surface-hover: 212 212 216;      /* #d4d4d8 */
+
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.1);
+
+  --content-primary: 24 24 27;       /* #18181b */
+  --content-secondary: 82 82 91;     /* #52525b */
+  --content-muted: 161 161 170;      /* #a1a1aa */
+
+  --success-default: 48 96 48;       /* #306030 */
+  --success-fg: 48 96 48;            /* #306030 */
+  --success-bg: rgba(48, 96, 48, 0.15);
+
+  --danger-default: 198 1 31;        /* #C6011F */
+  --danger-fg: 255 107 107;          /* #ff6b6b */
+  --danger-bg: rgba(198, 1, 31, 0.15);
+
+  --warning-default: 180 83 9;       /* #B45309 */
+  --warning-fg: 180 83 9;            /* #B45309 */
+  --warning-bg: rgba(180, 83, 9, 0.15);
+
+  --info-default: 112 136 165;       /* #7088A5 */
+  --info-fg: 112 136 165;            /* #7088A5 */
+  --info-bg: rgba(112, 136, 165, 0.15);
+
+  --neutral-default: 161 161 170;    /* #a1a1aa */
+  --neutral-fg: 161 161 170;         /* #a1a1aa */
+  --neutral-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark theme tokens (neutral graphite/zinc palette + CraftTogether forest green) */
+html.dark {
+  color-scheme: dark;
+  --surface-base: 17 17 19;          /* #111113 */
+  --surface-elevated: 24 24 27;      /* #18181b */
+  --surface-card: 31 31 35;          /* #1f1f23 */
+  --surface-hover: 42 42 47;         /* #2a2a2f */
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.12);
+
+  --content-primary: 244 244 245;    /* #f4f4f5 */
+  --content-secondary: 161 161 170;  /* #a1a1aa */
+  --content-muted: 113 113 122;      /* #71717a */
+
+  --success-default: 52 115 52;      /* #347334 */
+  --success-fg: 102 187 106;         /* #66bb6a */
+  --success-bg: rgba(72, 143, 72, 0.18);
+
+  --danger-default: 198 1 31;        /* #C6011F */
+  --danger-fg: 248 113 113;          /* #f87171 */
+  --danger-bg: rgba(220, 38, 38, 0.16);
+
+  --warning-default: 217 119 6;      /* #d97706 */
+  --warning-fg: 251 191 36;          /* #fbbf24 */
+  --warning-bg: rgba(245, 158, 11, 0.14);
+
+  --info-default: 147 174 204;       /* #93aecc */
+  --info-fg: 147 174 204;            /* #93aecc */
+  --info-bg: rgba(147, 174, 204, 0.14);
+
+  --neutral-default: 161 161 170;    /* #a1a1aa */
+  --neutral-fg: 161 161 170;         /* #a1a1aa */
+  --neutral-bg: rgba(255, 255, 255, 0.07);
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   user-select: none;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  background-color: #ffffff; /* obsidian-950 / bg-surface-base */
-  color: #18181b; /* slate-200 / text-content-primary */
+  background-color: rgb(var(--surface-base));
+  color: rgb(var(--content-primary));
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: #000000 !important;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #f4f4f5 !important;
+}
+
+/* Native form dropdown readability in Dark Mode */
+html.dark select,
+html.dark input,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+html.dark select,
+html.dark select option {
+  background-color: #18181b;
+  color: #f4f4f5;
 }
 
 /* Premium primary action button polish for #306030 */
@@ -26,12 +120,25 @@ button[class*="bg-success"],
   box-shadow: 0 4px 14px -2px rgba(48, 96, 48, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+html.dark button.bg-success,
+html.dark button[class*="bg-success"],
+html.dark .btn-success {
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.5), 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
 button.bg-success:hover,
 button[class*="bg-success"]:hover,
 .btn-success:hover {
   background-color: #3d7a3d !important;
   box-shadow: 0 6px 20px -2px rgba(48, 96, 48, 0.6), 0 3px 8px -1px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
+}
+
+html.dark button.bg-success:hover,
+html.dark button[class*="bg-success"]:hover,
+html.dark .btn-success:hover {
+  background-color: #3f873f !important;
+  box-shadow: 0 6px 18px -2px rgba(0, 0, 0, 0.6), 0 2px 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 button.bg-success:active,
@@ -52,6 +159,13 @@ button[class*="bg-success"]:disabled,
   opacity: 0.55 !important;
 }
 
+html.dark button.bg-success:disabled,
+html.dark button[class*="bg-success"]:disabled,
+html.dark .btn-success:disabled {
+  background-color: #27272a !important;
+  color: #71717a !important;
+}
+
 /* Custom Scrollbar for professional desktop apps */
 ::-webkit-scrollbar {
   width: 5px;
@@ -59,19 +173,29 @@ button[class*="bg-success"]:disabled,
 }
 
 ::-webkit-scrollbar-track {
-  background: #ffffff; /* obsidian-950 */
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #e4e4e7; /* obsidian-900 */
+  background: #e4e4e7;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4d4d8; /* obsidian-800 */
+  background: #d4d4d8;
 }
 
+html.dark ::-webkit-scrollbar-track {
+  background: #111113;
+}
 
+html.dark ::-webkit-scrollbar-thumb {
+  background: #2c2c32;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
 
 /* Titlebar drag region */
 .titlebar-drag {
@@ -83,10 +207,13 @@ button[class*="bg-success"]:disabled,
 }
 
 .xterm-viewport {
-  background-color: #ffffff !important; /* obsidian-950 */
+  background-color: #ffffff !important;
   border-radius: 0.5rem;
 }
 
+html.dark .xterm-viewport {
+  background-color: #0b0b0d !important;
+}
 
 .xterm {
   padding: 12px;

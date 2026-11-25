@@ -4,13 +4,65 @@ import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { Terminal as TerminalIcon, Send } from 'lucide-react';
 import { useServerState, useServerActions } from '../../context/ServerContext';
+import { useTheme } from '../../context/ThemeContext';
+
+const LIGHT_TERMINAL_THEME = {
+  background: '#ffffff',
+  foreground: '#18181b',
+  cursor: '#488f48',
+  cursorAccent: '#ffffff',
+  selectionBackground: 'rgba(48, 96, 48, 0.35)',
+  black: '#0f172a',
+  red: '#ef4444',
+  green: '#306030',
+  yellow: '#f59e0b',
+  blue: '#3b82f6',
+  magenta: '#8b5cf6',
+  cyan: '#06b6d4',
+  white: '#f8fafc',
+  brightBlack: '#64748b',
+  brightRed: '#f87171',
+  brightGreen: '#488f48',
+  brightYellow: '#fbbf24',
+  brightBlue: '#60a5fa',
+  brightMagenta: '#a78bfa',
+  brightCyan: '#22d3ee',
+  brightWhite: '#ffffff'
+};
+
+const DARK_TERMINAL_THEME = {
+  background: '#0b0b0d',
+  foreground: '#e4e4e7',
+  cursor: '#66bb6a',
+  cursorAccent: '#0b0b0d',
+  selectionBackground: 'rgba(72, 143, 72, 0.35)',
+  black: '#18181b',
+  red: '#f87171',
+  green: '#66bb6a',
+  yellow: '#fbbf24',
+  blue: '#60a5fa',
+  magenta: '#c084fc',
+  cyan: '#22d3ee',
+  white: '#e4e4e7',
+  brightBlack: '#71717a',
+  brightRed: '#fca5a5',
+  brightGreen: '#81c784',
+  brightYellow: '#fcd34d',
+  brightBlue: '#93c5fd',
+  brightMagenta: '#d8b4fe',
+  brightCyan: '#67e8f9',
+  brightWhite: '#ffffff'
+};
 
 export const ConsoleTab: React.FC = () => {
   const { status, activeServer } = useServerState();
   const { sendCommand } = useServerActions();
+  const { theme } = useTheme();
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermInstance = useRef<XTerm | null>(null);
   const fitAddonInstance = useRef<FitAddon | null>(null);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const [inputCommand, setInputCommand] = useState('');
 
   // Initialize xterm
@@ -19,29 +71,7 @@ export const ConsoleTab: React.FC = () => {
     terminalRef.current.innerHTML = '';
 
     const term = new XTerm({
-      theme: {
-        background: '#06090e',
-        foreground: '#18181b',
-        cursor: '#488f48',
-        cursorAccent: '#06090e',
-        selectionBackground: 'rgba(48, 96, 48, 0.35)',
-        black: '#0f172a',
-        red: '#ef4444',
-        green: '#306030',
-        yellow: '#f59e0b',
-        blue: '#3b82f6',
-        magenta: '#8b5cf6',
-        cyan: '#06b6d4',
-        white: '#f8fafc',
-        brightBlack: '#64748b',
-        brightRed: '#f87171',
-        brightGreen: '#488f48',
-        brightYellow: '#fbbf24',
-        brightBlue: '#60a5fa',
-        brightMagenta: '#a78bfa',
-        brightCyan: '#22d3ee',
-        brightWhite: '#ffffff'
-      },
+      theme: themeRef.current === 'dark' ? DARK_TERMINAL_THEME : LIGHT_TERMINAL_THEME,
       fontFamily: '"JetBrains Mono", "Fira Code", monospace',
       fontSize: 13,
       lineHeight: 1.4,
@@ -113,6 +143,13 @@ export const ConsoleTab: React.FC = () => {
       fitAddonInstance.current = null;
     };
   }, [activeServer?.id]);
+
+  // Update terminal theme immediately when Light/Dark theme switches without clearing logs
+  useEffect(() => {
+    if (xtermInstance.current) {
+      xtermInstance.current.options.theme = theme === 'dark' ? DARK_TERMINAL_THEME : LIGHT_TERMINAL_THEME;
+    }
+  }, [theme]);
 
   // Listen for live logs via IPC
   useEffect(() => {
@@ -207,7 +244,7 @@ export const ConsoleTab: React.FC = () => {
       </div>
 
       {/* Terminal Viewport */}
-      <div className="flex-1 min-h-0 bg-surface-base rounded-xl border border-border-default p-2 overflow-hidden shadow-2xl">
+      <div className="flex-1 min-h-0 bg-surface-base dark:bg-[#0b0b0d] rounded-xl border border-border-default p-2 overflow-hidden shadow-2xl">
         <div ref={terminalRef} className="w-full h-full" />
       </div>
 

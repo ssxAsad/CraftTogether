@@ -5,42 +5,53 @@ import { GlassCard } from '../common/GlassCard';
 
 export const PerformanceTab: React.FC = () => {
   const { activeServer, javaRuntimes } = useServerState();
-  const { refreshServers } = useServerActions();
+  const { refreshServers, updateServerConfig } = useServerActions();
   const [ramGb, setRamGb] = useState(activeServer?.allocatedRamGb || 4);
   const [useAikar, setUseAikar] = useState(activeServer?.useAikarFlags !== false);
   const [selectedJava, setSelectedJava] = useState(activeServer?.javaPath || javaRuntimes[0]?.path || 'java');
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (activeServer) {
-      activeServer.allocatedRamGb = ramGb;
-      activeServer.useAikarFlags = useAikar;
-      activeServer.javaPath = selectedJava;
+      await updateServerConfig(activeServer.id, {
+        allocatedRamGb: ramGb,
+        useAikarFlags: useAikar,
+        javaPath: selectedJava
+      });
+      await refreshServers();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     }
   };
 
+  const totalAllottedMb = Math.max(2, ramGb || 4) * 1024;
+  const offHeapReserveMb = totalAllottedMb <= 2048 ? 512 : totalAllottedMb <= 4096 ? 768 : 1024;
+  const maxHeapMb = totalAllottedMb - offHeapReserveMb;
+  const initialHeapMb = Math.max(1024, Math.floor(maxHeapMb * 0.5));
+
   const aikarFlagsPreview = [
-    `-Xms${ramGb}G`,
-    `-Xmx${ramGb}G`,
+    `-Xms${initialHeapMb}M`,
+    `-Xmx${maxHeapMb}M`,
+    '-XX:MaxMetaspaceSize=384M',
+    '-XX:ReservedCodeCacheSize=128M',
+    '-XX:MaxDirectMemorySize=512M',
     '-XX:+UseG1GC',
     '-XX:+ParallelRefProcEnabled',
-    '-XX:MaxGCPauseMillis=200',
+    '-XX:MaxGCPauseMillis=130',
     '-XX:+UnlockExperimentalVMOptions',
     '-XX:+DisableExplicitGC',
-    '-XX:+AlwaysPreTouch',
-    '-XX:G1NewSizePercent=30',
-    '-XX:G1MaxNewSizePercent=40',
-    '-XX:G1ReservePercent=20',
+    '-XX:G1NewSizePercent=25',
+    '-XX:G1MaxNewSizePercent=35',
+    '-XX:G1ReservePercent=15',
     '-XX:G1HeapWastePercent=5',
     '-XX:G1MixedGCCountTarget=4',
-    '-XX:InitiatingHeapOccupancyPercent=15',
+    '-XX:InitiatingHeapOccupancyPercent=45',
     '-XX:G1MixedGCLiveThresholdPercent=90',
     '-XX:G1RSetUpdatingPauseTimePercent=5',
     '-XX:SurvivorRatio=32',
     '-XX:+PerfDisableSharedMem',
     '-XX:MaxTenuringThreshold=1',
+    '-XX:+UseStringDeduplication',
     '-Dusing.aikars.flags=https://mcflags.emc.gs',
     '-Daikars.new.flags=true'
   ];

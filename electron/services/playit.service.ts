@@ -1,12 +1,16 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import https from 'https';
-import { spawn, ChildProcess } from 'child_process';
+import { execFile, spawn, ChildProcess } from 'child_process';
+import { promisify } from 'util';
 import { shell } from 'electron';
 import { AppPaths } from '../utils/paths';
 import { Logger } from '../utils/logger';
 
+const execFileAsync = promisify(execFile);
 const logger = new Logger('PlayitService');
+const PLAYIT_MACOS_URL = 'https://github.com/playit-cloud/playit-agent/releases/download/v2.0.2/playit-macos-universal.tar.gz';
 
 export interface CloudTunnelStatus {
   isActive: boolean;
@@ -57,12 +61,27 @@ export class PlayitService {
   }
 
   /**
-   * Returns path to the portable playit executable.
+   * Returns path to the portable playit tunnel executable (`playit.exe` on Windows, `playitd` on macOS).
    */
   static getBinaryPath(): string {
     const binDir = AppPaths.getBinDir();
     AppPaths.ensureDir(binDir);
-    return path.join(binDir, 'playit.exe');
+    if (process.platform === 'win32') {
+      return path.join(binDir, 'playit.exe');
+    }
+    if (process.platform === 'darwin') {
+      return path.join(binDir, 'playitd');
+    }
+    return path.join(binDir, 'playit');
+  }
+
+  /**
+   * Returns path to the playit CLI executable used for claiming (`playit` on macOS, `playit.exe` on Windows).
+   */
+  static getCliBinaryPath(): string {
+    const binDir = AppPaths.getBinDir();
+    AppPaths.ensureDir(binDir);
+    return path.join(binDir, process.platform === 'win32' ? 'playit.exe' : 'playit');
   }
 
   /**
@@ -72,11 +91,16 @@ export class PlayitService {
     const binPath = this.getBinaryPath();
     if (!fs.existsSync(binPath)) return false;
     const size = fs.statSync(binPath).size;
-    // v0.17.1 signed exe is ~4.8MB; v1.0.10 daemon is ~4.8MB too but check < 1MB as sanity floor
-    // Key check: if > 5MB it's the v1.0.10 daemon playitd — delete it and force re-download
     if (size < 1024 * 1024) return false; // too small, corrupt
-    if (size > 5 * 1024 * 1024) {
-      // This is the v1.0.10 daemon binary — not compatible with our claim flow
+
+    if (process.platform === 'darwin') {
+      const cliPath = this.getCliBinaryPath();
+      if (!fs.existsSync(cliPath)) return false;
+      return fs.statSync(cliPath).size >= 1024 * 1024;
+    }
+
+    // Windows: v0.17.1 signed exe is ~4.8MB; if > 5MB it's the v1.0.10 daemon playitd — delete it and force re-download
+    if (process.platform === 'win32' && size > 5 * 1024 * 1024) {
       logger.warn('Detected oversized playit daemon binary (v1.0.10) — removing and scheduling re-download of v0.17.1');
       try { fs.unlinkSync(binPath); } catch {}
       return false;
@@ -93,23 +117,15 @@ export class PlayitService {
   }
 
   /**
-   * Downloads the official playit agent binary if not present.
+   * Helper to download a URL (following redirects) to a destination file path.
    */
-  static async ensureBinary(onProgress?: (percent: number, msg?: string) => void): Promise<boolean> {
-    if (this.isBinaryInstalled()) {
-      return true;
-    }
-
-    const binDir = AppPaths.getBinDir();
-    AppPaths.ensureDir(binDir);
-    const binPath = this.getBinaryPath();
-    const downloadUrl = 'https://github.com/playit-cloud/playit-agent/releases/download/v0.17.1/playit-windows-x86_64-signed.exe';
-
-    logger.info(`Downloading official playit tunnel binary to: ${binPath}`);
-    if (onProgress) onProgress(10, 'Downloading PlayIt.gg Agent...');
-
-    return new Promise<boolean>((resolve, reject) => {
-      const tempPath = `${binPath}.tmp`;
+  private static downloadFile(
+    downloadUrl: string,
+    destPath: string,
+    onProgress?: (percent: number, msg?: string) => void
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const tempPath = `${destPath}.tmp`;
 
       const downloadFileWithRedirects = (url: string, redirectsRemaining = 5) => {
         if (redirectsRemaining <= 0) {
@@ -119,11 +135,14 @@ export class PlayitService {
 
         https.get(url, (res) => {
           if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            downloadFileWithRedirects(res.headers.location, redirectsRemaining - 1);
+            res.resume();
+            const nextUrl = new URL(res.headers.location, url).toString();
+            downloadFileWithRedirects(nextUrl, redirectsRemaining - 1);
             return;
           }
 
           if (res.statusCode !== 200) {
+            res.resume();
             reject(new Error(`Failed to download agent. HTTP status: ${res.statusCode}`));
             return;
           }
@@ -135,7 +154,7 @@ export class PlayitService {
           res.on('data', (chunk) => {
             receivedBytes += chunk.length;
             if (totalBytes > 0 && onProgress) {
-              const percent = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+              const percent = Math.min(95, Math.round((receivedBytes / totalBytes) * 95));
               onProgress(percent, `Downloading PlayIt.gg Agent... ${percent}%`);
             }
           });
@@ -145,11 +164,9 @@ export class PlayitService {
           fileStream.on('finish', () => {
             fileStream.close(() => {
               try {
-                if (fs.existsSync(binPath)) fs.unlinkSync(binPath);
-                fs.renameSync(tempPath, binPath);
-                logger.info('PlayIt.gg Agent binary downloaded successfully.');
-                if (onProgress) onProgress(100, 'PlayIt.gg Agent ready!');
-                resolve(true);
+                if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+                fs.renameSync(tempPath, destPath);
+                resolve();
               } catch (e) {
                 reject(e);
               }
@@ -168,6 +185,73 @@ export class PlayitService {
 
       downloadFileWithRedirects(downloadUrl);
     });
+  }
+
+  /**
+   * Downloads the official playit agent binary if not present.
+   */
+  static async ensureBinary(onProgress?: (percent: number, msg?: string) => void): Promise<boolean> {
+    if (this.isBinaryInstalled()) {
+      return true;
+    }
+
+    const binDir = AppPaths.getBinDir();
+    AppPaths.ensureDir(binDir);
+
+    // macOS: Download official v2.0.2 universal tarball (Apple Silicon + Intel) containing `playit` + `playitd`
+    if (process.platform === 'darwin') {
+      const archivePath = path.join(binDir, 'playit-macos-universal.tar.gz');
+      const extractDir = path.join(binDir, 'playit-extract-tmp');
+      logger.info(`Downloading official macOS universal playit agent to: ${archivePath}`);
+      if (onProgress) onProgress(10, 'Downloading PlayIt.gg Agent for macOS...');
+
+      await this.downloadFile(PLAYIT_MACOS_URL, archivePath, onProgress);
+
+      if (onProgress) onProgress(96, 'Extracting PlayIt.gg Agent...');
+      try {
+        if (fs.existsSync(extractDir)) fs.rmSync(extractDir, { recursive: true, force: true });
+        AppPaths.ensureDir(extractDir);
+        await execFileAsync('tar', ['-xzf', archivePath, '-C', extractDir]);
+
+        const nestedDir = path.join(extractDir, 'playit-macos-universal');
+        const srcDir = fs.existsSync(nestedDir) ? nestedDir : extractDir;
+        const cliSrc = path.join(srcDir, 'playit');
+        const daemonSrc = path.join(srcDir, 'playitd');
+
+        if (!fs.existsSync(cliSrc) || !fs.existsSync(daemonSrc)) {
+          throw new Error('PlayIt.gg macOS archive is missing playit or playitd binaries.');
+        }
+
+        const cliDest = this.getCliBinaryPath();
+        const daemonDest = this.getBinaryPath();
+        fs.copyFileSync(cliSrc, cliDest);
+        fs.copyFileSync(daemonSrc, daemonDest);
+        fs.chmodSync(cliDest, 0o755);
+        fs.chmodSync(daemonDest, 0o755);
+
+        try { await execFileAsync('xattr', ['-d', 'com.apple.quarantine', cliDest]); } catch {}
+        try { await execFileAsync('xattr', ['-d', 'com.apple.quarantine', daemonDest]); } catch {}
+
+        logger.info('PlayIt.gg macOS universal binaries extracted and ready.');
+        if (onProgress) onProgress(100, 'PlayIt.gg Agent ready!');
+        return true;
+      } finally {
+        try { if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath); } catch {}
+        try { if (fs.existsSync(extractDir)) fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
+      }
+    }
+
+    // Windows: Download official v0.17.1 signed portable executable
+    const binPath = this.getBinaryPath();
+    const downloadUrl = 'https://github.com/playit-cloud/playit-agent/releases/download/v0.17.1/playit-windows-x86_64-signed.exe';
+
+    logger.info(`Downloading official playit tunnel binary to: ${binPath}`);
+    if (onProgress) onProgress(10, 'Downloading PlayIt.gg Agent...');
+
+    await this.downloadFile(downloadUrl, binPath, onProgress);
+    logger.info('PlayIt.gg Agent binary downloaded successfully.');
+    if (onProgress) onProgress(100, 'PlayIt.gg Agent ready!');
+    return true;
   }
 
   /**
@@ -284,6 +368,94 @@ export class PlayitService {
       return this.currentStatus;
     }
 
+    // macOS v2.0.2 claim flow using `playit claim generate / url / exchange` (no LaunchAgent required)
+    if (process.platform === 'darwin') {
+      const cliPath = this.getCliBinaryPath();
+      if (!fs.existsSync(cliPath)) {
+        this.updateStatus({ isActive: false, status: 'ERROR', error: 'PlayIt.gg CLI binary not found. Please re-run setup.' });
+        return this.currentStatus;
+      }
+
+      try {
+        logger.info('Generating PlayIt.gg claim code via macOS playit CLI...');
+        const { stdout: genOut } = await execFileAsync(cliPath, ['claim', 'generate'], {
+          cwd: AppPaths.getBinDir(),
+          timeout: 15000
+        });
+        const claimCode = genOut.trim().split(/\s+/).pop() || '';
+        if (!claimCode) {
+          throw new Error('Failed to generate PlayIt.gg claim code.');
+        }
+
+        let claimUrl = `https://playit.gg/claim/${claimCode}`;
+        try {
+          const { stdout: urlOut } = await execFileAsync(cliPath, ['claim', 'url', claimCode, '--name', 'CraftTogether'], {
+            cwd: AppPaths.getBinDir(),
+            timeout: 15000
+          });
+          const match = urlOut.match(/https:\/\/playit\.gg\/claim\/[^\s]+/i);
+          if (match) claimUrl = match[0];
+        } catch {}
+
+        logger.info(`PlayIt.gg macOS claim URL ready: ${claimUrl}`);
+        this.updateStatus({
+          status: 'WAITING_CLAIM',
+          claimUrl
+        });
+
+        try {
+          shell.openExternal(claimUrl);
+        } catch (err) {
+          logger.warn('Failed to auto-open claim URL in browser', err);
+        }
+
+        // Wait for user to approve claim in browser and exchange for secret key
+        const exchangeChild = spawn(cliPath, ['claim', 'exchange', claimCode, '--wait', '0'], {
+          cwd: AppPaths.getBinDir(),
+          env: { ...process.env },
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
+        this.childProcess = exchangeChild;
+
+        let stdoutBuf = '';
+        exchangeChild.stdout.on('data', (chunk: Buffer) => {
+          stdoutBuf += chunk.toString('utf-8');
+        });
+        exchangeChild.stderr.on('data', (chunk: Buffer) => {
+          const msg = chunk.toString('utf-8').trim();
+          if (msg) logger.info(`[PlayitClaimMac] ${msg}`);
+        });
+        exchangeChild.on('error', (err) => {
+          logger.error('PlayIt.gg macOS claim exchange error', err);
+          this.updateStatus({ isActive: false, status: 'ERROR', error: err.message });
+        });
+        exchangeChild.on('close', (code) => {
+          this.childProcess = null;
+          const secret = stdoutBuf.trim().split(/\s+/).pop() || '';
+          if (code === 0 && secret.length > 10) {
+            logger.info('PlayIt.gg macOS claim succeeded — saving secret and starting playitd...');
+            try {
+              fs.writeFileSync(workspaceToml, `secret_key = "${secret}"\n`, { encoding: 'utf8', mode: 0o600 });
+            } catch {}
+            setTimeout(() => this.startTunnel(port), 400);
+          } else if (this.currentStatus.status === 'WAITING_CLAIM') {
+            logger.warn(`PlayIt.gg macOS claim exchange exited with code ${code}`);
+            this.updateStatus({
+              isActive: false,
+              status: 'ERROR',
+              error: 'PlayIt.gg claim did not complete. Click Try Again to generate a new claim link.'
+            });
+          }
+        });
+
+        return this.currentStatus;
+      } catch (err: any) {
+        logger.error('PlayIt.gg macOS claim flow failed', err);
+        this.updateStatus({ isActive: false, status: 'ERROR', error: err.message || 'Failed to start PlayIt.gg claim.' });
+        return this.currentStatus;
+      }
+    }
+
     logger.info('Spawning playit.exe with no arguments to generate claim URL...');
 
     // Spawn with no args — playit.exe will print its own claim URL to stderr
@@ -396,11 +568,11 @@ export class PlayitService {
   private static findSecretInKnownPaths(): { path: string; content: string; secret: string } | null {
     const appData = process.env.APPDATA || '';
     const localAppData = process.env.LOCALAPPDATA || '';
-    const userProfile = process.env.USERPROFILE || '';
+    const userProfile = process.env.USERPROFILE || os.homedir() || '';
     const binDir = AppPaths.getBinDir();
     const workspaceToml = path.join(binDir, 'playit.toml');
 
-    // All paths playit v0.17.1 and v1.0.x might write to
+    // All paths playit v0.17.1, v1.0.x, and v2.x (Windows + macOS) might write to
     const candidates = [
       path.join(binDir, 'config.toml'),
       path.join(appData, 'playit', 'config.toml'),
@@ -408,6 +580,8 @@ export class PlayitService {
       path.join(appData, 'playit_gg', 'playit.toml'),
       path.join(localAppData, 'playit_gg', 'playit.toml'),
       path.join(localAppData, 'playit', 'config.toml'),
+      path.join(userProfile, 'Library', 'Application Support', 'playit_gg', 'playit.toml'),
+      path.join(userProfile, 'Library', 'Application Support', 'playit', 'config.toml'),
       path.join(userProfile, '.config', 'playit', 'config.toml'),
       path.join(userProfile, '.playit', 'config.toml'),
     ];
@@ -636,8 +810,13 @@ export class PlayitService {
 
       logger.info(`Starting PlayIt.gg process with secret: ${binPath}`);
 
-      // Spawn with secret — this is the authenticated daemon mode
-      const child = spawn(binPath, ['--secret_path', configPath, '--stdout', 'start'], {
+      // Spawn with secret — authenticated daemon mode
+      // macOS runs v2.0.2 `playitd` directly with `--secret` and a workspace-scoped IPC socket (no LaunchAgent needed)
+      const spawnArgs = process.platform === 'darwin'
+        ? ['--secret', secretKey, '--socket-path', path.join(workingDir, 'playit.sock')]
+        : ['--secret_path', configPath, '--stdout', 'start'];
+
+      const child = spawn(binPath, spawnArgs, {
         cwd: workingDir,
         env: { ...process.env },
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -691,7 +870,7 @@ export class PlayitService {
           // Kill current process
           try {
             if (process.platform === 'win32' && child.pid) {
-              spawn('taskkill', ['/pid', child.pid.toString(), '/f', '/t']);
+              spawn('taskkill', ['/pid', child.pid.toString(), '/f', '/t'], { stdio: 'ignore', windowsHide: true });
             } else {
               child.kill('SIGINT');
             }
@@ -787,7 +966,7 @@ export class PlayitService {
       logger.info('Stopping PlayIt.gg background process...');
       try {
         if (process.platform === 'win32' && this.childProcess.pid) {
-          spawn('taskkill', ['/pid', this.childProcess.pid.toString(), '/f', '/t']);
+          spawn('taskkill', ['/pid', this.childProcess.pid.toString(), '/f', '/t'], { stdio: 'ignore', windowsHide: true });
         } else {
           this.childProcess.kill('SIGINT');
         }

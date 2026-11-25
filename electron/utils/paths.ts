@@ -12,72 +12,127 @@ export class AppPaths {
     return path.join(userData, 'workspace-pointer.json');
   }
 
+  private static savePointer(storageDir: string, setupComplete: boolean, setupStep: string): void {
+    let relativeStorageDirectory: string | undefined;
+
+    if (process.env.PORTABLE_EXECUTABLE_DIR) {
+      try {
+        const exeDir = process.env.PORTABLE_EXECUTABLE_DIR;
+        const exeDrive = path.parse(path.resolve(exeDir)).root.toLowerCase();
+        const storageDrive = path.parse(path.resolve(storageDir)).root.toLowerCase();
+        if (exeDrive === storageDrive) {
+          relativeStorageDirectory = path.relative(exeDir, storageDir);
+        }
+      } catch {}
+    }
+
+    const payload = JSON.stringify({
+      storageDirectory: storageDir,
+      relativeStorageDirectory,
+      setupComplete,
+      setupStep
+    }, null, 2);
+
+    // Save in userData
+    try {
+      const userDataPointer = this.getPointerPath();
+      fs.writeFileSync(userDataPointer, payload, 'utf-8');
+    } catch {}
+
+    // Also save next to the portable executable if running portably
+    if (process.env.PORTABLE_EXECUTABLE_DIR) {
+      try {
+        const portablePointer = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'workspace-pointer.json');
+        fs.writeFileSync(portablePointer, payload, 'utf-8');
+      } catch {}
+    }
+  }
+
   static init(): void {
     // Clean up any legacy Craftora folders in Roaming
     this.cleanUpRoamingFolders();
 
-    // Read saved storage directory from workspace pointer
-    const pointerPath = this.getPointerPath();
-    if (fs.existsSync(pointerPath)) {
+    // Check pointer file in order:
+    // 1. Next to the portable executable (PORTABLE_EXECUTABLE_DIR)
+    // 2. In userData (%APPDATA%\CraftTogether)
+    let pointerData: any = null;
+
+    if (process.env.PORTABLE_EXECUTABLE_DIR) {
+      const portablePointer = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'workspace-pointer.json');
+      if (fs.existsSync(portablePointer)) {
+        try {
+          const parsed = JSON.parse(fs.readFileSync(portablePointer, 'utf-8'));
+          if (parsed.relativeStorageDirectory) {
+            const relResolved = path.resolve(process.env.PORTABLE_EXECUTABLE_DIR, parsed.relativeStorageDirectory);
+            if (fs.existsSync(relResolved)) {
+              parsed.storageDirectory = relResolved;
+            }
+          }
+          pointerData = parsed;
+        } catch {}
+      }
+    }
+
+    if (!pointerData || !pointerData.storageDirectory || !fs.existsSync(pointerData.storageDirectory)) {
+      const userDataPointer = this.getPointerPath();
+      if (fs.existsSync(userDataPointer)) {
+        try {
+          pointerData = JSON.parse(fs.readFileSync(userDataPointer, 'utf-8'));
+        } catch {}
+      }
+    }
+
+    if (pointerData && pointerData.storageDirectory && fs.existsSync(pointerData.storageDirectory)) {
       try {
-        const data = JSON.parse(fs.readFileSync(pointerPath, 'utf-8'));
-        if (data.storageDirectory && fs.existsSync(data.storageDirectory)) {
-          const settingsPath = path.join(data.storageDirectory, 'app-settings.json');
-          if (fs.existsSync(settingsPath)) {
-            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-            this.baseDir = data.storageDirectory;
+        const settingsPath = path.join(pointerData.storageDirectory, 'app-settings.json');
+        if (fs.existsSync(settingsPath)) {
+          const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+          this.baseDir = pointerData.storageDirectory;
 
-            // Explicitly finished setup
-            if (settings.setupStep === 'complete' && settings.setupComplete === true) {
-              this.setupComplete = true;
-              this.setupStep = 'complete';
-              return;
-            }
-
-            // User was on playit screen
-            if (settings.setupStep === 'playit') {
-              this.setupComplete = false;
-              this.setupStep = 'playit';
-              return;
-            }
-
-            // User was on dependencies screen
-            if (settings.setupStep === 'dependencies') {
-              this.setupComplete = false;
-              this.setupStep = 'dependencies';
-              return;
-            }
-
-            // Migration heuristic for legacy files where setupStep was not saved:
-            // If no servers have been created yet and setupStep was not explicitly 'complete',
-            // this user was mid-setup. Resume from playit if playit binary is present, else dependencies.
-            const serversDir = path.join(data.storageDirectory, 'servers');
-            const hasServers = fs.existsSync(serversDir) && fs.readdirSync(serversDir).filter(f => {
-              try { return fs.statSync(path.join(serversDir, f)).isDirectory(); } catch { return false; }
-            }).length > 0;
-
-            const playitBin = path.join(data.storageDirectory, 'bin', 'playit.exe');
-            const hasPlayitBin = fs.existsSync(playitBin) && fs.statSync(playitBin).size > 1024 * 1024;
-
-            if (!hasServers && settings.setupStep !== 'complete') {
-              this.setupComplete = false;
-              this.setupStep = hasPlayitBin ? 'playit' : 'dependencies';
-              return;
-            }
-
-            this.setupComplete = settings.setupComplete === true;
-            this.setupStep = this.setupComplete ? 'complete' : 'dependencies';
+          // Explicitly finished setup
+          if (settings.setupStep === 'complete' && settings.setupComplete === true) {
+            this.setupComplete = true;
+            this.setupStep = 'complete';
             return;
           }
+
+          // User was on playit screen
+          if (settings.setupStep === 'playit') {
+            this.setupComplete = false;
+            this.setupStep = 'playit';
+            return;
+          }
+
+          // User was on dependencies screen
+          if (settings.setupStep === 'dependencies') {
+            this.setupComplete = false;
+            this.setupStep = 'dependencies';
+            return;
+          }
+
+          const serversDir = path.join(pointerData.storageDirectory, 'servers');
+          const hasServers = fs.existsSync(serversDir) && fs.readdirSync(serversDir).filter(f => {
+            try { return fs.statSync(path.join(serversDir, f)).isDirectory(); } catch { return false; }
+          }).length > 0;
+
+          const playitFileName = process.platform === 'win32' ? 'playit.exe' : process.platform === 'darwin' ? 'playitd' : 'playit';
+          const playitBin = path.join(pointerData.storageDirectory, 'bin', playitFileName);
+          const hasPlayitBin = fs.existsSync(playitBin) && fs.statSync(playitBin).size > 1024 * 1024;
+
+          if (!hasServers && settings.setupStep !== 'complete') {
+            this.setupComplete = false;
+            this.setupStep = hasPlayitBin ? 'playit' : 'dependencies';
+            return;
+          }
+
+          this.setupComplete = settings.setupComplete === true;
+          this.setupStep = this.setupComplete ? 'complete' : 'dependencies';
+          return;
         }
       } catch (e) {
         console.error('Failed to parse workspace pointer', e);
       }
       
-      // If the directory was emptied or app-settings.json is missing, invalidate setup
-      try {
-        if (fs.existsSync(pointerPath)) fs.unlinkSync(pointerPath);
-      } catch {}
       this.baseDir = '';
       this.setupComplete = false;
       this.setupStep = 'directory';
@@ -171,33 +226,38 @@ export class AppPaths {
   static setStorageDir(customPath: string): void {
     this.ensureDir(customPath);
     this.baseDir = customPath;
-    this.setupComplete = false;
-    this.setupStep = 'dependencies';
 
-    // Save app settings inside the chosen directory with setupStep = dependencies
+    // Check if this is an existing workspace
     const settingsPath = path.join(customPath, 'app-settings.json');
-    fs.writeFileSync(
-      settingsPath,
-      JSON.stringify({
-        storageDirectory: customPath,
-        setupComplete: false,
-        setupStep: 'dependencies',
-        updatedAt: new Date().toISOString()
-      }, null, 2),
-      'utf-8'
-    );
+    let isExistingComplete = false;
+    if (fs.existsSync(settingsPath)) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+        if (existing.setupComplete === true && existing.setupStep === 'complete') {
+          isExistingComplete = true;
+          this.setupComplete = true;
+          this.setupStep = 'complete';
+        }
+      } catch {}
+    }
 
-    // Save bootstrap pointer so Electron remembers the chosen directory and step
-    const pointerPath = this.getPointerPath();
-    fs.writeFileSync(
-      pointerPath,
-      JSON.stringify({
-        storageDirectory: customPath,
-        setupComplete: false,
-        setupStep: 'dependencies'
-      }, null, 2),
-      'utf-8'
-    );
+    if (!isExistingComplete) {
+      this.setupComplete = false;
+      this.setupStep = 'dependencies';
+      fs.writeFileSync(
+        settingsPath,
+        JSON.stringify({
+          storageDirectory: customPath,
+          setupComplete: false,
+          setupStep: 'dependencies',
+          updatedAt: new Date().toISOString()
+        }, null, 2),
+        'utf-8'
+      );
+    }
+
+    // Save bootstrap pointer so Electron remembers the chosen directory
+    this.savePointer(customPath, this.setupComplete, this.setupStep);
 
     // Ensure all subdirectories inside the chosen directory
     this.ensureDir(this.getServersDir());
@@ -233,16 +293,7 @@ export class AppPaths {
         'utf-8'
       );
 
-      const pointerPath = this.getPointerPath();
-      fs.writeFileSync(
-        pointerPath,
-        JSON.stringify({
-          storageDirectory: this.baseDir,
-          setupComplete: this.setupComplete,
-          setupStep: this.setupStep
-        }, null, 2),
-        'utf-8'
-      );
+      this.savePointer(this.baseDir, this.setupComplete, this.setupStep);
     }
   }
 
@@ -251,9 +302,9 @@ export class AppPaths {
   }
 
   /**
-   * Validates if a target directory exists and is strictly EMPTY.
+   * Validates if a target directory exists and is either strictly EMPTY or an EXISTING CraftTogether workspace.
    */
-  static validateDirectory(targetPath: string): { isValid: boolean; isEmpty: boolean; error?: string; path: string } {
+  static validateDirectory(targetPath: string): { isValid: boolean; isEmpty: boolean; isExistingWorkspace?: boolean; error?: string; path: string } {
     if (!targetPath || !targetPath.trim()) {
       return { isValid: false, isEmpty: false, error: 'Please specify a folder path.', path: targetPath };
     }
@@ -270,12 +321,18 @@ export class AppPaths {
         return { isValid: false, isEmpty: false, error: 'The selected path is a file, not a directory.', path: resolved };
       }
 
+      // Check if this directory is already an existing CraftTogether workspace
+      const settingsPath = path.join(resolved, 'app-settings.json');
+      if (fs.existsSync(settingsPath)) {
+        return { isValid: true, isEmpty: true, isExistingWorkspace: true, path: resolved };
+      }
+
       const files = fs.readdirSync(resolved);
       if (files.length > 0) {
         return {
           isValid: false,
           isEmpty: false,
-          error: 'The selected folder is not empty. Please select or create an empty folder to continue.',
+          error: 'The selected folder is not empty. Please select an empty folder or an existing CraftTogether directory.',
           path: resolved
         };
       }

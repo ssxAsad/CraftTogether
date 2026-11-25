@@ -70,14 +70,13 @@ export function registerServerIpc(mainWindow: BrowserWindow): void {
   });
 
   // Java discovery & installation
-  ipcMain.handle('java:detect-all', async () => {
-    return await JavaDetectorService.detectJavaRuntimes();
+  ipcMain.handle('java:detect-all', async (_, forceRefresh?: boolean) => {
+    return await JavaDetectorService.detectJavaRuntimes(Boolean(forceRefresh));
   });
 
   ipcMain.handle('java:install-21', async () => {
     return await JavaDetectorService.downloadAndInstallJava21((percent) => {
       if (!mainWindow.isDestroyed()) {
-        // We can reuse the jar download progress event or create a new one, but let's just send a generic progress
         mainWindow.webContents.send('java:install-progress', percent);
       }
     });

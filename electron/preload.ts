@@ -3,11 +3,11 @@ import { contextBridge, ipcRenderer } from 'electron';
 export interface IElectronAPI {
   // First Launch & Workspace setup
   getSetupStatus: () => Promise<{ isSetupComplete: boolean; setupStep: 'directory' | 'dependencies' | 'playit' | 'complete'; storageDirectory: string }>;
-  validateDirectory: (targetPath: string) => Promise<{ isValid: boolean; isEmpty: boolean; error?: string; path: string }>;
+  validateDirectory: (targetPath: string) => Promise<{ isValid: boolean; isEmpty: boolean; isExistingWorkspace?: boolean; error?: string; path: string }>;
   setStorageDirectory: (targetPath: string) => Promise<boolean>;
   setSetupStep: (step: 'directory' | 'dependencies' | 'playit' | 'complete') => Promise<boolean>;
   completeSetup: () => Promise<boolean>;
-  browseDirectory: () => Promise<{ path: string; validation: { isValid: boolean; isEmpty: boolean; error?: string } } | null>;
+  browseDirectory: () => Promise<{ path: string; validation: { isValid: boolean; isEmpty: boolean; isExistingWorkspace?: boolean; error?: string } } | null>;
   checkSetupDependencies: () => Promise<any[]>;
   installSetupDependency: (id: 'java' | 'cloud_relay' | 'papermc' | 'plugins') => Promise<boolean>;
   onSetupDependencyProgress: (callback: (data: { id: string; percent: number; message?: string }) => void) => () => void;
@@ -31,7 +31,7 @@ export interface IElectronAPI {
   onDownloadProgress: (callback: (progress: any) => void) => () => void;
 
   // Java & Jars
-  detectJava: () => Promise<any[]>;
+  detectJava: (forceRefresh?: boolean) => Promise<any[]>;
   installJava21: () => Promise<boolean>;
   onJavaInstallProgress: (callback: (percent: number) => void) => () => void;
   getSoftwareVersions: (software: string) => Promise<string[]>;
@@ -105,6 +105,7 @@ export interface IElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;
+  setWindowTheme: (theme: 'light' | 'dark') => void;
 }
 
 const electronAPI: IElectronAPI = {
@@ -162,7 +163,7 @@ const electronAPI: IElectronAPI = {
   },
 
   // Java & Jars
-  detectJava: () => ipcRenderer.invoke('java:detect-all'),
+  detectJava: (forceRefresh?: boolean) => ipcRenderer.invoke('java:detect-all', forceRefresh),
   installJava21: () => ipcRenderer.invoke('java:install-21'),
   onJavaInstallProgress: (callback) => {
     const handler = (_: any, percent: number) => callback(percent);
@@ -246,6 +247,7 @@ const electronAPI: IElectronAPI = {
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+  setWindowTheme: (theme) => ipcRenderer.send('window:set-theme', theme),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

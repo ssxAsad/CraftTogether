@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
+import dns from 'dns';
 import { AppPaths } from './utils/paths';
 import { Logger } from './utils/logger';
 import { registerServerIpc } from './ipc/server.ipc';
@@ -15,6 +16,11 @@ import { UpnpService } from './services/upnp.service';
 import { LanBroadcastService } from './services/lan-broadcast.service';
 import { handleSquirrelEvent } from './utils/squirrel';
 
+// Prefer IPv4 first across all network lookups to prevent ECONNRESET on networks with broken/unrouted IPv6
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 // __filename and __dirname are globally available in CommonJS
 
 const logger = new Logger('Main');
@@ -23,14 +29,17 @@ const logger = new Logger('Main');
 process.env.DIST = path.join(__dirname, '../dist');
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public');
 
-// Optimize GPU hardware acceleration & background throttling to minimize CPU
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('disable-software-rasterizer');
+// Disable GPU hardware acceleration & lock sRGB color profile on Windows:
+// Chromium 132's ANGLE D3D11 + DirectComposition + MPO GPU compositor corrupts tiles into
+// yellow/pink (magenta) artifacts on NVIDIA/Windows drivers during tab switches and dark-mode repaints.
+// On macOS, Metal compositing is unaffected, so keep native acceleration there.
+if (process.platform === 'win32') {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('force-color-profile', 'srgb');
+}
 
-// Disable disk cache to prevent cache_util_win.cc Access Denied (0x5) errors
+// Disable HTTP disk cache to prevent cache_util_win.cc Access Denied (0x5) errors
 app.commandLine.appendSwitch('disable-http-cache');
-app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -54,9 +63,8 @@ async function createWindow() {
     height: 820,
     minWidth: 1050,
     minHeight: 680,
-    frame: false, // Frameless for modern custom titlebar & Obsidian aesthetic
-    titleBarStyle: 'hidden',
-    backgroundColor: '#090d16',
+    frame: false, // Frameless window for custom titlebar (avoid combining with titleBarStyle on Windows)
+    backgroundColor: '#ffffff',
     icon: iconPath,
     show: false,
     webPreferences: {

@@ -2,8 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
+import dns from 'dns';
 import { AppPaths } from '../utils/paths';
 import { Logger } from '../utils/logger';
+
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const logger = new Logger('JarDownloader');
 
@@ -218,14 +223,15 @@ export class JarDownloaderService {
   }
 
   /**
-   * Generic file downloader with redirect handling and byte stream progress.
+   * Generic file downloader with redirect handling, byte stream progress, and automatic retries.
    * Resolves redirects in-memory before opening file write streams on disk.
    */
   static downloadFile(
     url: string,
     destPath: string,
     onProgress?: (percent: number, downloaded: number, total: number) => void,
-    maxRedirects = 8
+    maxRedirects = 8,
+    retries = 2
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       if (maxRedirects <= 0) {
@@ -234,13 +240,13 @@ export class JarDownloaderService {
 
       const client = url.startsWith('https') ? https : http;
 
-      const request = client.get(url, { headers: { 'User-Agent': 'CraftTogether/1.0.0' } }, (res) => {
+      const request = client.get(url, { family: 4, headers: { 'User-Agent': 'CraftTogether/1.0.0' } }, (res) => {
         // Follow redirects (both relative and absolute) purely in memory
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           res.resume(); // Discard socket stream data
           try {
             const redirectUrl = new URL(res.headers.location, url).href;
-            return this.downloadFile(redirectUrl, destPath, onProgress, maxRedirects - 1).then(resolve).catch(reject);
+            return this.downloadFile(redirectUrl, destPath, onProgress, maxRedirects - 1, retries).then(resolve).catch(reject);
           } catch (urlErr) {
             return reject(new Error(`Invalid redirect URL: ${res.headers.location}`));
           }
@@ -269,7 +275,14 @@ export class JarDownloaderService {
         res.on('error', (err) => {
           file.destroy();
           try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch {}
-          reject(err);
+          if (retries > 0) {
+            logger.warn(`Download stream error (${err.message}). Retrying in 1.5s... (${retries} attempts left)`);
+            setTimeout(() => {
+              this.downloadFile(url, destPath, onProgress, maxRedirects, retries - 1).then(resolve).catch(reject);
+            }, 1500);
+          } else {
+            reject(err);
+          }
         });
 
         file.on('error', (err) => {
@@ -286,7 +299,15 @@ export class JarDownloaderService {
       });
 
       request.on('error', (err) => {
-        reject(err);
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch {}
+        if (retries > 0) {
+          logger.warn(`Download request error (${err.message}). Retrying in 1.5s... (${retries} attempts left)`);
+          setTimeout(() => {
+            this.downloadFile(url, destPath, onProgress, maxRedirects, retries - 1).then(resolve).catch(reject);
+          }, 1500);
+        } else {
+          reject(err);
+        }
       });
     });
   }
@@ -296,7 +317,7 @@ export class JarDownloaderService {
    */
   static fetchJson<T>(url: string): Promise<T> {
     return new Promise((resolve, reject) => {
-      https.get(url, { headers: { 'User-Agent': 'CraftTogether/1.0.0' } }, (res) => {
+      https.get(url, { family: 4, headers: { 'User-Agent': 'CraftTogether/1.0.0' } }, (res) => {
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           try {
             const redirectUrl = new URL(res.headers.location, url).href;

@@ -51,7 +51,7 @@ export const App: React.FC = () => {
   if (isSetupComplete === null) {
     return (
       <div className="flex h-screen w-screen bg-surface-base items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-border-default border-t-transparent animate-spin" />
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, dialog, shell } from 'electron';
+import { ipcMain, BrowserWindow, dialog, shell, nativeTheme } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { ConfigParserService, ServerProperties } from '../services/config-parser.service';
@@ -103,6 +103,14 @@ export function registerConfigIpc(mainWindow: BrowserWindow): void {
 
   ipcMain.on('window:close', () => {
     mainWindow.close();
+  });
+
+  ipcMain.on('window:set-theme', (_, mode: 'light' | 'dark') => {
+    const isDark = mode === 'dark';
+    nativeTheme.themeSource = isDark ? 'dark' : 'light';
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.setBackgroundColor(isDark ? '#111113' : '#ffffff');
+    }
   });
 
   // App Paths & Instances helper
